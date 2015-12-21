@@ -6,6 +6,7 @@
  *      contains main loop for 3D rendering software using irrlicht
  *
  *============================================================================*/
+
 //----------------------------------------------------------------------------//
 //                               Pre Processors
 //----------------------------------------------------------------------------//
@@ -87,15 +88,29 @@ int main()
     // sets IGUIEnvironment object
     // under gui namespace
     // grants access to GUI environment
-    // IGUIEnvironment* guienv = device->getGUIEnvironment();
-
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    guienv->addStaticText(
+        L"testing..",
+        rect<s32>(10,10,260,22),
+        true
+        );
+    
+    // main loop for drawing
     while(device->run())
     {
+        // all drawings must be placed between beginScene and endScene
         driver->beginScene(true, true, SColor(255,100,101,140));
+
+        // draws scene manager drawings
         smgr->drawAll();
+
+        // draws gui drawings
+        guienv->drawAll();
+
         driver->endScene();
     }
 
+    // deletes device and free memory
     device->drop();
     return 0;
 }
