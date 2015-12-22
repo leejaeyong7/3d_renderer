@@ -36,5 +36,12 @@ endif
 # FINAL FLAG
 FLAGS = $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
 
-main: main.cpp
-	$(CC) -o main.out main.cpp $(FLAGS) 
+main: main.o eventHandler.o
+	$(CC) -o main.out main.o eventHandler.o $(FLAGS)
+
+main.o: main.cpp
+	$(CC) -c main.cpp $(LDFLAGS)
+
+eventHandler.o: eventHandler.h
+	$(CC) -c eventHandler.cpp $(LDFLAGS)
+
