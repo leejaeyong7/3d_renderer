@@ -16,13 +16,12 @@
 class WorldSceneNode : public scene::ISceneNode
 {
 public:
-
     WorldSceneNode(
         scene::ISceneNode* parent,
         scene:: ISceneManager* mgr,
         s32 id
         ); 
-    private:
+private:
     core::aabbox3d<f32> Box;
     video::S3DVertex Vertices[4];
     video::SMaterial Material;

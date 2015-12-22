@@ -46,8 +46,8 @@ int main()
             // device type : software
             // using video namespace
             // is able to choose between EDT_OPENGL, EDT_DIRECT3D8/9, etc
-            //EDT_SOFTWARE,
-            EDT_OPENGL,
+            EDT_SOFTWARE,
+            //EDT_OPENGL,
 
             // window size
             // dimension2d from core namespace
