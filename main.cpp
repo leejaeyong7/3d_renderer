@@ -89,32 +89,42 @@ int main()
     // IrrlichtDevice->getSceneManager() grants access to scene manager
     // scene manager covers scene nodes, mesh resource, camera handlers
     ISceneManager* smgr = device->getSceneManager();
+    
+    // sets camera scene node
+    // parameters: parent node (default 0)
+    // position : 0, -40, 0
+    // lookat : 0, 0, 0
+    smgr->addCameraSceneNode(0, vector3df(0,-40,0), vector3df(0,0,0));
 
     // sets IGUIEnvironment object
     // under gui namespace
     // grants access to GUI environment
     IGUIEnvironment* guienv = device->getGUIEnvironment();
     
+    
     // add sphere scene node for testing movement
     ISceneNode * test_node = smgr->addSphereSceneNode();
     if(test_node)
     {
-        test_node->setPosition(vector3df(0,0,15));
+        test_node->setPosition(vector3df(0,0,10));
         test_node->setMaterialFlag(EMF_WIREFRAME,true);
+        test_node->setScale(vector3df(0.4,0.4,0.4));
     }
 
     // add cube scene node for static (relative to test node) 
     ISceneNode * static_node = smgr->addCubeSceneNode();
     if(static_node)
     {
-        static_node->setPosition(vector3df(0,0.3,1));
-        static_node->setRotation(vector3df(30,10,30));
-        static_node->setScale(vector3df(0.07,0.07,0.07));
-        static_node->setMaterialFlag(EMF_WIREFRAME,true);
+        static_node->setPosition(vector3df(0,0,1));
+        static_node->setRotation(vector3df(10,0,0));
+        //static_node->setScale(vector3df(0.07,0.07,0.07));
+        static_node->getMaterial(0).AmbientColor = SColor(0,0,255,0);
+        static_node->getMaterial(0).DiffuseColor = SColor(0,255,0,0);
+        static_node->getMaterial(0).SpecularColor = SColor(0,0,0,255);
         // add test node to its children for test movement
         static_node->addChild(test_node);
     }
-    // decalre FPS tracker variable
+    // decalre FPS tracker variable 
     int lastFPS = -1;
 
     // get static time for frame length check
@@ -150,6 +160,11 @@ int main()
                 nodePos.X -= MOVEMENT_SPEED * frameDeltaTime;
             else if(handler.IsKeyDown(KEY_KEY_D))
                 nodePos.X += MOVEMENT_SPEED * frameDeltaTime;
+
+            if(handler.IsKeyDown(KEY_KEY_Q))
+                nodePos.Z -= MOVEMENT_SPEED * frameDeltaTime;
+            else if(handler.IsKeyDown(KEY_KEY_E))
+                nodePos.Z += MOVEMENT_SPEED * frameDeltaTime;
 
             test_node->setPosition(nodePos);
 //------------------------------SCENE RENDERERING-----------------------------//
