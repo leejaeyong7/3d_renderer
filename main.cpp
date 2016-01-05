@@ -220,8 +220,13 @@ int main()
     }
 
 //------------------------------Collision Handling----------------------------//
+    // create Meta triangle selector for world collision detection
     IMetaTriangleSelector * metaSelector = smgr->createMetaTriangleSelector();
+    // selector for individual triangles
     ITriangleSelector* selector = 0;
+    
+    // assign triangleselector for floor and
+    // add floor to meta selector
     if (floor)
     {
         selector = smgr->createOctreeTriangleSelector(
@@ -230,6 +235,8 @@ int main()
         metaSelector->addTriangleSelector(selector);
         selector->drop();
     }
+    // assign triangle mesh to cube node
+    // add cube node to meta selector
     if(cube_node)
     {
         selector = smgr->createTriangleSelectorFromBoundingBox(cube_node);
@@ -237,6 +244,7 @@ int main()
         metaSelector->addTriangleSelector(selector);
         selector->drop();
     }
+    // use meta selector to check collisions
     if(metaSelector)
     {
         ISceneNodeAnimator* anim = smgr->createCollisionResponseAnimator(
@@ -254,8 +262,6 @@ int main()
         camera->addAnimator(anim);
         anim->drop(); 
     }
-    ISceneNode* highlightedSceneNode = 0;
-    ISceneCollisionManager* collMan = smgr->getSceneCollisionManager();
 
 //------------------------------Loop Setting----------------------------------//
     // decalre FPS tracker variable 
@@ -279,7 +285,6 @@ int main()
         
             // update past static time
             then = now;
-//------------------------------SCENE NODE UPDATE-----------------------------//
  
 //------------------------------SCENE RENDERERING-----------------------------//
             // all drawings must be placed between beginScene and endScene
