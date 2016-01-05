@@ -36,6 +36,7 @@ using namespace gui;
 //----------------------------------------------------------------------------//
 int main()
 {
+//------------------------------Initialization--------------------------------//
     // declare Event Handler
     // see eventhandler.h for detail
     EventHandler handler;
@@ -91,6 +92,12 @@ int main()
     // scene manager covers scene nodes, mesh resource, camera handlers
     ISceneManager* smgr = device->getSceneManager();
 
+    // sets IGUIEnvironment object
+    // under gui namespace
+    // grants access to GUI environment
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+
+//------------------------------Camera Setting--------------------------------//
     // set camera scene node as FPS (alternative)
     // this will set mouse action as FPS-like environment
     // sets key map for fps-like traversal
@@ -144,11 +151,7 @@ int main()
     camera->setFarValue(20000.0f);
     // hides mouse
     device->getCursorControl()->setVisible(false);
-
-    // sets IGUIEnvironment object
-    // under gui namespace
-    // grants access to GUI environment
-    IGUIEnvironment* guienv = device->getGUIEnvironment();
+//------------------------------Mesh/Model Creation---------------------------//
     
     // sets material of the floor
     SMaterial * floor_material = new SMaterial();
@@ -188,6 +191,7 @@ int main()
         cube_node->getMaterial(0).ColorMaterial = ECM_DIFFUSE;
 
     }
+
     // set global lighting (weak gray)
     smgr->setAmbientLight(SColorf(0.1f,0.1f,0.1f,0.1f));
 
@@ -215,10 +219,47 @@ int main()
         sun_node->setMaterialFlag(EMF_LIGHTING,false);
     }
 
-    // decalre FPS tracker variable 
-    int lastFPS = -1;
+//------------------------------Collision Handling----------------------------//
+    IMetaTriangleSelector * metaSelector = smgr->createMetaTriangleSelector();
+    ITriangleSelector* selector = 0;
+    if (floor)
+    {
+        selector = smgr->createOctreeTriangleSelector(
+            floor->getMesh(), floor, 128);
+        floor->setTriangleSelector(selector);
+        metaSelector->addTriangleSelector(selector);
+        selector->drop();
+    }
+    if(cube_node)
+    {
+        selector = smgr->createTriangleSelectorFromBoundingBox(cube_node);
+        cube_node->setTriangleSelector(selector);
+        metaSelector->addTriangleSelector(selector);
+        selector->drop();
+    }
+    if(metaSelector)
+    {
+        ISceneNodeAnimator* anim = smgr->createCollisionResponseAnimator(
+            // triangle selector
+            metaSelector, 
+            // camera scene node
+            camera, 
+            // collision detection radius
+            vector3df(3,5,3),
+            // gravity per sec
+            vector3df(0,-10,0),
+            // ellipsoid translation
+            vector3df(0,0,0));
+        metaSelector->drop();
+        camera->addAnimator(anim);
+        anim->drop(); 
+    }
+    ISceneNode* highlightedSceneNode = 0;
+    ISceneCollisionManager* collMan = smgr->getSceneCollisionManager();
 
-    // get static time for frame length check
+//------------------------------Loop Setting----------------------------------//
+    // decalre FPS tracker variable 
+    int lastFPS = -1;    // get static time for frame length check
     u32 then = device->getTimer()->getTime();
 
     // set constant moving speed
@@ -239,15 +280,14 @@ int main()
             // update past static time
             then = now;
 //------------------------------SCENE NODE UPDATE-----------------------------//
-
+ 
 //------------------------------SCENE RENDERERING-----------------------------//
             // all drawings must be placed between beginScene and endScene
             driver->beginScene(true, true, SColor(255,179,234,252));
 
             // draws scene manager drawings
             smgr->drawAll();
-
-            // draws gui drawings
+           // draws gui drawings
             guienv->drawAll();
 
             // ends irrlict drawing
