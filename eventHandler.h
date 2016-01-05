@@ -17,7 +17,7 @@
 //----------------------------------------------------------------------------//
 #include <irrlicht.h>
 using namespace irr;
-
+        
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
@@ -48,5 +48,6 @@ public:
 private:
     // private array that holds all key pressed data
     bool KeyIsDown[KEY_KEY_CODES_COUNT];
+    
 };
 #endif
