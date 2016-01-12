@@ -94,12 +94,8 @@ int main()
     // grants access to GUI environment
     IGUIEnvironment* guienv = context.device->getGUIEnvironment();
 //-------------------------------GUI Setting----------------------------------//
-    guienv->addButton(rect<s32>(10,240,110,240 + 32), 0,101, 
+    guienv->addButton(rect<s32>(10,240,110,240 + 32), 0,GUI_ID_QUIT_BUTTON, 
                    L"Quit", L"Exits Program");
-    guienv->addButton(rect<s32>(10,280,110,280 + 32), 0, 102, 
-                   L"New Window", L"Launches a new Window");
-    guienv->addButton(rect<s32>(10,320,110,320 + 32), 0, 103, 
-                   L"File Open", L"Opens a file");
 //------------------------------Camera Setting--------------------------------//
     // set camera scene node as FPS (alternative)
     // this will set mouse action as FPS-like environment

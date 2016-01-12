@@ -35,6 +35,11 @@ bool EventHandler::OnEvent(const SEvent & event)
             
             KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
         }
+        else if(event.KeyInput.Key == KEY_KEY_Q &&
+                event.KeyInput.PressedDown == false)
+        {
+            context.device->closeDevice();
+        }
         else
             KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
     }
