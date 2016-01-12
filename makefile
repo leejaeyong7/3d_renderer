@@ -1,6 +1,7 @@
 CC = g++
 
 OS_NAME := $(shell uname)
+MKDIR_P  = mkdir -p
 
 ###############################################################################
 # ON OS X with HOMEBREW install
@@ -10,7 +11,7 @@ ifeq ($(OS_NAME),Darwin)
 LDFLAGS = -I/usr/local/Cellar/Irrlicht/1.8.1/include/irrlicht -I/opt/local/include
 
 #SET LIB FLAGS TO HOMEBREW CELLAR LIB DIR
-LLIBFLAGS = -L/usr/local/Cellar/Irrlicht/1.8.1/lib -L/usr/X11/lib
+LLIBFLAGS = -L/usr/local/Cellar/irrlicht/1.8.1/lib -L/usr/X11/lib 
 
 #SET OPENGL FLAG for os x (requires Xquartz)
 OPENGL_FLAGS = -framework OpenGL -framework GLUT -framework Cocoa -framework IOkit
@@ -36,12 +37,24 @@ endif
 # FINAL FLAG
 FLAGS = $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
 
+
+ifeq ($(OS_NAME),Darwin)
+
+main: main.o eventHandler.o
+	@mkdir -p main.out.app
+	@mkdir -p main.out.app/Contents
+	@mkdir -p main.out.app/Contents/MacOS
+	$(CC) -o main.out.app/Contents/MacOS/main.out main.o eventHandler.o $(FLAGS)
+
+else ifeq ($(OS_NAME),Linux)
+
 main: main.o eventHandler.o
 	$(CC) -o main.out main.o eventHandler.o $(FLAGS)
+
+endif
 
 main.o: main.cpp
 	$(CC) -c main.cpp $(LDFLAGS)
 
 eventHandler.o: eventHandler.h
 	$(CC) -c eventHandler.cpp $(LDFLAGS)
-

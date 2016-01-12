@@ -31,24 +31,21 @@ using namespace video;
 using namespace io;
 using namespace gui;
 
+
 //----------------------------------------------------------------------------//
 //                                  Main function
 //----------------------------------------------------------------------------//
 int main()
 {
 //------------------------------Initialization--------------------------------//
-    // declare Event Handler
-    // see eventhandler.h for detail
-    EventHandler handler;
 
-    // declare Irrlicht device
+    RenderingDevice context;
     // sets parameters for root Irrlicht object
-    IrrlichtDevice * device =
+    context.device =
         createDevice(
-            // device type : software
+            // device type : opengl 
             // using video namespace
             // is able to choose between EDT_OPENGL, EDT_DIRECT3D8/9, etc
-            //EDT_SOFTWARE,
             EDT_OPENGL,
 
             // window size
@@ -70,33 +67,39 @@ int main()
             false,
 
             // custom event handler
-            &handler
+            0
             );
 
     // checks device is valid
-    if(!device)
+    if(!context.device)
         return -1;
 
     // sets window name using macro value
-    device->setWindowCaption(WINDOW_CAPTION);
+    context.device->setWindowCaption(WINDOW_CAPTION);
 
     // sets IVideoDriver object
     // under video namespace
     // IrrlichtDevice->getVideoDriver() grants access to video driver
     // for 3D / 2D rendering
-    IVideoDriver* driver = device->getVideoDriver();
+    IVideoDriver* driver = context.device->getVideoDriver();
 
     // sets ISceneManager object
     // under scene namespace
     // IrrlichtDevice->getSceneManager() grants access to scene manager
     // scene manager covers scene nodes, mesh resource, camera handlers
-    ISceneManager* smgr = device->getSceneManager();
+    ISceneManager* smgr = context.device->getSceneManager();
 
     // sets IGUIEnvironment object
     // under gui namespace
     // grants access to GUI environment
-    IGUIEnvironment* guienv = device->getGUIEnvironment();
-
+    IGUIEnvironment* guienv = context.device->getGUIEnvironment();
+//-------------------------------GUI Setting----------------------------------//
+    guienv->addButton(rect<s32>(10,240,110,240 + 32), 0,101, 
+                   L"Quit", L"Exits Program");
+    guienv->addButton(rect<s32>(10,280,110,280 + 32), 0, 102, 
+                   L"New Window", L"Launches a new Window");
+    guienv->addButton(rect<s32>(10,320,110,320 + 32), 0, 103, 
+                   L"File Open", L"Opens a file");
 //------------------------------Camera Setting--------------------------------//
     // set camera scene node as FPS (alternative)
     // this will set mouse action as FPS-like environment
@@ -125,7 +128,7 @@ int main()
     keyMap[8].Action = EKA_JUMP_UP;
     keyMap[8].KeyCode = KEY_SPACE;
 
-    ICameraSceneNode * camera =  smgr->addCameraSceneNodeFPS(
+    context.camera[0] =  smgr->addCameraSceneNodeFPS(
         // parent node : default null
         0, 
         // rotation speed : default 100
@@ -141,16 +144,26 @@ int main()
         // disables vertical traversal
         true,
         // jump speed
-        5.0f
+        0.8f
         );
 
     // set camera position
-    camera->setPosition(vector3df(0,5,0));
+    context.camera[0]->setPosition(vector3df(0,5,0));
     // sets far value of camera
     // extended for sun support
-    camera->setFarValue(20000.0f);
+    context.camera[0]->setFarValue(20000.0f);
     // hides mouse
-    device->getCursorControl()->setVisible(false);
+    context.device->getCursorControl()->setVisible(false);
+
+
+    context.camera[1] = smgr->addCameraSceneNodeMaya();
+    context.camera[1]->setFarValue(20000.0f);
+//------------------------------Event Setting---------------------------------//
+    
+    EventHandler handler(context);
+    context.device->setEventReceiver(&handler);
+    handler.setActiveCamera(context.camera[0]);
+
 //------------------------------Mesh/Model Creation---------------------------//
     
     // sets material of the floor
@@ -251,34 +264,35 @@ int main()
             // triangle selector
             metaSelector, 
             // camera scene node
-            camera, 
+            context.camera[0], 
             // collision detection radius
             vector3df(3,5,3),
             // gravity per sec
-            vector3df(0,-10,0),
+            vector3df(0,-3,0),
             // ellipsoid translation
             vector3df(0,0,0));
         metaSelector->drop();
-        camera->addAnimator(anim);
+        context.camera[0]->addAnimator(anim);
         anim->drop(); 
     }
 
+    
 //------------------------------Loop Setting----------------------------------//
     // decalre FPS tracker variable 
     int lastFPS = -1;    // get static time for frame length check
-    u32 then = device->getTimer()->getTime();
+    u32 then = context.device->getTimer()->getTime();
 
     // set constant moving speed
     const f32 MOVEMENT_SPEED = 5.f;
 
     // main loop for drawing
-    while(device->run())
+    while(context.device->run())
     {
-        if(device->isWindowActive())
+        if(context.device->isWindowActive())
         {
 //------------------------------TIME TRACK------------------------------------//
             // calculate frame rate(frame delta time)
-            const u32 now = device->getTimer()->getTime();
+            const u32 now = context.device->getTimer()->getTime();
 
             // calculate time value in second
             const f32 frameDeltaTime = (f32)(now-then) / 1000.0f;
@@ -299,9 +313,9 @@ int main()
             driver->endScene();
         }
         else
-            device->yield();
+            context.device->yield();
     }
     // deletes device and free memory
-    device->drop();
+    context.device->drop();
     return 0;
 }

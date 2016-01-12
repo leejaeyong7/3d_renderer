@@ -16,8 +16,31 @@
 //                                  Includes
 //----------------------------------------------------------------------------//
 #include <irrlicht.h>
+
 using namespace irr;
-        
+using namespace core;
+using namespace scene;
+using namespace video;
+using namespace io;
+using namespace gui;
+
+//----------------------------------------------------------------------------//
+//                                 Global Variables 
+//----------------------------------------------------------------------------//
+struct RenderingDevice
+{
+    IrrlichtDevice * device;
+    ICameraSceneNode * camera[2];
+};
+
+// enum for GUI elements
+enum
+{
+    GUI_ID_QUIT_BUTTON = 0x10000,
+    GUI_ID_NEW_WINDOW_BUTTON,
+    GUI_ID_FILE_OPEN_BUTTON
+};
+
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
@@ -41,11 +64,28 @@ public:
     virtual bool IsKeyDown(EKEY_CODE keyCode) const;
     
     /**
+     * sets active camera
+     * @param ICameraSceneNode - pointer to active camera
+     * @see ICameraSceneNode
+     * @return none
+     */
+    void setActiveCamera(ICameraSceneNode* newActive);
+
+    /**
      * Constructor
      * Initializes KeyIsDown array to all false
      */
     EventHandler();
+
+    /**
+     * Overloaded Constructor
+     * Initializes KeyIsDown array to all false
+     * Sets private device pointer
+     */
+    EventHandler(RenderingDevice & dev);
 private:
+    //
+    RenderingDevice context;
     // private array that holds all key pressed data
     bool KeyIsDown[KEY_KEY_CODES_COUNT];
     
