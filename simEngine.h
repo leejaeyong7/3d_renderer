@@ -15,10 +15,11 @@
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include <irrlicht.h>
 #include <vector>
-
-#include 
+#include "simGUI.h"
+#include "simPhysics.h"
+#include "simEntity.h"
+#include <irrlicht.h>
 
 //----------------------------------------------------------------------------//
 //                                  Namespaces
@@ -46,13 +47,45 @@ public:
      * Constructor
      * Initialize Irrlicht, Entities, and physics
      */
-    SimEngine();
+    SimEngine(const wchar_t * text,
+              u32 width, u32 height, 
+              u32 width_r, u32 height_r, 
+              bool fullscreen);
+
     /**
      * Runs Simulation with physics, environment, and 3D rendering
      */
     void run();
+    
+    /**
+     * fetch Irrlicht device pointer
+     * @return pointer to Irrlicht device object
+     */
+    IrrlichtDevice * getDevice(){return device;};
+
+    
+    /**
+     * adds entity to rendering
+     * @param SimEntity - entity object to add
+     * @see SimEntity
+     * @return None
+     */
+    void addEntity(SimEntity * obj);
+
+    /**
+     * removes entity object from rendering
+     * if entity object doesn't exist, it will do nothing
+     * @param SimEntity - pointer to entity object to remove
+     * @return None
+     */
+    void removeEntity(SimEntity * obj);
 
 private:
+    // pointer to Irrliche device for drawing entities and gui
+    IrrlichtDevice * device;
+
+    // pointer to driver for drawing
+    IVideoDriver * driver;
 
     // Pointer to SimGUI object that handles irrlicht GUI design
     SimGUI * simGUI;
@@ -61,8 +94,10 @@ private:
     // simulation engine
     SimPhysics * simPhysics;
 
-    // Pointer to head of linked list of entities
-    vector<SimEntity> simEntityVector;
-
+    // vector of SimEntity object
+    vector<SimEntity*> simEntityVector;
+    
+    // vector of mesh scene node for entities
+    vector<IMeshSceneNode*> meshSceneNodeVector;
 }
 #endif

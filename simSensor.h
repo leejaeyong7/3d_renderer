@@ -1,23 +1,22 @@
 /*============================================================================
  * @author: Jae Yong Lee
- * @file: simGUI.h
+ * @file: simSensor.h
  * @version:  
  * @summary:
- *      Declaration file for simulating GUI objects
+ *      Declaration file for simEntity Sensor object
  *
  *============================================================================*/
+
 
 //----------------------------------------------------------------------------//
 //                                INCLUDE GUARDS
 //----------------------------------------------------------------------------//
-#ifndef _SIM_GUI_H_
-#define _SIM_GUI_H_
+#ifndef _SIM_SENSOR_H_
+#define _SIM_SENSOR_H_
 
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include "simEngine.h"
-#include "eventHandler.h"
 #include <irrlicht.h>
 #include <vector>
 
@@ -36,45 +35,30 @@ using namespace gui;
 //                                Global Variables
 //----------------------------------------------------------------------------//
 
-enum
-{
-    GUI_ID_QUIT_BUTTON = 0x10000;
-}
-
-
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
-class SimGUI
+
+class SimSensor : public SimEntity
 {
 public:
     /**
-     * Default Constructor for Simulation GUI
-     * Initializes Irrlicht device
-     * @param SimEngine * - simulator engine for running simengine methods
-     * @param u32 width - window width
-     * @param u32 height - window height 
-     * @param u32 width_r - rendering width
-     * @param u32 height_r - rendering height
-     * @param bool fullscreeen - True to run on full screen mode
-     * @see SimEngine
-     * @return None
+     * Default Constructor
+     * Initialize Sensor with default parameters
      */
-    SimGUI(SimEngine * eng);
-    /**
-     * Draws GUI elements on device
-     * @return None
-     */
-    void Draw();
-
-private:
-    // Pointer to SimEngine
-    SimEngine * engine;
+    SimSensor();
     
-    // event handler for device
-    eventHandler * eh;
+    
+    /**
+     * Estimates sensor's new position
+     * This is pure virtual function and needs to be overridden!
+     * @param None
+     * @return None
+     */
+    virtual void estimate() = 0;
+    
+private:
 
-    // Contains pointer to GUI environment manager of Irrlicht
-    IGUIEnvironment * guienv;
+
 };
 #endif

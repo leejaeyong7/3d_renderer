@@ -19,7 +19,7 @@
 //                                  Includes
 //----------------------------------------------------------------------------//
 #include <irrlicht.h>
-#include "eventHandler.h"
+#include "SimEngine.h"
 
 //----------------------------------------------------------------------------//
 //                             namespace declarations
@@ -38,6 +38,10 @@ using namespace gui;
 int main()
 {
 //------------------------------Initialization--------------------------------//
+
+    // SimEngine * simEngine = new SimEngine();
+
+    // simEngine->run();
 
     RenderingDevice context;
     // sets parameters for root Irrlicht object

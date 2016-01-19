@@ -45,8 +45,37 @@ public:
     /**
      * Default Constructor
      * Initialize Irrlicht, Entities, and physics
+     * All degrees of freedom are set to 0
      */
     SimEntity();
+    
+    /**
+     * Constructor with position/rotation and empty scenenode
+     * @param double x - x axis coordinate
+     * @param double y - y axis coordinate
+     * @param double z - z axis coordinate
+     * @param double a - a axis coordinate
+     * @param double b - b axis coordinate
+     * @param double c - c axis coordinate
+     * @return SimEntity object with no mesh to render
+     */
+    SimEntity(double x, double y, double z,
+              double a, double b, double c);
+
+    /**
+     * Constructor with position/rotation and empty scenenode
+     * @param double x - x axis coordinate
+     * @param double y - y axis coordinate
+     * @param double z - z axis coordinate
+     * @param double a - a axis coordinate
+     * @param double b - b axis coordinate
+     * @param double c - c axis coordinate
+     * @param IMesh- mesh to be rendered
+     * @return SimEntity object with mesh object
+     */
+    SimEntity(double x, double y, double z,
+              double a, double b, double c,
+              IMesh* m);
 
     /**
      * Copy Constructor
@@ -67,7 +96,6 @@ public:
      * Initialize Irrlicht, Entities, and physics
      */
     ~SimEntity();
-    
 
     /**
      * sets position of entity
@@ -87,32 +115,29 @@ public:
      */
     void setRotation(double a, double b, double c);
 
-
     /**
      * gets position of entity
      * @param none
-     * @return array size of 3 of double as x,y,z respectively
+     * @return array size of 3 of double representing positional vector
      */
     const vector<double> getPosition();
 
     /**
      * gets position of entity
      * @param none
-     * @return array size of 3 of double as x,y,z respectively
+     * @return vector size of 3 of double representing rotational matrix 
      */
     const vector<double> getRotation();
     
     /**
-     * Draws entity on 3D rendering screen at given position/rotation
-     * This is pure virtual function : must be overridden!
-     * @param none
-     * @return drawn scene node
+     * checks sceneNode exists and returns true if so
+     * @return bool - true if scnenode exists
      */
-    virtual void Draw() = 0;
+    bool drawable() {return mesh != 0;};
 
 private:
-    // Scene node for drawing
-    ISceneNode * sceneNode;
+    // mesh for drawing
+    IMesh * mesh;
 
     // translation coordinates
     vector<double> translation;
