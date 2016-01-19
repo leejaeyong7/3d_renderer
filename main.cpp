@@ -94,8 +94,57 @@ int main()
     // grants access to GUI environment
     IGUIEnvironment* guienv = context.device->getGUIEnvironment();
 //-------------------------------GUI Setting----------------------------------//
-    guienv->addButton(rect<s32>(10,240,110,240 + 32), 0,GUI_ID_QUIT_BUTTON, 
-                   L"Quit", L"Exits Program");
+
+    // Add feature button
+    guienv->addButton(
+        // position
+        // x, y, x2, y2
+        rect<s32>(WINDOW_WIDTH-240,
+                  WINDOW_HEIGHT-60,
+                  WINDOW_WIDTH-180,
+                  WINDOW_HEIGHT-20), 
+        // parent (default null)
+        0,
+        // ID
+        GUI_ID_ADD_FEATURE_BUTTON, 
+        // Button Caption
+        L"Add Feature",
+        // hover caption
+        L"Adds Feature Point to Target");
+
+    // Add feature button
+    guienv->addButton(
+        // position
+        // x, y, x2, y2
+        rect<s32>(WINDOW_WIDTH-160,
+                  WINDOW_HEIGHT-60,
+                  WINDOW_WIDTH-100,
+                  WINDOW_HEIGHT-20), 
+        // parent (default null)
+        0,
+        // ID
+        GUI_ID_RUN_DETECTION_BUTTON, 
+        // Button Caption
+        L"Run Detection",
+        // hover caption
+        L"Run Detection in FPS mode");
+
+    // quit button
+    guienv->addButton(
+        // position
+        // x, y, x2, y2
+        rect<s32>(WINDOW_WIDTH-80,
+                  WINDOW_HEIGHT-60,
+                  WINDOW_WIDTH-20,
+                  WINDOW_HEIGHT-20), 
+        // parent (default null)
+        0,
+        // ID
+        GUI_ID_QUIT_BUTTON, 
+        // Button Caption
+        L"Quit",
+        // hover caption
+        L"Exits Program");
 //------------------------------Camera Setting--------------------------------//
     // set camera scene node as FPS (alternative)
     // this will set mouse action as FPS-like environment
@@ -140,7 +189,11 @@ int main()
         // disables vertical traversal
         true,
         // jump speed
-        0.8f
+        0.8f,
+        // invert mouse
+        false,
+        // make active
+        true
         );
 
     // set camera position
@@ -152,8 +205,24 @@ int main()
     context.device->getCursorControl()->setVisible(false);
 
 
-    context.camera[1] = smgr->addCameraSceneNodeMaya();
+    context.camera[1] = smgr->addCameraSceneNodeMaya(
+        // parent node
+        0,
+        // rotateSpeed
+        -1500.f, 
+        // zoomSpeed
+        200.f,
+        // translationSpeed
+        1500.f,
+        // id
+        -1,
+        // distance
+        70.f,
+        // makeActive
+        false
+        );
     context.camera[1]->setFarValue(20000.0f);
+    context.camera[1]->setTarget(vector3df(10,10,10));
 //------------------------------Event Setting---------------------------------//
     
     EventHandler handler(context);
@@ -302,8 +371,9 @@ int main()
 
             // draws scene manager drawings
             smgr->drawAll();
-           // draws gui drawings
-            guienv->drawAll();
+           // draws gui drawings if cameramode is not FPS
+            if(!handler.isFPS())
+                guienv->drawAll();
 
             // ends irrlict drawing
             driver->endScene();

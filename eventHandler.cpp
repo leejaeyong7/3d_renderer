@@ -21,8 +21,7 @@ bool EventHandler::OnEvent(const SEvent & event)
         if (event.KeyInput.Key== KEY_KEY_T &&
             event.KeyInput.PressedDown == false)
         {
-            if(context.device->getSceneManager()->getActiveCamera()
-               == context.camera[0])
+            if(isFPS())
             {
                 setActiveCamera(context.camera[1]);
                 context.device->getCursorControl()->setVisible(true);
@@ -78,10 +77,19 @@ void EventHandler::setActiveCamera(ICameraSceneNode* newActive)
         return;
 
     ICameraSceneNode * active = context.device->getSceneManager()->getActiveCamera();
+    if(active == newActive)
+        return;
+
     active->setInputReceiverEnabled(false);
 
     newActive->setInputReceiverEnabled(true);
     context.device->getSceneManager()->setActiveCamera(newActive);
+}
+
+bool EventHandler::isFPS()
+{
+    return (context.device->getSceneManager()->getActiveCamera()
+            == context.camera[0]);
 }
 
 EventHandler::EventHandler()

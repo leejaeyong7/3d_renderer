@@ -37,8 +37,8 @@ struct RenderingDevice
 enum
 {
     GUI_ID_QUIT_BUTTON = 0x10000,
-    GUI_ID_NEW_WINDOW_BUTTON,
-    GUI_ID_FILE_OPEN_BUTTON
+    GUI_ID_ADD_FEATURE_BUTTON,
+    GUI_ID_RUN_DETECTION_BUTTON
 };
 
 //----------------------------------------------------------------------------//
@@ -70,6 +70,12 @@ public:
      * @return none
      */
     void setActiveCamera(ICameraSceneNode* newActive);
+
+    /**
+     * checks whether current view is FPS mode
+     * @return bool - true if camera is FPS mode
+     */
+    bool isFPS();
 
     /**
      * Constructor
