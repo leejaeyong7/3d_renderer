@@ -49,12 +49,24 @@ main: main.o eventHandler.o
 else ifeq ($(OS_NAME),Linux)
 
 main: main.o eventHandler.o
-	$(CC) -o main.out main.o eventHandler.o $(FLAGS)
+	$(CC) -o main.out main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o $(FLAGS)
 
 endif
 
 main.o: main.cpp
 	$(CC) -c main.cpp $(LDFLAGS)
 
+simEngine.o: simEngine.h simGUI.o simEntity.o simPhysics.o
+	$(CC) -c simEngine.cpp simGUI.o simEntity.o simPhysics.o $(LDFLAGS)
+
+simGUI.o: simGUI.h eventHandler.o
+	$(CC) -c simGUI.cpp $(LDFLAGS)
+
 eventHandler.o: eventHandler.h
 	$(CC) -c eventHandler.cpp $(LDFLAGS)
+
+simEntity.o: simEntity.h
+	$(CC) -c simEntity.cpp $(LDFLAGS)
+
+simPhysics.o: simPhysics.h
+	$(CC) -c simPhysics.cpp $(LDFLAGS)

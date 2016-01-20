@@ -46,10 +46,16 @@ public:
     /**
      * Constructor
      * Initialize Irrlicht, Entities, and physics
+     * @param wchar_t text - window title
+     * @param u32 m_width - window width
+     * @param u32 m_height - window height 
+     * @param u32 m_width_r - rendering width
+     * @param u32 m_height_r - rendering height
+     * @param bool fullscreeen - True to run on full screen mode
      */
     SimEngine(const wchar_t * text,
-              u32 width, u32 height, 
-              u32 width_r, u32 height_r, 
+              u32 m_width, u32 m_height, 
+              u32 m_width_r, u32 m_height_r, 
               bool fullscreen);
 
     /**
@@ -84,8 +90,13 @@ private:
     // pointer to Irrliche device for drawing entities and gui
     IrrlichtDevice * device;
 
-    // pointer to driver for drawing
-    IVideoDriver * driver;
+    // window width/height
+    u32 width;
+    u32 height;
+
+    // rendering width/height
+    u32 width_r;
+    u32 height_r;
 
     // Pointer to SimGUI object that handles irrlicht GUI design
     SimGUI * simGUI;

@@ -27,18 +27,10 @@ using namespace gui;
 //----------------------------------------------------------------------------//
 //                                 Global Variables 
 //----------------------------------------------------------------------------//
-struct RenderingDevice
-{
-    IrrlichtDevice * device;
-    ICameraSceneNode * camera[2];
-};
-
 // enum for GUI elements
 enum
 {
     GUI_ID_QUIT_BUTTON = 0x10000,
-    GUI_ID_ADD_FEATURE_BUTTON,
-    GUI_ID_RUN_DETECTION_BUTTON
 };
 
 //----------------------------------------------------------------------------//
@@ -88,10 +80,9 @@ public:
      * Initializes KeyIsDown array to all false
      * Sets private device pointer
      */
-    EventHandler(RenderingDevice & dev);
+    EventHandler(IrrlichtDevice& dev);
 private:
-    //
-    RenderingDevice context;
+    IrrlichtDevice * device;
     // private array that holds all key pressed data
     bool KeyIsDown[KEY_KEY_CODES_COUNT];
     

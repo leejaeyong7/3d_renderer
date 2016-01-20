@@ -6,7 +6,6 @@
  *      Definition file for simulator GUI
  *
  *============================================================================*/
-
 //----------------------------------------------------------------------------//
 //                                  Includes
 //----------------------------------------------------------------------------//
@@ -19,11 +18,11 @@ SimGUI::SimGUI(SimEngine * eng)
 {
     // set engine pointer for engine method handling
     engine = eng;
-    eh = new eventHandler();
     // sets IGUIEnvironment object
     // under gui namespace
     // grants access to GUI environment
     guienv = engine->getDevice()->getGUIEnvironment();
+    eh = new eventHandler(engine->getDevice());
     engine->getDevice()->setEventReceiver(eh);
     
     // quit button
@@ -43,3 +42,10 @@ SimGUI::SimGUI(SimEngine * eng)
     
 }
 
+void SimGUI::draw()
+{
+    if(!guienv)
+        return;
+
+    guienv->drawall();
+}
