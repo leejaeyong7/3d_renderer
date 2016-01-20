@@ -80,7 +80,7 @@ public:
      * Initializes KeyIsDown array to all false
      * Sets private device pointer
      */
-    EventHandler(IrrlichtDevice& dev);
+    EventHandler(IrrlichtDevice* dev);
 private:
     IrrlichtDevice * device;
     // private array that holds all key pressed data

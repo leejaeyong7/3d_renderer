@@ -22,14 +22,14 @@ SimGUI::SimGUI(SimEngine * eng)
     // under gui namespace
     // grants access to GUI environment
     guienv = engine->getDevice()->getGUIEnvironment();
-    eh = new eventHandler(engine->getDevice());
+    eh = new EventHandler(engine->getDevice());
     engine->getDevice()->setEventReceiver(eh);
     
     // quit button
     guienv->addButton(
         // position
         // x, y, x2, y2
-        rect<s32>(10, 10, 10, 10),
+        rect<s32>(10, 10, 60, 60),
 
         // parent (default null)
         0,
@@ -47,5 +47,5 @@ void SimGUI::draw()
     if(!guienv)
         return;
 
-    guienv->drawall();
+    guienv->drawAll();
 }

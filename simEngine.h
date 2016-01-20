@@ -39,6 +39,7 @@ using namespace gui;
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
+class SimGUI;
 class SimEngine
 {
 public:
@@ -57,7 +58,20 @@ public:
               u32 m_width, u32 m_height, 
               u32 m_width_r, u32 m_height_r, 
               bool fullscreen);
+    /**
+     * sets up simGUI
+     * @param None
+     * @return None
+     */
+    void setupGUI();
 
+    /**
+     * sets up FPS camera
+     * @param None
+     * @return None
+     */
+    void setupRenderingCamera();
+    
     /**
      * Runs Simulation with physics, environment, and 3D rendering
      */
@@ -110,5 +124,5 @@ private:
     
     // vector of mesh scene node for entities
     vector<IMeshSceneNode*> meshSceneNodeVector;
-}
+};
 #endif

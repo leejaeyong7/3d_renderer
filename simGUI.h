@@ -16,11 +16,10 @@
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include "simEngine.h"
-#include "eventHandler.h"
 #include <irrlicht.h>
 #include <vector>
-
+#include "simEngine.h"
+#include "eventHandler.h"
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
@@ -63,7 +62,7 @@ private:
     SimEngine * engine;
     
     // event handler for device
-    eventHandler * eh;
+    EventHandler * eh;
 
     // Contains pointer to GUI environment manager of Irrlicht
     IGUIEnvironment * guienv;

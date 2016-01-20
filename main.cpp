@@ -19,7 +19,7 @@
 //                                  Includes
 //----------------------------------------------------------------------------//
 #include <irrlicht.h>
-#include "SimEngine.h"
+#include "simEngine.h"
 
 //----------------------------------------------------------------------------//
 //                             namespace declarations
@@ -42,5 +42,6 @@ int main()
                                           WINDOW_WIDTH,
                                           WINDOW_HEIGHT,
                                           false);
+    simEngine->setupGUI();
     simEngine->run();
 }
