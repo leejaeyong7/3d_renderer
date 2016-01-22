@@ -1,30 +1,30 @@
 /*============================================================================
  * @author: Jae Yong Lee
- * @file: main.cpp
- * @version: 1.0 
+ * @file: simSensor.h
+ * @version:  
  * @summary:
- *      contains main loop for 3D rendering software using irrlicht
+ *      Declaration file for simEntity Sensor object
  *
  *============================================================================*/
 
-//----------------------------------------------------------------------------//
-//                               Pre Processors
-//----------------------------------------------------------------------------//
-#define WINDOW_WIDTH 840
-#define WINDOW_HEIGHT 600
-#define RENDERING_WIDTH 640 
-#define RENDERING_HEIGHT 480
-#define WINDOW_CAPTION L"TEST WINDOW"
 
 //----------------------------------------------------------------------------//
-//                                  Includes
+//                                INCLUDE GUARDS
 //----------------------------------------------------------------------------//
+#ifndef _SIM_SENSOR_H_
+#define _SIM_SENSOR_H_
+
+//----------------------------------------------------------------------------//
+//                                   Includes
+//----------------------------------------------------------------------------//
+#include "simEntity.h"
 #include <irrlicht.h>
-#include "simEngine.h"
+#include <vector>
 
 //----------------------------------------------------------------------------//
-//                             namespace declarations
+//                                  Namespaces
 //----------------------------------------------------------------------------//
+using namespace std;
 using namespace irr;
 using namespace core;
 using namespace scene;
@@ -33,16 +33,33 @@ using namespace io;
 using namespace gui;
 
 //----------------------------------------------------------------------------//
-//                                  Main function
+//                                Global Variables
 //----------------------------------------------------------------------------//
-int main()
+
+//----------------------------------------------------------------------------//
+//                               Class Declaration
+//----------------------------------------------------------------------------//
+
+class SimSensor : public SimEntity
 {
-    SimEngine * simEngine = new SimEngine(WINDOW_CAPTION,
-                                          WINDOW_WIDTH,
-                                          WINDOW_HEIGHT,
-                                          RENDERING_WIDTH,
-                                          RENDERING_HEIGHT,
-                                          false);
-    simEngine->setupGUI();
-    simEngine->run();
-}
+public:
+    /**
+     * Default Constructor
+     * Initialize Sensor with default parameters
+     */
+    SimSensor();
+    
+    
+    /**
+     * Estimates sensor's new position
+     * This is pure virtual function and needs to be overridden!
+     * @param None
+     * @return None
+     */
+    virtual void estimate() = 0;
+    
+private:
+
+
+};
+#endif

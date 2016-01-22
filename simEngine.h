@@ -15,10 +15,11 @@
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include <irrlicht.h>
 #include <vector>
-
-#include 
+#include "simGUI.h"
+#include "simPhysics.h"
+#include "simEntity.h"
+#include <irrlicht.h>
 
 //----------------------------------------------------------------------------//
 //                                  Namespaces
@@ -38,6 +39,7 @@ using namespace gui;
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
+class SimGUI;
 class SimEngine
 {
 public:
@@ -45,14 +47,74 @@ public:
     /**
      * Constructor
      * Initialize Irrlicht, Entities, and physics
+     * @param wchar_t text - window title
+     * @param u32 m_width - window width
+     * @param u32 m_height - window height 
+     * @param u32 m_width_r - rendering width
+     * @param u32 m_height_r - rendering height
+     * @param bool fullscreeen - True to run on full screen mode
      */
-    SimEngine();
+    SimEngine(const wchar_t * text,
+              u32 m_width, u32 m_height, 
+              u32 m_width_r, u32 m_height_r, 
+              bool fullscreen);
+    /**
+     * sets up simGUI
+     * @param None
+     * @return None
+     */
+    void setupGUI();
+
+    /**
+     * sets up FPS camera
+     * @param None
+     * @return None
+     */
+    void setupRenderingCamera();
+    
     /**
      * Runs Simulation with physics, environment, and 3D rendering
      */
     void run();
+    
+    /**
+     * fetch Irrlicht device pointer
+     * @return pointer to Irrlicht device object
+     */
+    IrrlichtDevice * getDevice(){return device;};
+
+    /**
+     * fetch SimGUI object pointer
+     */
+    SimGUI * getSimGUI(){return simGUI;};
+    
+    /**
+     * adds entity to rendering
+     * @param SimEntity - entity object to add
+     * @see SimEntity
+     * @return None
+     */
+    void addEntity(SimEntity * obj);
+
+    /**
+     * removes entity object from rendering
+     * if entity object doesn't exist, it will do nothing
+     * @param SimEntity - pointer to entity object to remove
+     * @return None
+     */
+    void removeEntity(SimEntity * obj);
 
 private:
+    // pointer to Irrliche device for drawing entities and gui
+    IrrlichtDevice * device;
+
+    // window width/height
+    u32 width;
+    u32 height;
+
+    // rendering width/height
+    u32 width_r;
+    u32 height_r;
 
     // Pointer to SimGUI object that handles irrlicht GUI design
     SimGUI * simGUI;
@@ -61,8 +123,10 @@ private:
     // simulation engine
     SimPhysics * simPhysics;
 
-    // Pointer to head of linked list of entities
-    vector<SimEntity> simEntityVector;
-
-}
+    // vector of SimEntity object
+    vector<SimEntity*> simEntityVector;
+    
+    // vector of mesh scene node for entities
+    vector<IMeshSceneNode*> meshSceneNodeVector;
+};
 #endif
