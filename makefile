@@ -40,11 +40,11 @@ FLAGS = $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
 
 ifeq ($(OS_NAME),Darwin)
 
-main: main.o eventHandler.o
+main: main.o main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o
 	@mkdir -p main.out.app
 	@mkdir -p main.out.app/Contents
 	@mkdir -p main.out.app/Contents/MacOS
-	$(CC) -o main.out.app/Contents/MacOS/main.out main.o eventHandler.o $(FLAGS)
+	$(CC) -o main.out.app/Contents/MacOS/main.out main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o $(FLAGS)
 
 else ifeq ($(OS_NAME),Linux)
 
