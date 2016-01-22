@@ -18,8 +18,8 @@
 //----------------------------------------------------------------------------//
 #include <irrlicht.h>
 #include <vector>
-#include "simEngine.h"
 #include "eventHandler.h"
+#include "simEngine.h"
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
@@ -39,6 +39,7 @@ using namespace gui;
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
+class EventHandler;
 class SimEngine;
 class SimGUI
 {
@@ -51,13 +52,33 @@ public:
      * @return None
      */
     SimGUI(SimEngine * eng);
+
     /**
      * Draws GUI elements on device
      * @return None
      */
     void draw();
+    
+    /**
+     * prompts user for adding entity
+     * @param int - entity type
+     * @see 
+     * @return calls addEntity in SimEngine
+     */
+    void promptAddEntity(u32 entityType);
+
+    /**
+     * prompts user for adding entity
+     * @param int - entity type
+     * @see 
+     * @return calls addEntity in SimEngine
+     */
+    void promptRemoveEntity(u32 entityType);
 
 private:
+    // Sets up context menu
+    void setContextMenu();
+
     // Pointer to SimEngine
     SimEngine * engine;
     

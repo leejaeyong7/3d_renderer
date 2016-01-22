@@ -83,6 +83,10 @@ public:
      */
     IrrlichtDevice * getDevice(){return device;};
 
+    /**
+     * fetch SimGUI object pointer
+     */
+    SimGUI * getSimGUI(){return simGUI;};
     
     /**
      * adds entity to rendering

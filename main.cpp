@@ -10,9 +10,10 @@
 //----------------------------------------------------------------------------//
 //                               Pre Processors
 //----------------------------------------------------------------------------//
-#define WINDOW_HEIGHT 480
-#define WINDOW_WIDTH 640
-#define GUI_WIDTH 200
+#define WINDOW_WIDTH 840
+#define WINDOW_HEIGHT 600
+#define RENDERING_WIDTH 640 
+#define RENDERING_HEIGHT 480
 #define WINDOW_CAPTION L"TEST WINDOW"
 
 //----------------------------------------------------------------------------//
@@ -37,10 +38,10 @@ using namespace gui;
 int main()
 {
     SimEngine * simEngine = new SimEngine(WINDOW_CAPTION,
-                                          WINDOW_WIDTH+GUI_WIDTH,
-                                          WINDOW_HEIGHT,
                                           WINDOW_WIDTH,
                                           WINDOW_HEIGHT,
+                                          RENDERING_WIDTH,
+                                          RENDERING_HEIGHT,
                                           false);
     simEngine->setupGUI();
     simEngine->run();

@@ -53,7 +53,6 @@ SimEngine::SimEngine(const wchar_t * text,
 
     // set window title
     device->setWindowCaption(text);
-    setupRenderingCamera();
 }
 void SimEngine::setupGUI()
 {
@@ -171,7 +170,7 @@ void SimEngine::setupRenderingCamera()
     // extended for sun support
     rc->setFarValue(20000.0f);
     // hides mouse
-    // rc->getCursorControl()->setVisible(false);
+    device->getCursorControl()->setVisible(false);
 
 }
 
@@ -179,15 +178,16 @@ void SimEngine::run()
 {
     IVideoDriver * driver = device->getVideoDriver();
     ISceneManager * smgr = device->getSceneManager();
+    setupRenderingCamera();
     while(device->run())
     {
         if(device->isWindowActive())
         {
-            //driver->setViewPort(rect<s32>(0,0,width,height));
             driver->beginScene(true,true,SColor(255,200,200,200));
-            //simGUI->draw();
-            //driver->setViewPort(rect<s32>(0,0,width_r,height_r));
+            driver->setViewPort(rect<s32>(0,20,width_r,height_r));
             smgr->drawAll();
+            driver->setViewPort(rect<s32>(0,0,width,height));
+            simGUI->draw();
             driver->endScene();
         }
         else

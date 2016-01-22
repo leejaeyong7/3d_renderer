@@ -62,7 +62,7 @@ simEngine.o: simEngine.h simGUI.o simEntity.o simPhysics.o
 simGUI.o: simGUI.h eventHandler.o
 	$(CC) -c simGUI.cpp $(LDFLAGS)
 
-eventHandler.o: eventHandler.h
+eventHandler.o: eventHandler.h 
 	$(CC) -c eventHandler.cpp $(LDFLAGS)
 
 simEntity.o: simEntity.h
