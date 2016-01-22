@@ -20,6 +20,7 @@
 #include <vector>
 #include "eventHandler.h"
 #include "simEngine.h"
+#include "simEntity.h"
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
@@ -68,14 +69,24 @@ public:
     void promptAddEntity(u32 entityType);
 
     /**
-     * prompts user for adding entity
+     * prompts user for editing entity
      * @param int - entity type
      * @see 
      * @return calls addEntity in SimEngine
      */
-    void promptRemoveEntity(u32 entityType);
+    void promptEditEntity(u32 entityType);
+
+    // enables/disables GUI element of window
+    void setAddPromptWindowEnabled(bool enabled);
+    void setEditPromptWindowEnabled(bool enabled);
 
 private:
+    // Sets up add entity Prompt Window
+    void setAddPromptWindow(s32 x, s32 y, s32 w, s32 h);
+
+    // Sets up edit entity prompt window
+    void setEditPromptWindow(s32 x, s32 y, s32 w, s32 h);
+
     // Sets up context menu
     void setContextMenu();
 

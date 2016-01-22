@@ -84,20 +84,48 @@ bool EventHandler::OnEvent(const SEvent & event)
             case GUI_ID_ADD_ENTITY_ENVIRONMENT:
                 simGUI->promptAddEntity(ENTITY_TYPE_ENVIRONMENT);
                 return true;
-            case GUI_ID_REMOVE_ENTITY_ROBOT:
-                simGUI->promptRemoveEntity(ENTITY_TYPE_ROBOT);
+            case GUI_ID_EDIT_ENTITY_ROBOT:
+                simGUI->promptEditEntity(ENTITY_TYPE_ROBOT);
                 return true;
-            case GUI_ID_REMOVE_ENTITY_SENSOR:
-                simGUI->promptRemoveEntity(ENTITY_TYPE_SENSOR);
+            case GUI_ID_EDIT_ENTITY_SENSOR:
+                simGUI->promptEditEntity(ENTITY_TYPE_SENSOR);
                 return true;
-            case GUI_ID_REMOVE_ENTITY_ENVIRONMENT:
-                simGUI->promptRemoveEntity(ENTITY_TYPE_ENVIRONMENT);
+            case GUI_ID_EDIT_ENTITY_ENVIRONMENT:
+                simGUI->promptEditEntity(ENTITY_TYPE_ENVIRONMENT);
                 return true;
             default:
                 return false;
             }
             return false;
         }
+        case EGET_COMBO_BOX_CHANGED:
+            s32 sid;
+            sid = ((IGUIComboBox*)(caller))->getSelected();
+            if(sid == 0)
+            {
+                switch(caller->getID())
+                {
+                case GUI_ID_ADD_ENTITY_WINDOW_COMBO:
+                    simGUI->setAddPromptWindowEnabled(false);
+                    break;
+                case GUI_ID_EDIT_ENTITY_WINDOW_COMBO:
+                    simGUI->setEditPromptWindowEnabled(false);
+                    break;
+                }
+            }
+            else
+            {
+                switch(caller->getID())
+                {
+                case GUI_ID_ADD_ENTITY_WINDOW_COMBO:
+                    simGUI->setAddPromptWindowEnabled(true);
+                    break;
+                case GUI_ID_EDIT_ENTITY_WINDOW_COMBO:
+                    simGUI->setEditPromptWindowEnabled(true);
+                    break;
+                }
+            }
+            break;
         default:
             break;
         }

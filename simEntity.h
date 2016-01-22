@@ -57,10 +57,11 @@ public:
      * @param double a - a axis coordinate
      * @param double b - b axis coordinate
      * @param double c - c axis coordinate
+     * @param stringw name - name of entity
      * @return SimEntity object with no mesh to render
      */
     SimEntity(double x, double y, double z,
-              double a, double b, double c);
+              double a, double b, double c, stringw name);
 
     /**
      * Constructor with position/rotation and empty scenenode
@@ -70,11 +71,12 @@ public:
      * @param double a - a axis coordinate
      * @param double b - b axis coordinate
      * @param double c - c axis coordinate
+     * @param stringw name - name of entity
      * @param IMesh- mesh to be rendered
      * @return SimEntity object with mesh object
      */
     SimEntity(double x, double y, double z,
-              double a, double b, double c,
+              double a, double b, double c, stringw name,
               IMesh* m);
 
     /**
@@ -128,6 +130,11 @@ public:
      * @return vector size of 3 of double representing rotational matrix 
      */
     const vector<double> getRotation();
+
+    /**
+     * gets name of this entity
+     */
+    stringw getName() {return name;};
     
     /**
      * checks sceneNode exists and returns true if so
@@ -144,5 +151,9 @@ private:
 
     // rotation coordinates
     vector<double> rotation;
+
+    // name of entity
+    stringw name;
+
 };
 #endif

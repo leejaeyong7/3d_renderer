@@ -87,6 +87,15 @@ public:
      * fetch SimGUI object pointer
      */
     SimGUI * getSimGUI(){return simGUI;};
+
+
+    /**
+     * fetch pointer to entity vector
+     * @param 
+     * @see 
+     * @return 
+     */
+    vector<SimEntity*> * getEntityVector(){return &simEntityVector;};
     
     /**
      * adds entity to rendering
@@ -125,8 +134,5 @@ private:
 
     // vector of SimEntity object
     vector<SimEntity*> simEntityVector;
-    
-    // vector of mesh scene node for entities
-    vector<IMeshSceneNode*> meshSceneNodeVector;
 };
 #endif

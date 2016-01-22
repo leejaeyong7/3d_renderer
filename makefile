@@ -70,3 +70,7 @@ simEntity.o: simEntity.h
 
 simPhysics.o: simPhysics.h
 	$(CC) -c simPhysics.cpp $(LDFLAGS)
+
+
+re: 
+	rm *.o; make
