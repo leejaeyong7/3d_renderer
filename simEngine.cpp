@@ -173,6 +173,10 @@ void SimEngine::setupRenderingCamera()
     device->getCursorControl()->setVisible(false);
 
 }
+void SimEngine::addEntity(SimEntity * obj)
+{
+    simEntityVector.push_back(obj);
+}
 
 void SimEngine::run()
 {

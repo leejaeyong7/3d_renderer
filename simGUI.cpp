@@ -66,17 +66,17 @@ void SimGUI::promptAddEntity(u32 entityType)
     switch(entityType)
     {
     case ENTITY_TYPE_ROBOT:
-        combo->addItem(L"-");
+        combo->addItem(L"-",entityType);
         combo->addItem(L"Quadrotor");
         combo->addItem(L"Ground Robot");
         break;
     case ENTITY_TYPE_SENSOR:
-        combo->addItem(L"-");
+        combo->addItem(L"-",entityType);
         combo->addItem(L"Monocular Camera");
         combo->addItem(L"Depth Camera");
         break;
     case ENTITY_TYPE_ENVIRONMENT:
-        combo->addItem(L"-");
+        combo->addItem(L"-",entityType);
         combo->addItem(L"April Tag");
         combo->addItem(L"Cube");
         combo->addItem(L"Sphere");
@@ -91,19 +91,183 @@ void SimGUI::promptEditEntity(u32 entityType)
 {
     // creates GUI element of prompt window
     setEditPromptWindow(240,100,360,360);
+    vector<SimEntity*>* entityVector = engine->getEntityVector();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
 
+    // clear combo box and re fill them with entity names
+    IGUIElement * cbb = rootelem->getElementFromId(
+        GUI_ID_EDIT_ENTITY_WINDOW_COMBO,true);
+    IGUIComboBox * cb = (IGUIComboBox*) cbb;
+    cb->clear();
+    cb->addItem(L"-",entityType);
+
+    vector<SimEntity*>::iterator it;
+    int counter = 0;
+    for(it = entityVector->begin(); it!= entityVector->end(); ++it)
+    {
 
     switch(entityType)
     {
     case ENTITY_TYPE_ROBOT:
+    {
+        //cout<< typeid(*it).name()<<endl;
+        std::wstring eName;
+        std::string eN;
+        eN= typeid(*it).name();
+        eName = std::wstring(eN.begin(),eN.end());
+        rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_WINDOW,true)->setText(eName.c_str());
+        if(eName.compare(L"P9SimEntity") == 0)
+            cb->addItem((*it)->getName().c_str(),counter);
         break;
+    }
     case ENTITY_TYPE_SENSOR:
+        cb->addItem((*it)->getName().c_str(),counter);
         break;
     case ENTITY_TYPE_ENVIRONMENT:
+        cb->addItem((*it)->getName().c_str(),counter);
         break;
     default:
         break;
     }
+        counter++;
+    }
+
+
+}
+
+SimEntity* SimGUI::createEntityObject()
+{
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    if(!rootelem->getElementFromId(GUI_ID_ADD_ENTITY_WINDOW,true))
+        return 0;
+    stringc str;    
+    stringw name;
+    f32 x,y,z,a,b,c;
+    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_X,true)
+        ->getText();
+    x = (f32)atof(str.c_str());
+    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_Y,true)
+        ->getText();
+    y = (f32)atof(str.c_str());
+    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_Z,true)
+        ->getText();
+    z = (f32)atof(str.c_str());
+    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_A,true)
+        ->getText();
+    a = (f32)atof(str.c_str());
+    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_B,true)
+        ->getText();
+    b = (f32)atof(str.c_str());
+    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_C,true)
+        ->getText();
+    c = (f32)atof(str.c_str());
+    name = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_NAME,true)
+        ->getText();
+    IGUIComboBox * cb = (IGUIComboBox*)(rootelem->getElementFromId(
+                                            GUI_ID_ADD_ENTITY_WINDOW_COMBO,
+                                            true));
+    u32 entityType = cb->getItemData(0);
+    u32 subEntityType = cb->getItemData(cb->getSelected());
+    switch(entityType)
+    {
+    case ENTITY_TYPE_ROBOT:
+    {
+        SimEntity * newSimEntity = new SimEntity(x,y,z,a,b,c,name);
+        return newSimEntity;
+        // SimEntity * newSimEntity = new SimEntity(x,y,z,a,b,c,name);
+        // return newSimEntity;
+    }
+    case ENTITY_TYPE_SENSOR:
+    default:
+    {
+        return 0;
+    }
+    
+    }
+    
+}
+
+SimEntity* SimGUI::editEntityObject(SimEntity * obj)
+{
+    
+    return obj;
+}
+
+bool SimGUI::checkEntityValid()
+{
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    stringw name;
+    if(rootelem->getElementFromId(GUI_ID_ADD_ENTITY_WINDOW,true))
+    {
+        name = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_NAME,true)
+            ->getText();
+    }
+    else if(rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_WINDOW,true))
+    {
+        name = rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_NAME,true)
+            ->getText();
+    }
+    else
+    {
+        return false;
+    }
+    // check name exists already
+    bool nameMatch = true;
+    vector<SimEntity*> * entityVector = engine->getEntityVector();
+    vector<SimEntity*>::iterator it;
+    for(it = entityVector->begin(); it != entityVector->end(); ++it)
+    {
+        if((*it)->getName() == name)
+            nameMatch = false;
+        nameMatch = nameMatch && true;
+    }
+    return nameMatch;
+}
+
+void SimGUI::alertCreationFailure(const wchar_t* message)
+{
+    IGUIWindow* window= guienv->addWindow(
+        // window rectangle
+        rect<s32>(
+            300,
+            250,
+            540,
+            350),
+        // Modality
+        true,
+        // text
+        L"Alert!",
+        // parent
+        0,
+        // id
+        GUI_ID_ADD_ENTITY_WINDOW);
+    guienv->addStaticText(
+        // text
+        message,
+        //
+        rect<s32>(10, 20, 230, 50),
+        // border
+        false,
+        // textwrap to multi lines
+        true,
+        // parent
+        window,
+        // id
+        -1,
+        // background fill
+        false);
+    IGUIButton * closeButton = guienv->addButton(
+        rect<s32>(
+            240/2+240/4+5,
+            60,
+            240-10,
+            90
+            ),
+        window,
+        GUI_ID_CLOSE_BUTTON,
+        L"Close",
+        L"Cancel and close window"
+        );
 }
 
 void SimGUI::setAddPromptWindowEnabled(bool enabled){
@@ -400,7 +564,7 @@ void SimGUI::setAddPromptWindow(s32 x, s32 y, s32 w, s32 h)
             350
             ),
         window,
-        GUI_ID_ADD_ENTITY_CLOSE_BUTTON,
+        GUI_ID_CLOSE_BUTTON,
         L"Close",
         L"Cancel and close window"
         );
@@ -664,7 +828,7 @@ void SimGUI::setEditPromptWindow(s32 x, s32 y, s32 w, s32 h)
             350
             ),
         window,
-        GUI_ID_EDIT_ENTITY_CLOSE_BUTTON,
+        GUI_ID_CLOSE_BUTTON,
         L"Close",
         L"Cancel and close window"
         );

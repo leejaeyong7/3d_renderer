@@ -6,7 +6,6 @@
  *      Declaration file for simulating GUI objects
  *
  *============================================================================*/
-
 //----------------------------------------------------------------------------//
 //                                INCLUDE GUARDS
 //----------------------------------------------------------------------------//
@@ -17,7 +16,10 @@
 //                                   Includes
 //----------------------------------------------------------------------------//
 #include <irrlicht.h>
+#include <stdlib.h>
 #include <vector>
+#include <typeinfo>
+#include <string>
 #include "eventHandler.h"
 #include "simEngine.h"
 #include "simEntity.h"
@@ -41,6 +43,7 @@ using namespace gui;
 //                               Class Declaration
 //----------------------------------------------------------------------------//
 class EventHandler;
+class SimEntity;
 class SimEngine;
 class SimGUI
 {
@@ -75,6 +78,39 @@ public:
      * @return calls addEntity in SimEngine
      */
     void promptEditEntity(u32 entityType);
+
+    /**
+     * creates entity object from add window
+     * @param none
+     * @see 
+     * @return SimEntity object with given params
+     */
+    SimEntity * createEntityObject();
+
+    /**
+     * edits entity object from edit window
+     * @param none
+     * @see 
+     * @return SimEntity object with fixed params
+     */
+    SimEntity * editEntityObject(SimEntity * obj);
+
+    /**
+     * checks entity creation is valid
+     * @param none
+     * @see 
+     * @return bool - true if valid
+     */
+    bool checkEntityValid();
+
+    /**
+     * alerts user for failing to create entity
+     * @param none
+     * @see 
+     * @return opens alert window
+     */
+    void alertCreationFailure(const wchar_t*  message);
+    
 
     // enables/disables GUI element of window
     void setAddPromptWindowEnabled(bool enabled);

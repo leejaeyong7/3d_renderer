@@ -59,18 +59,20 @@ bool EventHandler::OnEvent(const SEvent & event)
         case EGET_BUTTON_CLICKED:
             switch(id)
             {
-            case GUI_ID_ADD_ENTITY_CLOSE_BUTTON:
-            case GUI_ID_EDIT_ENTITY_CLOSE_BUTTON:
+            case GUI_ID_CLOSE_BUTTON:
                 caller->getParent()->remove();
                 return false;
             case GUI_ID_ADD_ENTITY_CREATE_BUTTON:
-                IGUIElement * entityName;
-                entityName= env->getRootGUIElement()
-                    ->getElementFromId(GUI_ID_ADD_ENTITY_NAME,true);
-                cout <<entityName->getText()<<endl;
+                if(simGUI->checkEntityValid())
+                    engine->addEntity(simGUI->createEntityObject());
+                else
+                    simGUI->alertCreationFailure(L"Check name please");
                 break;
             case GUI_ID_EDIT_ENTITY_REMOVE_BUTTON:
+                // simGUI->promptDeletion();
             case GUI_ID_EDIT_ENTITY_CREATE_BUTTON:
+                // simGUI->checkEntityEdit();
+                // simGUI->editEntity();
                 return false;
             default:
                 return false;

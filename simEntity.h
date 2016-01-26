@@ -57,11 +57,11 @@ public:
      * @param double a - a axis coordinate
      * @param double b - b axis coordinate
      * @param double c - c axis coordinate
-     * @param stringw name - name of entity
+     * @param stringw p_name - name of entity
      * @return SimEntity object with no mesh to render
      */
     SimEntity(double x, double y, double z,
-              double a, double b, double c, stringw name);
+              double a, double b, double c, stringw p_name);
 
     /**
      * Constructor with position/rotation and empty scenenode
@@ -71,12 +71,12 @@ public:
      * @param double a - a axis coordinate
      * @param double b - b axis coordinate
      * @param double c - c axis coordinate
-     * @param stringw name - name of entity
+     * @param stringw p_name - name of entity
      * @param IMesh- mesh to be rendered
      * @return SimEntity object with mesh object
      */
     SimEntity(double x, double y, double z,
-              double a, double b, double c, stringw name,
+              double a, double b, double c, stringw p_name,
               IMesh* m);
 
     /**
@@ -122,14 +122,14 @@ public:
      * @param none
      * @return array size of 3 of double representing positional vector
      */
-    const vector<double> getPosition();
+    const vector3df getPosition();
 
     /**
      * gets position of entity
      * @param none
      * @return vector size of 3 of double representing rotational matrix 
      */
-    const vector<double> getRotation();
+    const vector3df getRotation();
 
     /**
      * gets name of this entity
@@ -143,14 +143,17 @@ public:
     bool drawable() {return mesh != 0;};
 
 private:
+    // mesh scene node
+    IMeshSceneNode * meshSceneNode;
+
     // mesh for drawing
     IMesh * mesh;
 
     // translation coordinates
-    vector<double> translation;
+    vector3df translation;
 
     // rotation coordinates
-    vector<double> rotation;
+    vector3df rotation;
 
     // name of entity
     stringw name;
