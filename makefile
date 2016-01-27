@@ -40,11 +40,11 @@ FLAGS = $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
 
 ifeq ($(OS_NAME),Darwin)
 
-main: main.o main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o
+main: main.o main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o simSensor.o simSensorMonocularCamera.o
 	@mkdir -p main.out.app
 	@mkdir -p main.out.app/Contents
 	@mkdir -p main.out.app/Contents/MacOS
-	$(CC) -o main.out.app/Contents/MacOS/main.out main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o $(FLAGS)
+	$(CC) -o main.out.app/Contents/MacOS/main.out main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o simSensor.o simSensorMonocularCamera.o $(FLAGS)
 
 else ifeq ($(OS_NAME),Linux)
 
@@ -64,6 +64,12 @@ simGUI.o: simGUI.h eventHandler.o simEntity.o
 
 eventHandler.o: eventHandler.h 
 	$(CC) -c eventHandler.cpp $(LDFLAGS)
+
+simSensorMonocularCamera.o: simSensorMonocularCamera.o simSensor.o
+	$(CC) -c simSensorMonocularCamera.cpp $(LDFLAGS)
+
+simSensor.o: simSensor.h simEntity.o
+	$(CC) -c simSensor.cpp $(LDFLAGS)
 
 simEntity.o: simEntity.h
 	$(CC) -c simEntity.cpp $(LDFLAGS)

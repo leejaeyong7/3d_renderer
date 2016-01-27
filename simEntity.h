@@ -63,21 +63,6 @@ public:
     SimEntity(double x, double y, double z,
               double a, double b, double c, stringw p_name);
 
-    /**
-     * Constructor with position/rotation and empty scenenode
-     * @param double x - x axis coordinate
-     * @param double y - y axis coordinate
-     * @param double z - z axis coordinate
-     * @param double a - a axis coordinate
-     * @param double b - b axis coordinate
-     * @param double c - c axis coordinate
-     * @param stringw p_name - name of entity
-     * @param IMesh- mesh to be rendered
-     * @return SimEntity object with mesh object
-     */
-    SimEntity(double x, double y, double z,
-              double a, double b, double c, stringw p_name,
-              IMesh* m);
 
     /**
      * Copy Constructor
@@ -118,36 +103,59 @@ public:
     void setRotation(double a, double b, double c);
 
     /**
+     * sets rotation of entity
+     * @param double a - a axis coordinate
+     * @param double b - b axis coordinate
+     * @param double c - c axis coordinate
+     * @return none
+     */
+    void setName(stringw new_name);
+
+    /**
      * gets position of entity
      * @param none
      * @return array size of 3 of double representing positional vector
      */
-    const vector3df getPosition();
+    const vector3df getPosition() const {return translation;};
 
     /**
      * gets position of entity
      * @param none
      * @return vector size of 3 of double representing rotational matrix 
      */
-    const vector3df getRotation();
+    const vector3df getRotation() const {return rotation;};
 
     /**
      * gets name of this entity
      */
-    stringw getName() {return name;};
+    const stringw getName() const {return name;};
     
     /**
-     * checks sceneNode exists and returns true if so
-     * @return bool - true if scnenode exists
+     * sets mesh scenenode for entity(pure virtual function
+     * @param ISceneManager - scene manager to hold mesh scenenode
+     * @param path - path to .obj file
+     * @see 
+     * @return Imeshscenenode attached to entity
      */
-    bool drawable() {return mesh != 0;};
+    virtual void setMeshSceneNode(ISceneManager* smgr, const path &filename) =0;
+
+
+    /**
+     * sets mesh scenenode through pointer(for inherited class access)
+     * @param IMeshSceneNode* - pointer to mesh scenenode to set
+     * @return none
+     */
+    void setMeshSceneNode(IMeshSceneNode * mSN){meshSceneNode = mSN;};
+
+    /**
+     * gets mesh scenenode pointer for entity
+     * @return IMeshScenenode * - pointer of mesh scenenode
+     */
+    IMeshSceneNode * getMeshSceneNode() {return meshSceneNode;};
 
 private:
     // mesh scene node
     IMeshSceneNode * meshSceneNode;
-
-    // mesh for drawing
-    IMesh * mesh;
 
     // translation coordinates
     vector3df translation;

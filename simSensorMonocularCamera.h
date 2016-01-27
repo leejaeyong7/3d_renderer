@@ -1,23 +1,21 @@
 /*============================================================================
  * @author: Jae Yong Lee
- * @file: simSensor.h
+ * @file: simSensorMonocularCamera.h
  * @version:  
  * @summary:
- *      Declaration file for simEntity Sensor object
+ *      Header file for monocular sensor object in simulation
  *
  *============================================================================*/
-
-
 //----------------------------------------------------------------------------//
 //                                INCLUDE GUARDS
 //----------------------------------------------------------------------------//
-#ifndef _SIM_SENSOR_H_
-#define _SIM_SENSOR_H_
+#ifndef _SIM_SENSOR_MONO_CAM_H_
+#define _SIM_SENSOR_MONO_CAM_H_
 
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include "simEntity.h"
+#include "simSensor.h"
 #include <irrlicht.h>
 #include <vector>
 
@@ -40,34 +38,20 @@ using namespace gui;
 //                               Class Declaration
 //----------------------------------------------------------------------------//
 
-class SimSensor : public SimEntity
+class SimMonocularCamera : public SimSensor
 {
 public:
     /**
      * Default Constructor
-     * Initialize Sensor with default parameters
+     * Initialized monocular camera
      */
-    SimSensor(double x, double y, double z,
-              double a, double b, double c, stringw p_name);
+    SimMonocularCamera(double x, double y, double z,
+                       double a, double b, double c, stringw p_name);
 
-    /**
-     * sets mesh scene node for this entity and add it on scenemanager
-     * @param IScenemManager - scene manager with scene nodes
-     * @param IMesh - mesh to be translated into IMeshSceneNode
-     * @return IMeshSceneNode added to ISceneManager
-     */
-    virtual void setMeshSceneNode(ISceneManager* smgr, const path &filename);
-    
-    /**
-     * Estimates sensor's new position
-     * This is pure virtual function and needs to be overridden!
-     * @param None
-     * @return None
-     */
-    virtual void estimate() = 0;
-    
+    virtual void estimate(){return ;};
+
 private:
 
-
 };
+
 #endif

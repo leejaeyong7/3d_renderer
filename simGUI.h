@@ -23,6 +23,7 @@
 #include "eventHandler.h"
 #include "simEngine.h"
 #include "simEntity.h"
+#include "simSensorMonocularCamera.h"
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//

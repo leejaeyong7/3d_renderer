@@ -67,19 +67,19 @@ void SimGUI::promptAddEntity(u32 entityType)
     {
     case ENTITY_TYPE_ROBOT:
         combo->addItem(L"-",entityType);
-        combo->addItem(L"Quadrotor");
-        combo->addItem(L"Ground Robot");
+        combo->addItem(L"Quadrotor",SUB_ENTITY_ROBOT_QUAD);
+        combo->addItem(L"Ground Robot",SUB_ENTITY_ROBOT_GROUND);
         break;
     case ENTITY_TYPE_SENSOR:
         combo->addItem(L"-",entityType);
-        combo->addItem(L"Monocular Camera");
-        combo->addItem(L"Depth Camera");
+        combo->addItem(L"Monocular Camera",SUB_ENTITY_SENSOR_MONO_CAM);
+        combo->addItem(L"Depth Camera",SUB_ENTITY_SENSOR_DEPTH_CAM);
         break;
     case ENTITY_TYPE_ENVIRONMENT:
         combo->addItem(L"-",entityType);
-        combo->addItem(L"April Tag");
-        combo->addItem(L"Cube");
-        combo->addItem(L"Sphere");
+        combo->addItem(L"April Tag",SUB_ENTITY_ENVIRONMENT_APRIL);
+        combo->addItem(L"Cube",SUB_ENTITY_ENVIRONMENT_CUBE);
+        combo->addItem(L"Sphere",SUB_ENTITY_ENVIRONMENT_SPHERE);
         break;
     default:
         break;
@@ -138,6 +138,7 @@ void SimGUI::promptEditEntity(u32 entityType)
 SimEntity* SimGUI::createEntityObject()
 {
     IGUIElement * rootelem = guienv->getRootGUIElement();
+    ISceneManager* smgr = engine->getDevice()->getSceneManager();
     if(!rootelem->getElementFromId(GUI_ID_ADD_ENTITY_WINDOW,true))
         return 0;
     stringc str;    
@@ -172,18 +173,53 @@ SimEntity* SimGUI::createEntityObject()
     {
     case ENTITY_TYPE_ROBOT:
     {
-        SimEntity * newSimEntity = new SimEntity(x,y,z,a,b,c,name);
-        return newSimEntity;
+        switch(subEntityType)
+        {
+        case SUB_ENTITY_ROBOT_QUAD:
+        {
+            break;
+        }
+        case SUB_ENTITY_ROBOT_GROUND:
+        {
+            break;
+        }
+        default:
+            break;
+        }
         // SimEntity * newSimEntity = new SimEntity(x,y,z,a,b,c,name);
         // return newSimEntity;
     }
     case ENTITY_TYPE_SENSOR:
+    {
+        switch(subEntityType)
+        {
+        case SUB_ENTITY_SENSOR_MONO_CAM:
+        {
+            SimMonocularCamera * monoCam =
+                new SimMonocularCamera(x,y,z,a,b,c,name);
+            monoCam->setMeshSceneNode(smgr,"Models/camera.obj");
+            return (SimEntity*) monoCam;
+        }
+        case SUB_ENTITY_SENSOR_DEPTH_CAM:
+        {
+            
+            break;
+        }
+        default:
+            break;
+        }
+    }
+    case ENTITY_TYPE_ENVIRONMENT:
+    {
+        break;
+    }
     default:
     {
         return 0;
     }
     
     }
+    return 0;
     
 }
 
