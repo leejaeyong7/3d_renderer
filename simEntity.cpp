@@ -13,49 +13,62 @@
 //----------------------------------------------------------------------------//
 //                               Class Definitions
 //----------------------------------------------------------------------------//
-SimEntity::SimEntity()
-{
-    meshSceneNode = 0;
-}
 
-SimEntity::SimEntity(double x, double y, double z,
-                     double a, double b, double c, stringw p_name)
+SimEntity::SimEntity(string _name,
+                     double x, double y, double z,
+                     double a, double b, double c)
 {
-    meshSceneNode = 0;
-
     translation.X = x;
     translation.Y = y;
     translation.Z = z;
 
-    rotation.X = a;
-    rotation.Y = b;
-    rotation.Z = c;
+    rotation.Pitch = a;
+    rotation.Roll = b;
+    rotation.Yaw = c;
 
-    name = p_name;
+    name = _name;
+    meshPath = "";
+}
+
+SimEntity::SimEntity(string _name,
+                     double x, double y, double z,
+                     double a, double b, double c,
+                     string _meshPath)
+{
+    translation.X = x;
+    translation.Y = y;
+    translation.Z = z;
+
+    rotation.Pitch = a;
+    rotation.Roll = b;
+    rotation.Yaw = c;
+
+    name = _name;
+    meshPath = _meshPath;
 }
 
 
 SimEntity::SimEntity(const SimEntity & obj)
 {
-    this->translation = vector3d<f32>(obj.getPosition());
-    this->rotation = vector3d<f32>(obj.getRotation());
+    this->translation = obj.getPosition();
+    this->rotation = obj.getRotation();
     this->name = obj.getName();
-    this->meshSceneNode = 0;
+    this->meshPath = obj.getMeshPath();
 }
 
 SimEntity& SimEntity::operator= (const SimEntity & rhs)
 {
-    translation = vector3d<f32>(rhs.getPosition());
-    rotation = vector3d<f32>(rhs.getRotation());
+    translation = rhs.getPosition();
+    rotation = rhs.getRotation();
     name = rhs.getName();
-    meshSceneNode = 0;
+    meshPath = rhs.getMeshPath();
     return *this;
 }
 
 SimEntity::~SimEntity()
 {
-    if(meshSceneNode)
-        ((ISceneNode*)meshSceneNode)->removeAll();
+    // remove all dynamically allocated data
+    // currently none
 }
 
 void SimEntity::setPosition(double x, double y, double z)
@@ -67,12 +80,17 @@ void SimEntity::setPosition(double x, double y, double z)
 
 void SimEntity::setRotation(double a, double b, double c)
 {
-    rotation.X = a;
-    rotation.Y = b;
-    rotation.Z = c;
+    rotation.Pitch = a;
+    rotation.Roll = b;
+    rotation.Yaw = c;
 }
 
-void SimEntity::setName(stringw new_name)
+void SimEntity::setName(string new_name)
 {
     name = new_name;
+}
+
+void SimEntity::setMeshPath(string new_path)
+{
+    meshPath = new_path;
 }

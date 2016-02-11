@@ -1,5 +1,4 @@
 CC = g++
-
 OS_NAME := $(shell uname)
 MKDIR_P  = mkdir -p
 
@@ -36,20 +35,22 @@ endif
 
 # FINAL FLAG
 FLAGS = $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
-
+SOURCES=main.cpp simEngine.cpp simGUI.cpp eventHandler.cpp simEntity.cpp\
+	simPhysics.cpp simSensor.cpp simSensorCamera.cpp simRobot.cpp
+OBJECTS=$(SOURCES:.cpp=.o)
 
 ifeq ($(OS_NAME),Darwin)
 
-main: main.o main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o simSensor.o simSensorMonocularCamera.o
-	@mkdir -p main.out.app
-	@mkdir -p main.out.app/Contents
-	@mkdir -p main.out.app/Contents/MacOS
-	$(CC) -o main.out.app/Contents/MacOS/main.out main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o simSensor.o simSensorMonocularCamera.o $(FLAGS)
+main: $(OBJECTS)
+	@mkdir -p irr.app
+	@mkdir -p irr.app/Contents
+	@mkdir -p irr.app/Contents/MacOS
+	$(CC) -o irr.app/Contents/MacOS/irr $(OBJECTS) $(FLAGS)
 
 else ifeq ($(OS_NAME),Linux)
 
-main: main.o main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o
-	$(CC) -o main.out main.o simEngine.o simGUI.o eventHandler.o simEntity.o simPhysics.o $(FLAGS)
+main: $(OBJECTS)
+	$(CC) -o main.out $(OBJECTS) $(FLAGS)
 
 endif
 
@@ -59,17 +60,20 @@ main.o: main.cpp simEngine.o
 simEngine.o: simEngine.h simGUI.o simEntity.o simPhysics.o
 	$(CC) -c simEngine.cpp $(LDFLAGS)
 
-simGUI.o: simGUI.h eventHandler.o simEntity.o
+simGUI.o: simGUI.h eventHandler.o simEntity.o 
 	$(CC) -c simGUI.cpp $(LDFLAGS)
 
 eventHandler.o: eventHandler.h 
 	$(CC) -c eventHandler.cpp $(LDFLAGS)
 
-simSensorMonocularCamera.o: simSensorMonocularCamera.o simSensor.o
-	$(CC) -c simSensorMonocularCamera.cpp $(LDFLAGS)
+simSensorCamera.o: simSensorCamera.h simSensor.o
+	$(CC) -c simSensorCamera.cpp $(LDFLAGS)
 
 simSensor.o: simSensor.h simEntity.o
 	$(CC) -c simSensor.cpp $(LDFLAGS)
+
+simRobot.o: simRobot.h simEntity.o
+	$(CC) -c simRobot.cpp $(LDFLAGS)
 
 simEntity.o: simEntity.h
 	$(CC) -c simEntity.cpp $(LDFLAGS)
@@ -77,6 +81,11 @@ simEntity.o: simEntity.h
 simPhysics.o: simPhysics.h
 	$(CC) -c simPhysics.cpp $(LDFLAGS)
 
-
 re: 
 	rm *.o; make
+
+rt: 
+	rm *.o; make test
+
+test: $(OBJECTS)
+	$(CC) -o main.out $(OBJECTS) $(FLAGS)

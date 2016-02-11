@@ -16,23 +16,29 @@
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include <irrlicht.h>
+#include <string>
 #include <vector>
+#include "simEntityOption.h"
 
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
 using namespace std;
-using namespace irr;
-using namespace core;
-using namespace scene;
-using namespace video;
-using namespace io;
-using namespace gui;
 
 //----------------------------------------------------------------------------//
 //                                Global Variables
 //----------------------------------------------------------------------------//
+typedef struct Position{
+    double X;
+    double Y;
+    double Z;
+} Position;
+
+typedef struct Rotation{
+    double Pitch;
+    double Roll;
+    double Yaw;
+} Rotation;
 
 //----------------------------------------------------------------------------//
 //                               Class Declaration
@@ -41,14 +47,6 @@ using namespace gui;
 class SimEntity
 {
 public:
-    
-    /**
-     * Default Constructor
-     * Initialize Irrlicht, Entities, and physics
-     * All degrees of freedom are set to 0
-     */
-    SimEntity();
-    
     /**
      * Constructor with position/rotation and empty scenenode
      * @param double x - x axis coordinate
@@ -57,12 +55,29 @@ public:
      * @param double a - a axis coordinate
      * @param double b - b axis coordinate
      * @param double c - c axis coordinate
-     * @param stringw p_name - name of entity
+     * @param std::stringw p_name - name of entity
      * @return SimEntity object with no mesh to render
      */
-    SimEntity(double x, double y, double z,
-              double a, double b, double c, stringw p_name);
+    SimEntity(std::string _name,
+              double x, double y, double z,
+              double a, double b, double c);
 
+    /**
+     * Constructor with position/rotation and empty scenenode
+     * @param std::string _name - name of entity
+     * @param double x - x axis coordinate
+     * @param double y - y axis coordinate
+     * @param double z - z axis coordinate
+     * @param double a - a axis coordinate
+     * @param double b - b axis coordinate
+     * @param double c - c axis coordinate
+     * @param std::string _meshPath - path of mesh file
+     * @return SimEntity object with no mesh to render
+     */
+    SimEntity(std::string _name,
+              double x, double y, double z,
+              double a, double b, double c,
+              std::string _meshPath);
 
     /**
      * Copy Constructor
@@ -82,7 +97,14 @@ public:
      * Destructor
      * Initialize Irrlicht, Entities, and physics
      */
-    ~SimEntity();
+    virtual ~SimEntity();
+
+    
+    /**
+     * Callback function when removeEntity is called 
+     * This is pure virtual function that must be overwritten
+     */
+    virtual void removeCallback() = 0;
 
     /**
      * sets position of entity
@@ -103,68 +125,72 @@ public:
     void setRotation(double a, double b, double c);
 
     /**
-     * sets rotation of entity
-     * @param double a - a axis coordinate
-     * @param double b - b axis coordinate
-     * @param double c - c axis coordinate
+     * sets name of entity
      * @return none
      */
-    void setName(stringw new_name);
+    void setName(std::string new_name);
+
+    /**
+     * sets path name of entity
+     * @return none
+     */
+    void setMeshPath(std::string new_path);
+
 
     /**
      * gets position of entity
      * @param none
      * @return array size of 3 of double representing positional vector
      */
-    const vector3df getPosition() const {return translation;};
+    const Position getPosition() const {return translation;};
 
     /**
      * gets position of entity
      * @param none
      * @return vector size of 3 of double representing rotational matrix 
      */
-    const vector3df getRotation() const {return rotation;};
+    const Rotation getRotation() const {return rotation;};
 
     /**
      * gets name of this entity
      */
-    const stringw getName() const {return name;};
+    const std::string getName() const {return name;};
     
     /**
-     * sets mesh scenenode for entity(pure virtual function
-     * @param ISceneManager - scene manager to hold mesh scenenode
-     * @param path - path to .obj file
-     * @see 
-     * @return Imeshscenenode attached to entity
+     * gets name of this entity
      */
-    virtual void setMeshSceneNode(ISceneManager* smgr, const path &filename) =0;
-
+    const std::string getMeshPath() const {return meshPath;};
 
     /**
-     * sets mesh scenenode through pointer(for inherited class access)
-     * @param IMeshSceneNode* - pointer to mesh scenenode to set
-     * @return none
+     * gets advanced option pointer
      */
-    void setMeshSceneNode(IMeshSceneNode * mSN){meshSceneNode = mSN;};
-
-    /**
-     * gets mesh scenenode pointer for entity
-     * @return IMeshScenenode * - pointer of mesh scenenode
-     */
-    IMeshSceneNode * getMeshSceneNode() {return meshSceneNode;};
+    vector<AdvancedOption*>* getAdvancedOption() {return &advancedOption;};
 
 private:
-    // mesh scene node
-    IMeshSceneNode * meshSceneNode;
-
+    // check advanced option label
+    struct checkLabel
+    {
+        checkLabel(std::string label) : str_holder(label) {}
+        std::string str_holder;
+        bool operator()(AdvancedOption* obj)
+        {
+            return obj->label == str_holder;
+        }
+    };
     // translation coordinates
-    vector3df translation;
+    Position translation;
 
     // rotation coordinates
-    vector3df rotation;
+    Rotation rotation;
 
     // name of entity
-    stringw name;
+    std::string name;
 
+    // path of mesh file
+    std::string meshPath;
+
+    // Advanced options vector
+    vector<AdvancedOption*> advancedOption;
+    
 };
 #endif

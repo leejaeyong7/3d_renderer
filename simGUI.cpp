@@ -14,18 +14,55 @@
 //                               Class Definitions
 //----------------------------------------------------------------------------//
 
-SimGUI::SimGUI(SimEngine * eng)
+SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
+               u32 m_width, u32 m_height,
+               u32 m_width_r, u32 m_height_r,
+               bool fullscreen)
 {
+    device = createDevice(
+        // device type : opengl 
+        // using video namespace
+        // is able to choose between EDT_OPENGL, EDT_DIRECT3D8/9, etc
+        EDT_OPENGL,
+
+        // window size
+        // dimension2d from core namespace
+        // using macro values for window size
+        dimension2d<u32>(m_width,m_height),
+
+        // bits per pixel : 16 (default 16)
+        // if not specified, set to 16
+        16,
+
+        // full screen mode : false (default false)
+        false,
+
+        // stencil buffer(??) : false (default false)
+        false,
+
+        // vsync : false (default false)
+        false,
+
+        // custom event handler
+        0
+        );
+    width = m_width;
+    height = m_height;
+    width_r = m_width_r;
+    height_r = m_height_r;
+
+    // set window title
+    device->setWindowCaption(text);
+
     // set engine pointer for engine method handling
     engine = eng;
+
     // sets IGUIEnvironment object
     // under gui namespace
     // grants access to GUI environment
-    guienv = engine->getDevice()->getGUIEnvironment();
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
     
     // set event handler taking care of all events
-    eh = new EventHandler(engine);
-    engine->getDevice()->setEventReceiver(eh);
     
     // set GUI skin
     IGUISkin * skin = guienv->getSkin();
@@ -38,134 +75,308 @@ SimGUI::SimGUI(SimEngine * eng)
         col.setAlpha(255);
         skin->setColor((EGUI_DEFAULT_COLOR)i, col);
     }
+    setup();
 
     // set context menu
     setContextMenu();
 
 }
 
+void SimGUI::setup()
+{
+    // set event handler
+    EventHandler * eh = new EventHandler(this);
+    device->setEventReceiver(eh);
+    IVideoDriver * driver = device->getVideoDriver();
+    ISceneManager * smgr = device->getSceneManager();
+
+//----------------------------------------------------------------------------//
+//                             Sky setup
+//----------------------------------------------------------------------------//
+    ITexture* skyTexture  = driver->getTexture("Textures/sky.png");
+    smgr->addSkyDomeSceneNode(
+        skyTexture);
+        
+//----------------------------------------------------------------------------//
+//                             Floor setup
+//----------------------------------------------------------------------------//
+    SMaterial * floor_material = new SMaterial();
+    ITexture* floorTexture= driver->getTexture("Textures/floor.png");
+    if(floor_material)
+    {
+        // floor will be affected by ambient light
+        floor_material->AmbientColor  = SColor(255, 110, 110, 110);
+        floor_material->DiffuseColor  = SColor(255, 0, 0, 0);
+        floor_material->SpecularColor = SColor(255, 0, 0, 0);
+        // and emit gray-ish color
+        floor_material->EmissiveColor = SColor(255, 110, 110, 110);
+        floor_material->ColorMaterial = ECM_NONE;
+        floor_material->setTexture(0,floorTexture);
+    }
+    // add floor for FPS like rendering
+    // for basic testing only
+    IAnimatedMesh * movingplane= smgr->addHillPlaneMesh(
+        // mesh name
+        "floor", 
+        // tileSize
+        dimension2d<f32>(15, 15),
+        // tilecount
+        dimension2d<u32>(40, 40),
+        // material
+        floor_material,
+        // hillheight
+        0.0f,
+        // hill count
+        dimension2df(0.0f,0.0f),
+        // texture repeat count
+        dimension2df(40.0f,40.0f)
+        );
+    IAnimatedMeshSceneNode *floor=smgr->addAnimatedMeshSceneNode(movingplane);
+
+    // set global lighting (weak gray)
+    smgr->setAmbientLight(SColorf(0.1f,0.1f,0.1f,0.1f));
+
+    // add sun light lighting (diffusive light)
+    ILightSceneNode* sun_light = smgr->addLightSceneNode(
+        //parent node
+        0, 
+        //scenemanager
+        vector3df(0,10000,0), 
+        // sun color
+        SColorf(0.906f,0.882f,0.488f),
+        // sun position
+        15000.0f,
+
+        -1 );
+    // add sun sphere for view
+    ISceneNode * sun_node = smgr->addSphereSceneNode();
+    if(sun_node)
+    {
+        // put sun up high
+        sun_node->setPosition(vector3df(0,10000,0));
+        // scale sun large
+        sun_node->setScale(vector3df(100,100,100));
+        // sun is not affected by any lighting
+        sun_node->setMaterialFlag(EMF_LIGHTING,false);
+    }
+
+
+    SKeyMap keyMap[8];
+
+    keyMap[0].Action = EKA_MOVE_FORWARD;
+    keyMap[0].KeyCode = KEY_UP;
+    keyMap[1].Action = EKA_MOVE_FORWARD;
+    keyMap[1].KeyCode = KEY_KEY_W;
+
+    keyMap[2].Action = EKA_MOVE_BACKWARD;
+    keyMap[2].KeyCode = KEY_DOWN;
+    keyMap[3].Action = EKA_MOVE_BACKWARD;
+    keyMap[3].KeyCode = KEY_KEY_S;
+
+    keyMap[4].Action = EKA_STRAFE_LEFT;
+    keyMap[4].KeyCode = KEY_LEFT;
+    keyMap[5].Action = EKA_STRAFE_LEFT;
+    keyMap[5].KeyCode = KEY_KEY_A;
+
+    keyMap[6].Action = EKA_STRAFE_RIGHT;
+    keyMap[6].KeyCode = KEY_RIGHT;
+    keyMap[7].Action = EKA_STRAFE_RIGHT;
+    keyMap[7].KeyCode = KEY_KEY_D;
+
+    ICameraSceneNode* rc = smgr->addCameraSceneNodeFPS(
+        // parent node : default null
+        0, 
+        // rotation speed : default 100
+        30,
+        // movement speed : default 0.5
+        0.03, 
+        // id
+        -1,
+        // key mapping input
+        keyMap,
+        // key mapping size
+        8
+        );
+
+    // set camera position
+    rc->setPosition(vector3df(0,5,0));
+    // sets far value of camera
+    // extended for sun support
+    rc->setFarValue(20000.0f);
+    // hides mouse
+    device->getCursorControl()->setVisible(false);
+
+    // set prompt window params
+    // window pos / size
+    px = 150;
+    py = 100;
+    pw = 600;
+    window_offset = 20;
+
+    // margin for all box(borders)
+    boxMargin = 10;
+
+    combo_box_x  = boxMargin;
+    combo_box_y = window_offset+boxMargin;
+    combo_box_w = pw - 2*boxMargin;
+    combo_box_h = 20;
+
+    combo_x = boxMargin;
+    combo_y = combo_box_y + combo_box_h;
+    combo_w = pw - 2*boxMargin;
+    combo_h = 20;
+
+    name_x = boxMargin;
+    name_y = combo_y+combo_h+boxMargin;
+    name_w = pw - 2*boxMargin; 
+    name_h = 20;
+
+    nameInputMargin = 5;
+    nameText_w_offset = 80;
+
+    boxInputMargin = 5;
+    boxText_h_margin = 10;
+    boxText_w_margin = 100;
+    boxText_w_offset = 10;
+    boxInputText_h = 20;
+    boxInputText_w = pw - 2*boxMargin - boxText_w_margin;
+    boxInputText_w /= 3;
+
+    dof_x = boxMargin;
+    dof_y = name_y + name_h + boxMargin;
+    dof_w = pw - 2*boxMargin;
+    dof_h = boxInputText_h * 2 + 
+        boxText_h_margin + boxMargin*2;
+    
+
+    boxWidth = pw - 2*(boxInputMargin + boxMargin);
+    boxInputText_w_offset = 40;
+
+    advSetting_y = dof_y + dof_h + boxMargin; 
+    advSetting_h = 200;
+    buttons_y = advSetting_y + advSetting_h + boxMargin;
+    buttons_h = 40;
+
+    ph = buttons_y + buttons_h;
+}
+
 void SimGUI::draw()
 {
-    if(!guienv)
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    ISceneManager * smgr = device->getSceneManager();
+    IVideoDriver * driver = device->getVideoDriver();
+    if(device->run())
+    {
+        if(device->isWindowActive())
+        {
+            driver->beginScene(true,true,SColor(255,200,200,200));
+            driver->setViewPort(rect<s32>(0,20,width_r,height_r));
+            smgr->drawAll();
+            driver->setViewPort(rect<s32>(0,0,width,height));
+            guienv->drawAll();
+            driver->endScene();
+        }
+        else
+            device->yield();
+    }
+}
+
+bool SimGUI::isRunning()
+{
+    return device->run();
+}
+
+void SimGUI::end()
+{
+    device->drop();
+}
+
+void SimGUI::addEntitySceneNode(EntityType type, SimEntity * obj)
+{
+    if(!obj)
         return;
-    guienv->drawAll();
-}
+    EntityMesh newEntityMesh;
+    ISceneManager* smgr = device->getSceneManager();
+    vector3df pos;
+    vector3df rot;
+    Position ePos = obj->getPosition();
+    Rotation eRot = obj->getRotation();
+    pos.X = ePos.X;
+    pos.Y = ePos.Y;
+    pos.Z = ePos.Z;
+    
+    rot.X = eRot.Pitch;
+    rot.Y = eRot.Roll;
+    rot.Z = eRot.Yaw;
 
-void SimGUI::promptAddEntity(u32 entityType)
+    newEntityMesh.obj = obj;
+    std::string pathname = obj->getMeshPath();
+    irr::core::string<fschar_t> pname = pathname.c_str();
+    if(pathname != "")
+    {
+        IAnimatedMesh* mesh = smgr->getMesh(pname);
+        newEntityMesh.mesh = smgr->addMeshSceneNode(
+            // mesh
+            mesh->getMesh(0),
+            //parent scene node
+            0,
+            // id
+            -1,
+            // position
+            pos,
+            // rotation
+            rot
+            // scale by default
+            );
+    }
+    else
+        newEntityMesh.mesh = 0;
+    entityMeshVector.push_back(newEntityMesh);
+}
+void SimGUI::removeEntitySceneNode(SimEntity * obj)
 {
-    // creates GUI element of prompt window
-    setAddPromptWindow(240,100,360,360);
-
-    IGUIComboBox* combo = (IGUIComboBox*)(guienv->getRootGUIElement()
-        ->getElementFromId(
-            // id of gui element
-            GUI_ID_ADD_ENTITY_WINDOW_COMBO,
-            // search children
-            true));
-    // append sub entity for each entity type
-    switch(entityType)
-    {
-    case ENTITY_TYPE_ROBOT:
-        combo->addItem(L"-",entityType);
-        combo->addItem(L"Quadrotor",SUB_ENTITY_ROBOT_QUAD);
-        combo->addItem(L"Ground Robot",SUB_ENTITY_ROBOT_GROUND);
-        break;
-    case ENTITY_TYPE_SENSOR:
-        combo->addItem(L"-",entityType);
-        combo->addItem(L"Monocular Camera",SUB_ENTITY_SENSOR_MONO_CAM);
-        combo->addItem(L"Depth Camera",SUB_ENTITY_SENSOR_DEPTH_CAM);
-        break;
-    case ENTITY_TYPE_ENVIRONMENT:
-        combo->addItem(L"-",entityType);
-        combo->addItem(L"April Tag",SUB_ENTITY_ENVIRONMENT_APRIL);
-        combo->addItem(L"Cube",SUB_ENTITY_ENVIRONMENT_CUBE);
-        combo->addItem(L"Sphere",SUB_ENTITY_ENVIRONMENT_SPHERE);
-        break;
-    default:
-        break;
-    }
-
+    if(!obj)
+        return;
+    entityMeshVector.erase(
+        std::remove_if(entityMeshVector.begin(),
+                       entityMeshVector.end(),
+                       checkEntityPointer(obj)),
+        entityMeshVector.end());
 }
 
-void SimGUI::promptEditEntity(u32 entityType)
-{
-    // creates GUI element of prompt window
-    setEditPromptWindow(240,100,360,360);
-    vector<SimEntity*>* entityVector = engine->getEntityVector();
-    IGUIElement * rootelem = guienv->getRootGUIElement();
-
-    // clear combo box and re fill them with entity names
-    IGUIElement * cbb = rootelem->getElementFromId(
-        GUI_ID_EDIT_ENTITY_WINDOW_COMBO,true);
-    IGUIComboBox * cb = (IGUIComboBox*) cbb;
-    cb->clear();
-    cb->addItem(L"-",entityType);
-
-    vector<SimEntity*>::iterator it;
-    int counter = 0;
-    for(it = entityVector->begin(); it!= entityVector->end(); ++it)
-    {
-
-    switch(entityType)
-    {
-    case ENTITY_TYPE_ROBOT:
-    {
-        //cout<< typeid(*it).name()<<endl;
-        std::wstring eName;
-        std::string eN;
-        eN= typeid(*it).name();
-        eName = std::wstring(eN.begin(),eN.end());
-        rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_WINDOW,true)->setText(eName.c_str());
-        if(eName.compare(L"P9SimEntity") == 0)
-            cb->addItem((*it)->getName().c_str(),counter);
-        break;
-    }
-    case ENTITY_TYPE_SENSOR:
-        cb->addItem((*it)->getName().c_str(),counter);
-        break;
-    case ENTITY_TYPE_ENVIRONMENT:
-        cb->addItem((*it)->getName().c_str(),counter);
-        break;
-    default:
-        break;
-    }
-        counter++;
-    }
-
-
-}
 
 SimEntity* SimGUI::createEntityObject()
 {
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
     IGUIElement * rootelem = guienv->getRootGUIElement();
-    ISceneManager* smgr = engine->getDevice()->getSceneManager();
-    if(!rootelem->getElementFromId(GUI_ID_ADD_ENTITY_WINDOW,true))
+    ISceneManager* smgr = device->getSceneManager();
+    if(!rootelem->getElementFromId(GUI_ID_ENTITY_PROMPT_WINDOW,true))
         return 0;
     stringc str;    
     stringw name;
     f32 x,y,z,a,b,c;
-    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_X,true)
+    str = rootelem->getElementFromId(GUI_ID_ENTITY_PROMPT_POS_X,true)
         ->getText();
     x = (f32)atof(str.c_str());
-    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_Y,true)
+    str = rootelem->getElementFromId(GUI_ID_ENTITY_PROMPT_POS_Y,true)
         ->getText();
     y = (f32)atof(str.c_str());
-    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_Z,true)
+    str = rootelem->getElementFromId(GUI_ID_ENTITY_PROMPT_POS_Z,true)
         ->getText();
     z = (f32)atof(str.c_str());
-    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_A,true)
+    str = rootelem->getElementFromId(GUI_ID_ENTITY_PROMPT_ROT_A,true)
         ->getText();
     a = (f32)atof(str.c_str());
-    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_B,true)
+    str = rootelem->getElementFromId(GUI_ID_ENTITY_PROMPT_ROT_B,true)
         ->getText();
     b = (f32)atof(str.c_str());
-    str = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_C,true)
+    str = rootelem->getElementFromId(GUI_ID_ENTITY_PROMPT_ROT_C,true)
         ->getText();
     c = (f32)atof(str.c_str());
-    name = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_NAME,true)
+    name = rootelem->getElementFromId(GUI_ID_ENTITY_PROMPT_NAME,true)
         ->getText();
     IGUIComboBox * cb = (IGUIComboBox*)(rootelem->getElementFromId(
-                                            GUI_ID_ADD_ENTITY_WINDOW_COMBO,
+                                            GUI_ID_ENTITY_PROMPT_COMBO,
                                             true));
     u32 entityType = cb->getItemData(0);
     u32 subEntityType = cb->getItemData(cb->getSelected());
@@ -177,41 +388,31 @@ SimEntity* SimGUI::createEntityObject()
         {
         case SUB_ENTITY_ROBOT_QUAD:
         {
-            break;
+            return 0;
         }
         case SUB_ENTITY_ROBOT_GROUND:
         {
-            break;
+            return 0;
         }
         default:
-            break;
+            return 0;
         }
-        // SimEntity * newSimEntity = new SimEntity(x,y,z,a,b,c,name);
-        // return newSimEntity;
     }
     case ENTITY_TYPE_SENSOR:
     {
         switch(subEntityType)
         {
-        case SUB_ENTITY_SENSOR_MONO_CAM:
+        case SUB_ENTITY_SENSOR_CAM:
         {
-            SimMonocularCamera * monoCam =
-                new SimMonocularCamera(x,y,z,a,b,c,name);
-            monoCam->setMeshSceneNode(smgr,"Models/camera.obj");
-            return (SimEntity*) monoCam;
-        }
-        case SUB_ENTITY_SENSOR_DEPTH_CAM:
-        {
-            
-            break;
+            return 0;
         }
         default:
-            break;
+            return 0;
         }
     }
     case ENTITY_TYPE_ENVIRONMENT:
     {
-        break;
+        return 0;
     }
     default:
     {
@@ -225,43 +426,48 @@ SimEntity* SimGUI::createEntityObject()
 
 SimEntity* SimGUI::editEntityObject(SimEntity * obj)
 {
-    
     return obj;
 }
 
 bool SimGUI::checkEntityValid()
 {
-    IGUIElement * rootelem = guienv->getRootGUIElement();
-    stringw name;
-    if(rootelem->getElementFromId(GUI_ID_ADD_ENTITY_WINDOW,true))
-    {
-        name = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_NAME,true)
-            ->getText();
-    }
-    else if(rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_WINDOW,true))
-    {
-        name = rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_NAME,true)
-            ->getText();
-    }
-    else
-    {
-        return false;
-    }
-    // check name exists already
-    bool nameMatch = true;
-    vector<SimEntity*> * entityVector = engine->getEntityVector();
-    vector<SimEntity*>::iterator it;
-    for(it = entityVector->begin(); it != entityVector->end(); ++it)
-    {
-        if((*it)->getName() == name)
-            nameMatch = false;
-        nameMatch = nameMatch && true;
-    }
-    return nameMatch;
+    // IGUIEnvironment* guienv = device->getGUIEnvironment();
+    // IGUIElement * rootelem = guienv->getRootGUIElement();
+    // wstring name;
+    // if(rootelem->getElementFromId(GUI_ID_ADD_ENTITY_WINDOW,true))
+    // {
+    //     name = rootelem->getElementFromId(GUI_ID_ADD_ENTITY_NAME,true)
+    //         ->getText();
+    // }
+    // else if(rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_WINDOW,true))
+    // {
+    //     name = rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_NAME,true)
+    //         ->getText();
+    // }
+    // else
+    // {
+    //     return false;
+    // }
+    // // check name exists already
+    // bool nameMatch = true;
+    // vector<SimEntity*> * entityVector = engine->getEntityVector();
+    // vector<SimEntity*>::iterator it;
+    // for(it = entityVector->begin(); it != entityVector->end(); ++it)
+    // {
+    //     wstring eName;
+    //     std::string entityName;
+    //     eName = wstring(entityName.begin(),entityName.end()); 
+    //     if(eName == name)
+    //         nameMatch = false;
+    //     nameMatch = nameMatch && true;
+    // }
+    // return nameMatch;
+    return false;
 }
 
 void SimGUI::alertCreationFailure(const wchar_t* message)
 {
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
     IGUIWindow* window= guienv->addWindow(
         // window rectangle
         rect<s32>(
@@ -276,7 +482,7 @@ void SimGUI::alertCreationFailure(const wchar_t* message)
         // parent
         0,
         // id
-        GUI_ID_ADD_ENTITY_WINDOW);
+        GUI_ID_ENTITY_PROMPT_WINDOW);
     guienv->addStaticText(
         // text
         message,
@@ -306,364 +512,230 @@ void SimGUI::alertCreationFailure(const wchar_t* message)
         );
 }
 
-void SimGUI::setAddPromptWindowEnabled(bool enabled){
-    IGUIElement * rootelem = guienv->getRootGUIElement();
-    if(!rootelem->getElementFromId(GUI_ID_ADD_ENTITY_WINDOW,true))
-        return;
-    rootelem->getElementFromId(GUI_ID_ADD_ENTITY_CREATE_BUTTON,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_X,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_Y,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_ADD_ENTITY_POS_Z,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_A,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_B,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_ADD_ENTITY_ROT_C,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_ADD_ENTITY_NAME,true)
-        ->setEnabled(enabled);
-}
-
-void SimGUI::setEditPromptWindowEnabled(bool enabled){
-    IGUIElement * rootelem = guienv->getRootGUIElement();
-    if(!rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_WINDOW,true))
-        return;
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_REMOVE_BUTTON,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_CREATE_BUTTON,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_POS_X,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_POS_Y,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_POS_Z,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_ROT_A,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_ROT_B,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_ROT_C,true)
-        ->setEnabled(enabled);
-    rootelem->getElementFromId(GUI_ID_EDIT_ENTITY_NAME,true)
-        ->setEnabled(enabled);
-}
 //----------------------------------------------------------------------------//
 //                          Private Helper Functions
 //----------------------------------------------------------------------------//
 //                           Handles GUI positioning
 //----------------------------------------------------------------------------//
-
-void SimGUI::setAddPromptWindow(s32 x, s32 y, s32 w, s32 h)
+void SimGUI::promptWindow(s32 prompt, u32 entityType)
 {
-    s32 window_pos_x = x;
-    s32 window_pos_y = y;
-    s32 window_width = w;
-    s32 window_height = h;
-    // setup window
+    setPromptWindow();
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    IGUIElement * comboText = rootelem->getElementFromId(
+        GUI_ID_ENTITY_PROMPT_COMBO_TEXT,true);
+    IGUIComboBox* combo =
+        (IGUIComboBox*)(rootelem->getElementFromId(
+                            GUI_ID_ENTITY_PROMPT_COMBO,
+                            true));
+    vector<SimEntity*>* eVector = engine->getEntityVector();
+    vector<SimEntity*>::iterator it;
+    int counter = 0;
+
+    switch(prompt)
+    {
+    case ADD_ENTITY_PROMPT:
+    {
+        // append sub entity for each entity type
+        switch(entityType)
+        {
+        case ENTITY_TYPE_ROBOT:
+            comboText->setText(L"Choose Robot");
+            combo->addItem(L"Quadrotor",SUB_ENTITY_ROBOT_QUAD);
+            combo->addItem(L"Ground Robot",SUB_ENTITY_ROBOT_GROUND);
+            break;
+        case ENTITY_TYPE_SENSOR:
+            comboText->setText(L"Choose Sensor");
+            combo->addItem(L"Camera",SUB_ENTITY_SENSOR_CAM);
+            break;
+        case ENTITY_TYPE_ENVIRONMENT:
+            comboText->setText(L"Choose Entity");
+            combo->addItem(L"April Tag",SUB_ENTITY_ENVIRONMENT_APRIL);
+            combo->addItem(L"Cube",SUB_ENTITY_ENVIRONMENT_CUBE);
+            combo->addItem(L"Sphere",SUB_ENTITY_ENVIRONMENT_SPHERE);
+            break;
+        default:
+            break;
+        }
+    }
+    case EDIT_ENTITY_PROMPT:
+    {
+        switch(entityType)
+        {
+        case ENTITY_TYPE_ROBOT:
+        {
+            comboText->setText(L"Choose Robot by name to edit");
+
+            for(it = eVector->begin(); it!= eVector->end(); ++it)
+            {
+                std::wstring eName;
+                std::string eN;
+                eN= typeid(*it).name();
+                eName = std::wstring(eN.begin(),eN.end());
+                if(eName.compare(L"P8SimRobot") == 0)
+                {
+                    std::wstring enName;
+                    enName = std::wstring((*it)->getName().begin(),
+                                          (*it)->getName().end());
+                    combo->addItem(enName.c_str(),counter);
+                }
+            }
+        }
+            break;
+        case ENTITY_TYPE_SENSOR:
+        {
+            comboText->setText(L"Choose Sensor by name to edit");
+            for(it = eVector->begin(); it!= eVector->end(); ++it)
+            {
+                SimSensor* s = dynamic_cast<SimSensor*>(*it);
+                if(s)
+                {
+
+                    comboText->setText(L"Choose Sensor by name to ");
+                    std::wstring name;
+                    name = std::wstring((*it)->getName().begin(),
+                                        (*it)->getName().end());
+                    // combo->addItem(name.c_str(),counter);
+                    counter++;
+                }
+            }
+
+        }
+            break;
+        case ENTITY_TYPE_ENVIRONMENT:
+        {
+
+            comboText->setText(L"Choose Entity by name to edit");
+            for(it = eVector->begin(); it!= eVector->end(); ++it)
+            {
+                std::wstring eName;
+                std::string eN;
+                eN= typeid(*it).name();
+                eName = std::wstring(eN.begin(),eN.end());
+                if(eName.compare(L"P14SimEnvironment") == 0)
+                {
+                    std::wstring enName;
+                    enName = std::wstring((*it)->getName().begin(),
+                                          (*it)->getName().end());
+                    combo->addItem(enName.c_str(),counter);
+                }
+
+            }
+        }
+            break;
+        default:
+            break;
+        }
+    }
+    default:
+        break;
+    }
+
+//-------------------------------Buttons--------------------------------------//
+
+    //setup buttons create/close
+    // IGUIButton * createButton = guienv->addButton(
+    //     rect<s32>(
+
+    //         window_width/2 + 10,
+    //         310,
+    //         window_width/2+window_width/4-5,
+    //         350
+    //         ),
+    //     window,
+    //     GUI_ID_ADD_ENTITY_CREATE_BUTTON,
+    //     L"Create",
+    //     L"Creates entity with above parameters"
+    //     );
+    // IGUIButton * closeButton = guienv->addButton(
+    //     rect<s32>(
+    //         window_width/2+window_width/4+5,
+    //         310,
+    //         window_width-10,
+    //         350
+    //         ),
+    //     window,
+    //     GUI_ID_CLOSE_BUTTON,
+    //     L"Close",
+    //     L"Cancel and close window"
+    //     );
+}
+
+void SimGUI::setPromptWindow()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    s32 x = px;
+    s32 y = py;
+    s32 w = pw;
+    s32 h = ph;
+    // creates GUI element of prompt window
     IGUIWindow* window= guienv->addWindow(
         // window rectangle
         rect<s32>(
-            window_pos_x,
-            window_pos_y,
-            window_pos_x+window_width,
-            window_pos_y+window_height),
+            x,
+            y,
+            x+w,
+            y+h),
         // Modality
         true,
         // text
-        L"Add Entity",
+        L"",
         // parent
         0,
         // id
-        GUI_ID_ADD_ENTITY_WINDOW);
+        GUI_ID_ENTITY_PROMPT_WINDOW);
 
+//-----------------------------Combo box--------------------------------------//
     guienv->addStaticText(
-        // text
-        L"Select Object to add",
-        //
-        rect<s32>(10, 20, window_width-10, 40),
-        // border
-        false,
-        // textwrap to multi lines
-        true,
-        // parent
-        window,
-        // id
-        -1,
-        // background fill
-        false);
-
-    // add dropdown for choosing which sub-entity to add
-    IGUIComboBox* cb = guienv->addComboBox(
-        //rectangle
-        rect<s32> (10,40,window_width-10,60),
-        //parent
-        window,
-        //id
-        GUI_ID_ADD_ENTITY_WINDOW_COMBO);
-
-    
-
-    s32 boxWidth = (window_width-30);
-    // add text for coordinate/rotation inputs
-    IGUIStaticText* ic = guienv->addStaticText(
-        // text
-        L"Input Coordinates",
-        //
-        rect<s32>(10, 80, window_width-10, 150),
-        // border
-        true,
-        // textwrap to multi lines
-        true,
-        // parent
-        window,
-        // id
-        -1,
-        // background fill
-        false);
-
-    // add text for coordinate/rotation inputs
-    IGUIStaticText* ir = guienv->addStaticText(
-        // text
-        L"Input Rotation",
-        //
-        rect<s32>(10, 160, window_width-10, 230),
-        // border
-        true,
-        // textwrap to multi lines
-        true,
-        // parent
-        window,
-        // id
-        -1,
-        // background fill
-        false);
-
-
-    IGUIStaticText* sx = guienv->addStaticText(L"x:",
-                                               rect<s32>(
-                                                   5 + 10,
-                                                   40,
-                                                   5+(boxWidth/3),
-                                                   60),
-                                               false, true, ic);
-    IGUIStaticText* sy = guienv->addStaticText(L"y:",
-                                               rect<s32>(
-                                                   5+(boxWidth/3)+ 10,
-                                                   40,
-                                                   5+(boxWidth/3)*2,
-                                                   60),
-                                               false, true, ic);
-    IGUIStaticText* sz = guienv->addStaticText(L"z:",
-                                               rect<s32>(
-                                                   5+(boxWidth/3)*2 + 10,
-                                                   40,
-                                                   5+(boxWidth/3)*3,
-                                                   60),
-                                               false, true, ic);
-
-    guienv->addEditBox(
-        // text
-        L"0.0",
-        // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
-        //border
-        true,
-        // parent
-        sx,
-        // ID
-        GUI_ID_ADD_ENTITY_POS_X);
-
-    guienv->addEditBox(
-        // text
-        L"0.0",
-        // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
-        //border
-        true,
-        // parent
-        sy,
-        // ID
-        GUI_ID_ADD_ENTITY_POS_Y);
-
-    guienv->addEditBox(
-        // text
-        L"0.0",
-        // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
-        //border
-        true,
-        // parent
-        sz,
-        // ID
-        GUI_ID_ADD_ENTITY_POS_Z);
-
-    IGUIStaticText* sa = guienv->addStaticText(L"a:",
-                                               rect<s32>(
-                                                   5 + 10,
-                                                   40,
-                                                   5+(boxWidth/3),
-                                                   60),
-                                               false, true, ir);
-    IGUIStaticText* sb = guienv->addStaticText(L"b:",
-                                               rect<s32>(
-                                                   5+(boxWidth/3)+ 10,
-                                                   40,
-                                                   5+(boxWidth/3)*2,
-                                                   60),
-                                               false, true, ir);
-    IGUIStaticText* sc = guienv->addStaticText(L"c:",
-                                               rect<s32>(
-                                                   5+(boxWidth/3)*2 + 10,
-                                                   40,
-                                                   5+(boxWidth/3)*3,
-                                                   60),
-                                               false, true, ir);
-
-    guienv->addEditBox(
-        // text
-        L"0.0",
-        // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
-        //border
-        true,
-        // parent
-        sa,
-        // ID
-        GUI_ID_ADD_ENTITY_ROT_A);
-
-    guienv->addEditBox(
-        // text
-        L"0.0",
-        // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
-        //border
-        true,
-        // parent
-        sb,
-        // ID
-        GUI_ID_ADD_ENTITY_ROT_B);
-
-    guienv->addEditBox(
-        // text
-        L"0.0",
-        // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
-        //border
-        true,
-        // parent
-        sc,
-        // ID
-        GUI_ID_ADD_ENTITY_ROT_C);
-
-    IGUIStaticText * en = guienv->addStaticText(
-        L"Input Entity Name",
+        L"Text",
         rect<s32>(
-            10,
-            240,
-            window_width-10,
-            290),
-        true, true, window);
+            combo_box_x,
+            combo_box_y,
+            combo_box_x+ combo_box_w,
+            combo_box_y+combo_box_h),
+        false, true, window,
+        GUI_ID_ENTITY_PROMPT_COMBO_TEXT);
+
+    IGUIComboBox *  cb = guienv->addComboBox(
+        rect<s32>(
+            combo_x,
+            combo_y,
+            combo_x+combo_w,
+            combo_y+combo_h),
+        window,
+        GUI_ID_ENTITY_PROMPT_COMBO);
+//-----------------------------Entity Name------------------------------------//
+    // 
+    IGUIStaticText * en = guienv->addStaticText(
+        L"Name:",
+        rect<s32>(
+            boxMargin,
+            name_y,
+            boxMargin + name_w,
+            name_y+name_h),
+        false, true, window);
     guienv->addEditBox(
         // text
-        L"-",
+        L"",
         // rectangle
-        rect<s32>(20,20,(boxWidth)-20,40),
+        rect<s32>(nameText_w_offset + nameInputMargin,
+                  0,
+                  name_w - nameInputMargin,
+                  name_h),
         //border
         true,
         // parent
         en,
         // ID
-        GUI_ID_ADD_ENTITY_NAME);
+        GUI_ID_ENTITY_PROMPT_NAME);
 
-    //setup buttons create/close
-    IGUIButton * createButton = guienv->addButton(
-        rect<s32>(
-            window_width/2 + 10,
-            310,
-            window_width/2+window_width/4-5,
-            350
-            ),
-        window,
-        GUI_ID_ADD_ENTITY_CREATE_BUTTON,
-        L"Create",
-        L"Creates entity with above parameters"
-        );
-    IGUIButton * closeButton = guienv->addButton(
-        rect<s32>(
-            window_width/2+window_width/4+5,
-            310,
-            window_width-10,
-            350
-            ),
-        window,
-        GUI_ID_CLOSE_BUTTON,
-        L"Close",
-        L"Cancel and close window"
-        );
-    // disables all input until user selects sub entity
-    setAddPromptWindowEnabled(false);
-}
-void SimGUI::setEditPromptWindow(s32 x, s32 y, s32 w, s32 h)
-{
-    s32 window_pos_x = x;
-    s32 window_pos_y = y;
-    s32 window_width = w;
-    s32 window_height = h;
-
-    // setup window
-    IGUIWindow* window= guienv->addWindow(
-        // window rectangle
-        rect<s32>(
-            window_pos_x,
-            window_pos_y,
-            window_pos_x+window_width,
-            window_pos_y+window_height),
-        // Modality
-        true,
-        // text
-        L"Edit Entity",
-        // parent
-        0,
-        // id
-        GUI_ID_EDIT_ENTITY_WINDOW);
-
-    guienv->addStaticText(
-        // text
-        L"Select Object to Edit",
-        //
-        rect<s32>(10, 20, window_width-10, 40),
-        // border
-        false,
-        // textwrap to multi lines
-        true,
-        // parent
-        window,
-        // id
-        -1,
-        // background fill
-        false);
-
-    // add dropdown for choosing which sub-entity to add
-    IGUIComboBox* cb = guienv->addComboBox(
-        //rectangle
-        rect<s32> (10,40,window_width-10,60),
-        //parent
-        window,
-        //id
-        GUI_ID_EDIT_ENTITY_WINDOW_COMBO);
-
-    s32 boxWidth = (window_width-30);
-
+//-----------------------------Degree of Freedoms-----------------------------//
     // add text for coordinate/rotation inputs
-    IGUIStaticText* ic = guienv->addStaticText(
+    IGUIStaticText* dof_box = guienv->addStaticText(
         // text
-        L"Edit Coordinates",
+        L"",
         //
-        rect<s32>(10, 80, window_width-10, 150),
+        rect<s32>(boxMargin, dof_y, w-boxMargin, dof_y+dof_h),
         // border
         true,
         // textwrap to multi lines
@@ -675,206 +747,177 @@ void SimGUI::setEditPromptWindow(s32 x, s32 y, s32 w, s32 h)
         // background fill
         false);
 
-    // add text for coordinate/rotation inputs
-    IGUIStaticText* ir = guienv->addStaticText(
-        // text
-        L"Edit Rotation",
-        //
-        rect<s32>(10, 160, window_width-10, 230),
-        // border
-        true,
-        // textwrap to multi lines
-        true,
-        // parent
-        window,
-        // id
-        -1,
-        // background fill
-        false);
-
-
-    IGUIStaticText* sx = guienv->addStaticText(L"x:",
-                                               rect<s32>(
-                                                   5 + 10,
-                                                   40,
-                                                   5+(boxWidth/3),
-                                                   60),
-                                               false, true, ic);
-    IGUIStaticText* sy = guienv->addStaticText(L"y:",
-                                               rect<s32>(
-                                                   5+(boxWidth/3)+ 10,
-                                                   40,
-                                                   5+(boxWidth/3)*2,
-                                                   60),
-                                               false, true, ic);
-    IGUIStaticText* sz = guienv->addStaticText(L"z:",
-                                               rect<s32>(
-                                                   5+(boxWidth/3)*2 + 10,
-                                                   40,
-                                                   5+(boxWidth/3)*3,
-                                                   60),
-                                               false, true, ic);
+    IGUIStaticText* position = guienv->
+        addStaticText(L"Position",
+                      rect<s32>(
+                          boxMargin,
+                          boxMargin,
+                          boxText_w_margin,
+                          boxMargin + boxInputText_h),
+                      false, true, dof_box);
+    IGUIStaticText* sx = guienv->
+        addStaticText(L"x:",
+                      rect<s32>(
+                          boxMargin + boxText_w_margin,
+                          boxMargin,
+                          boxMargin + (boxInputText_w) + boxText_w_margin,
+                          boxMargin + boxInputText_h),
+                      false, true, dof_box);
+    IGUIStaticText* sy = guienv->
+        addStaticText(L"y:",
+                      rect<s32>(
+                          boxText_w_margin + boxMargin + (boxInputText_w),
+                          boxMargin,
+                          boxText_w_margin + boxMargin + 2*(boxInputText_w),
+                          boxMargin + boxInputText_h),
+                      false, true, dof_box);
+    IGUIStaticText* sz = guienv->
+        addStaticText(L"z:",
+                      rect<s32>(
+                          boxText_w_margin + boxMargin + 2*(boxInputText_w),
+                          boxMargin,
+                          boxText_w_margin + boxMargin + 3*(boxInputText_w),
+                          boxMargin + boxInputText_h),
+                      false, true, dof_box);
 
     guienv->addEditBox(
         // text
-        L"",
+        L"0.0",
         // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
+        rect<s32>(boxInputText_w_offset,
+                  0,
+                  (boxInputText_w)-20,
+                  20),
         //border
         true,
         // parent
         sx,
         // ID
-        GUI_ID_EDIT_ENTITY_POS_X);
+        GUI_ID_ENTITY_PROMPT_POS_X);
 
     guienv->addEditBox(
         // text
-        L"",
+        L"0.0",
         // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
+        rect<s32>(boxInputText_w_offset,
+                  0,
+                  (boxInputText_w)-20,
+                  20),
         //border
         true,
         // parent
         sy,
         // ID
-        GUI_ID_EDIT_ENTITY_POS_Y);
+        GUI_ID_ENTITY_PROMPT_POS_Y);
 
     guienv->addEditBox(
         // text
-        L"",
+        L"0.0",
         // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
+        rect<s32>(boxInputText_w_offset,
+                  0,
+                  (boxInputText_w)-20,
+                  20),
         //border
         true,
         // parent
         sz,
         // ID
-        GUI_ID_EDIT_ENTITY_POS_Z);
+        GUI_ID_ENTITY_PROMPT_POS_Z);
 
-    IGUIStaticText* sa = guienv->addStaticText(L"a:",
-                                               rect<s32>(
-                                                   5 + 10,
-                                                   40,
-                                                   5+(boxWidth/3),
-                                                   60),
-                                               false, true, ir);
-    IGUIStaticText* sb = guienv->addStaticText(L"b:",
-                                               rect<s32>(
-                                                   5+(boxWidth/3)+ 10,
-                                                   40,
-                                                   5+(boxWidth/3)*2,
-                                                   60),
-                                               false, true, ir);
-    IGUIStaticText* sc = guienv->addStaticText(L"c:",
-                                               rect<s32>(
-                                                   5+(boxWidth/3)*2 + 10,
-                                                   40,
-                                                   5+(boxWidth/3)*3,
-                                                   60),
-                                               false, true, ir);
+    IGUIStaticText* rotation= guienv->
+        addStaticText(L"Rotation",
+                      rect<s32>(
+                          boxMargin,
+                          boxMargin+ boxText_h_margin + boxInputText_h,
+                          boxText_w_margin,
+                          boxMargin + boxText_h_margin + boxInputText_h*2),
+                      false, true, dof_box);
+    IGUIStaticText* sa = guienv->
+        addStaticText(L"pitch:",
+                      rect<s32>(
+                          boxText_w_margin + boxMargin,
+                          boxMargin+ boxText_h_margin + boxInputText_h,
+                          boxText_w_margin + boxMargin + (boxInputText_w),
+                          boxMargin + boxText_h_margin + boxInputText_h*2),
+                      false, true, dof_box);
+    IGUIStaticText* sb = guienv->
+        addStaticText(L"roll:",
+                      rect<s32>(
+                          boxText_w_margin + boxMargin + (boxInputText_w),
+                          boxMargin + boxText_h_margin + boxInputText_h,
+                          boxText_w_margin + boxMargin + 2*(boxInputText_w),
+                          boxMargin + boxText_h_margin + boxInputText_h*2),
+                      false, true, dof_box);
+    IGUIStaticText* sc = guienv->
+        addStaticText(L"yaw:",
+                      rect<s32>(
+                          boxText_w_margin + boxMargin + 2*(boxInputText_w),
+                          boxMargin + boxText_h_margin + boxInputText_h,
+                          boxText_w_margin + boxMargin + 3*(boxInputText_w),
+                          boxMargin+ boxText_h_margin + boxInputText_h*2),
+                      false, true, dof_box);
 
     guienv->addEditBox(
         // text
-        L"",
+        L"0.0",
         // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
+        rect<s32>(boxInputText_w_offset,
+                  0,
+                  (boxInputText_w)-20,
+                  20),
         //border
         true,
         // parent
         sa,
         // ID
-        GUI_ID_EDIT_ENTITY_ROT_A);
+        GUI_ID_ENTITY_PROMPT_ROT_A);
 
     guienv->addEditBox(
         // text
-        L"",
+        L"0.0",
         // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
+        rect<s32>(boxInputText_w_offset,
+                  0,
+                  (boxInputText_w)-20,
+                  20),
         //border
         true,
         // parent
         sb,
         // ID
-        GUI_ID_EDIT_ENTITY_ROT_B);
+        GUI_ID_ENTITY_PROMPT_ROT_B);
 
     guienv->addEditBox(
         // text
-        L"",
+        L"0.0",
         // rectangle
-        rect<s32>(20,0,(boxWidth/3)-20,20),
+        rect<s32>(boxInputText_w_offset,
+                  0,
+                  (boxInputText_w)-20,
+                  20),
         //border
         true,
         // parent
         sc,
         // ID
-        GUI_ID_EDIT_ENTITY_ROT_C);
+        GUI_ID_ENTITY_PROMPT_ROT_C);
 
-    IGUIStaticText * en = guienv->addStaticText(
-        L"Entity Name",
-        rect<s32>(
-            10,
-            240,
-            window_width-10,
-            290),
-        true, true, window);
-    guienv->addEditBox(
-        // text
-        L"",
-        // rectangle
-        rect<s32>(20,20,(boxWidth)-20,40),
-        //border
-        true,
-        // parent
-        en,
-        // ID
-        GUI_ID_EDIT_ENTITY_NAME);
-
-    //setup buttons create/close
-
-    IGUIButton * deleteButton = guienv->addButton(
-        rect<s32>(
-            window_width/2 -window_width/4+15,
-            310,
-            window_width/2,
-            350
-            ),
-        window,
-        GUI_ID_EDIT_ENTITY_REMOVE_BUTTON,
-        L"Delete",
-        L"Delete selected entity"
-        );
-
-    IGUIButton * createButton = guienv->addButton(
-        rect<s32>(
-            window_width/2 + 10,
-            310,
-            window_width/2+window_width/4-5,
-            350
-            ),
-        window,
-        GUI_ID_EDIT_ENTITY_CREATE_BUTTON,
-        L"Set",
-        L"Sets selected entity with above parameters"
-        );
-    IGUIButton * closeButton = guienv->addButton(
-        rect<s32>(
-            window_width/2+window_width/4+5,
-            310,
-            window_width-10,
-            350
-            ),
-        window,
-        GUI_ID_CLOSE_BUTTON,
-        L"Close",
-        L"Cancel and close window"
-        );
-    
-    // disable all inputs until user selects object
-    setEditPromptWindowEnabled(false);
-
+//-------------------------------Advanced Options-----------------------------//
+    IGUIStaticText * adv_box = guienv->
+        addStaticText(L"Advanced Options",
+                      rect<s32>(
+                          boxMargin,
+                          advSetting_y,
+                          w - boxMargin,
+                          advSetting_y + advSetting_h),
+                      true, true, window,
+                      GUI_ID_ENTITY_PROMPT_ADVANCED_BOX);
 }
+
 void SimGUI::setContextMenu()
 {
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
     // add context menu(toolbar menu)
     IGUIContextMenu * cM = guienv->addMenu();
 

@@ -1,26 +1,24 @@
 /*============================================================================
  * @author: Jae Yong Lee
- * @file: simSensor.h
+ * @file: simRobot.h
  * @version:  
  * @summary:
- *      Declaration file for simEntity Sensor object
+ *      Declaration file for simEntity Robot object
  *
  *============================================================================*/
-
-
 //----------------------------------------------------------------------------//
 //                                INCLUDE GUARDS
 //----------------------------------------------------------------------------//
-#ifndef _SIM_SENSOR_H_
-#define _SIM_SENSOR_H_
+#ifndef _SIM_ROBOT_H_
+#define _SIM_ROBOT_H_
 
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include <algorithm>
-#include <vector>
+#include <algorithm> 
+#include <vector> 
 #include "simEntity.h"
-#include "simRobot.h"
+#include "simSensor.h"
 
 //----------------------------------------------------------------------------//
 //                                  Namespaces
@@ -35,64 +33,63 @@ using namespace std;
 //                               Class Declaration
 //----------------------------------------------------------------------------//
 
-class SimRobot;
-class SimSensor : public SimEntity
+class SimSensor;
+class SimRobot: public SimEntity
 {
 public:
     /**
      * Default Constructor
      * Initialize Sensor with default parameters
      */
-    SimSensor(std::string _name,
-              double x, double y, double z,
-              double a, double b, double c);
+    SimRobot(std::string _name,
+             double x, double y, double z,
+             double a, double b, double c);
 
     /**
-     * Default Constructor with mesh path
+     * Default Constructor
      * Initialize Sensor with default parameters
      */
-    SimSensor(std::string _name,
-              double x, double y, double z,
-              double a, double b, double c,
-              std::string _meshPath);
+    SimRobot(std::string _name,
+             double x, double y, double z,
+             double a, double b, double c,
+             std::string _meshPath);
 
     /**
-     * Callback function when removing entity is called
-     * All robots that has this sensor will remove this sensor
+     * Callback function when remove entity is called
+     * All sensors will be removed from this robot
      */
     virtual void removeCallback();
 
     /**
-     * adds a robot entity that added this sensor entity to vector 
-     * @param SimRobot* - robot that attached this sensor
+     * Adds Sensor to robot
+     * @param SimSensor* - pointer to sensor object to add
      * @return None
      */
-    void addAttachedRobot(SimRobot * obj);
-
-
+    void addSensor(SimSensor* obj);
+    
     /**
-     * removes robot entity that added this sensor entity to vector
-     * @param SimRobot* - robot that removed this sensor
+     * Remove Sensor to robot
+     * @param SimSensor* - pointer to sensor object to remove 
      * @return None
      */
-    void removeAttachedRobot(SimRobot * obj);
+    void removeSensor(SimSensor* obj);
+
     
     /**
      * Get sensor vector pointer attached to robot
      * @return vector<SimSensor*>* - pointer to vector
      */
-    vector<SimRobot*>* getRobotVector(){return &robotVector;}; 
-    
+    vector<SimSensor*>* getSensorVector(){return &sensorVector;}; 
     /**
      * Estimates sensor's new position
      * This is pure virtual function and needs to be overridden!
      * @param None
      * @return None
      */
-    virtual void estimate() = 0;
+    //virtual void estimate() = 0;
     
 private:
-    vector<SimRobot*> robotVector;
+    vector<SimSensor*> sensorVector;
 
 
 };

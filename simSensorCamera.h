@@ -1,6 +1,6 @@
 /*============================================================================
  * @author: Jae Yong Lee
- * @file: simSensorMonocularCamera.h
+ * @file: simSensorCamera.h
  * @version:  
  * @summary:
  *      Header file for monocular sensor object in simulation
@@ -9,27 +9,17 @@
 //----------------------------------------------------------------------------//
 //                                INCLUDE GUARDS
 //----------------------------------------------------------------------------//
-#ifndef _SIM_SENSOR_MONO_CAM_H_
-#define _SIM_SENSOR_MONO_CAM_H_
+#ifndef _SIM_SENSOR_CAM_H_
+#define _SIM_SENSOR_CAM_H_
 
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
 #include "simSensor.h"
-#include <irrlicht.h>
-#include <vector>
-
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
 using namespace std;
-using namespace irr;
-using namespace core;
-using namespace scene;
-using namespace video;
-using namespace io;
-using namespace gui;
-
 //----------------------------------------------------------------------------//
 //                                Global Variables
 //----------------------------------------------------------------------------//
@@ -38,20 +28,33 @@ using namespace gui;
 //                               Class Declaration
 //----------------------------------------------------------------------------//
 
-class SimMonocularCamera : public SimSensor
+class SimCamera : public SimSensor
 {
 public:
     /**
      * Default Constructor
-     * Initialized monocular camera
+     * Initialized pinhole model camera
      */
-    SimMonocularCamera(double x, double y, double z,
-                       double a, double b, double c, stringw p_name);
+    SimCamera(std::string _name,
+              double x, double y, double z,
+              double a, double b, double c,
+              double fx, double fy, double fl);
+
+    /**
+     * Default Constructor with mesh parameter
+     * Initialized pinhole model camera
+     */
+    SimCamera(std::string _name,
+              double x, double y, double z,
+              double a, double b, double c,
+              std::string _meshPath,
+              double fx, double fy, double fl);
+
+    int foo(){return 50;};
 
     virtual void estimate(){return ;};
 
 private:
-
 };
 
 #endif

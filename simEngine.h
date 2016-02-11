@@ -16,26 +16,21 @@
 //                                   Includes
 //----------------------------------------------------------------------------//
 #include <vector>
+#include <iostream>
+#include <algorithm>
+#include <string>
 #include "simGUI.h"
 #include "simPhysics.h"
 #include "simEntity.h"
-#include <irrlicht.h>
+#include "enumerations.h"
 
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
 using namespace std;
-using namespace irr;
-using namespace core;
-using namespace scene;
-using namespace video;
-using namespace io;
-using namespace gui;
-
 //----------------------------------------------------------------------------//
 //                                Global Variables
 //----------------------------------------------------------------------------//
-
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
@@ -47,17 +42,10 @@ public:
     /**
      * Constructor
      * Initialize Irrlicht, Entities, and physics
-     * @param wchar_t text - window title
-     * @param u32 m_width - window width
-     * @param u32 m_height - window height 
-     * @param u32 m_width_r - rendering width
-     * @param u32 m_height_r - rendering height
-     * @param bool fullscreeen - True to run on full screen mode
+     * @param bool - if true, setup GUI
      */
-    SimEngine(const wchar_t * text,
-              u32 m_width, u32 m_height, 
-              u32 m_width_r, u32 m_height_r, 
-              bool fullscreen);
+    SimEngine(bool enableGUI);
+
     /**
      * sets up simGUI
      * @param None
@@ -66,44 +54,36 @@ public:
     void setupGUI();
 
     /**
-     * sets up FPS camera
-     * @param None
-     * @return None
-     */
-    void setupRenderingCamera();
-    
-    /**
      * Runs Simulation with physics, environment, and 3D rendering
      */
     void run();
-    
-    /**
-     * fetch Irrlicht device pointer
-     * @return pointer to Irrlicht device object
-     */
-    IrrlichtDevice * getDevice(){return device;};
 
     /**
      * fetch SimGUI object pointer
      */
     SimGUI * getSimGUI(){return simGUI;};
 
-
     /**
      * fetch pointer to entity vector
-     * @param 
-     * @see 
-     * @return 
+     * @return pointer to vector of enitty pointers
      */
     vector<SimEntity*> * getEntityVector(){return &simEntityVector;};
     
     /**
+     * fetch pointer to entity searched by name
+     * @param string - name
+     * @return SimEntity * - pointer to entity object
+     */
+    SimEntity* getEntityByName(std::string name);
+
+    /**
      * adds entity to rendering
+     * @param EntityType - type of entity object to add
      * @param SimEntity - entity object to add
      * @see SimEntity
      * @return None
      */
-    void addEntity(SimEntity * obj);
+    void addEntity(EntityType type, SimEntity * obj);
 
     /**
      * removes entity object from rendering
@@ -114,17 +94,16 @@ public:
     void removeEntity(SimEntity * obj);
 
 private:
-    // pointer to Irrliche device for drawing entities and gui
-    IrrlichtDevice * device;
-
-    // window width/height
-    u32 width;
-    u32 height;
-
-    // rendering width/height
-    u32 width_r;
-    u32 height_r;
-
+    //functor for find_if predicate
+    struct checkEntityName 
+    {
+        checkEntityName(const std::string name) : name_holder(name) {}
+        std::string name_holder;
+        bool operator()(SimEntity* obj)
+        {
+            return obj->getName().compare(name_holder) == 0;
+        }
+    };
     // Pointer to SimGUI object that handles irrlicht GUI design
     SimGUI * simGUI;
 

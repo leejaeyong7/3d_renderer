@@ -16,19 +16,12 @@
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include <irrlicht.h>
 #include <vector>
 
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
 using namespace std;
-using namespace irr;
-using namespace core;
-using namespace scene;
-using namespace video;
-using namespace io;
-using namespace gui;
 
 //----------------------------------------------------------------------------//
 //                                Global Variables
@@ -39,6 +32,7 @@ using namespace gui;
 //----------------------------------------------------------------------------//
 class SimPhysics
 {
+public:
     SimPhysics(){test = 1;};
 private:
     int test;

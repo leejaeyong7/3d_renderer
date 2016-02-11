@@ -13,30 +13,42 @@
 //----------------------------------------------------------------------------//
 //                               DEFINITION
 //----------------------------------------------------------------------------//
-SimSensor::SimSensor(double x, double y, double z,
-                     double a, double b, double c, stringw p_name)
-    :SimEntity(x,y,z,a,b,c,p_name)
+SimSensor::SimSensor(string _name,
+                     double x, double y, double z,
+                     double a, double b, double c)
+    :SimEntity(_name,x,y,z,a,b,c)
 {
 
 }
 
-
-void SimSensor::setMeshSceneNode(ISceneManager* smgr, const path &filename)
+SimSensor::SimSensor(string _name,
+                     double x, double y, double z,
+                     double a, double b, double c,
+                     string _meshPath)
+    :SimEntity(_name,x,y,z,a,b,c,_meshPath)
 {
-    IAnimatedMesh* mesh = smgr->getMesh(filename);
-    SimEntity::setMeshSceneNode(smgr->addMeshSceneNode(
-                         // mesh
-                         mesh->getMesh(0),
-                         //parent scene node
-                         0,
-                         // id
-                         -1,
-                         // position
-                         getPosition(),
-                         // rotation
-                         getRotation()
-                         // scale by default
-                         )
-        );
 
+}
+
+void SimSensor::addAttachedRobot(SimRobot * obj)
+{
+    robotVector.push_back(obj); 
+}
+
+void SimSensor::removeAttachedRobot(SimRobot * obj)
+{
+    robotVector.erase(
+        std::remove(robotVector.begin(),
+                    robotVector.end(),
+                    obj),
+        robotVector.end());
+}
+void SimSensor::removeCallback()
+{
+    vector<SimRobot*>::iterator it;
+    for(it = robotVector.begin() ; it < robotVector.end(); ++it)
+    {
+        removeAttachedRobot(*it);
+        (*it)->removeSensor(this);
+    }
 }

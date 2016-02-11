@@ -16,8 +16,7 @@
 //----------------------------------------------------------------------------//
 bool EventHandler::OnEvent(const SEvent & event)
 {
-    IrrlichtDevice * device = engine->getDevice();
-    SimGUI* simGUI = engine->getSimGUI(); 
+    IrrlichtDevice * device = gui->device;
     ICameraSceneNode* camera = device->getSceneManager()->getActiveCamera();
     // KEYBOARD EVENT
     if(event.EventType == EET_KEY_INPUT_EVENT)
@@ -57,23 +56,17 @@ bool EventHandler::OnEvent(const SEvent & event)
 
         switch(event.GUIEvent.EventType)
         {
+            // button click event
         case EGET_BUTTON_CLICKED:
             switch(id)
             {
+                // when close button is clicked, close it's parent
             case GUI_ID_CLOSE_BUTTON:
                 caller->getParent()->remove();
                 return false;
-            case GUI_ID_ADD_ENTITY_CREATE_BUTTON:
-                if(simGUI->checkEntityValid())
-                    engine->addEntity(simGUI->createEntityObject());
-                else
-                    simGUI->alertCreationFailure(L"Check name please");
+            case GUI_ID_ENTITY_PROMPT_CONFIRM_BUTTON:
                 break;
-            case GUI_ID_EDIT_ENTITY_REMOVE_BUTTON:
-                // simGUI->promptDeletion();
-            case GUI_ID_EDIT_ENTITY_CREATE_BUTTON:
-                // simGUI->checkEntityEdit();
-                // simGUI->editEntity();
+            case GUI_ID_ENTITY_PROMPT_REMOVE_BUTTON:
                 return false;
             default:
                 return false;
@@ -92,22 +85,22 @@ bool EventHandler::OnEvent(const SEvent & event)
                 device->closeDevice();
                 return true;
             case GUI_ID_ADD_ENTITY_ROBOT:
-                simGUI->promptAddEntity(ENTITY_TYPE_ROBOT);
+                gui->promptWindow(ADD_ENTITY_PROMPT,ENTITY_TYPE_ROBOT);
                 return true;
             case GUI_ID_ADD_ENTITY_SENSOR:
-                simGUI->promptAddEntity(ENTITY_TYPE_SENSOR);
+                gui->promptWindow(ADD_ENTITY_PROMPT,ENTITY_TYPE_SENSOR);
                 return true;
             case GUI_ID_ADD_ENTITY_ENVIRONMENT:
-                simGUI->promptAddEntity(ENTITY_TYPE_ENVIRONMENT);
+                gui->promptWindow(EDIT_ENTITY_PROMPT,ENTITY_TYPE_ENVIRONMENT);
                 return true;
             case GUI_ID_EDIT_ENTITY_ROBOT:
-                simGUI->promptEditEntity(ENTITY_TYPE_ROBOT);
+                gui->promptWindow(EDIT_ENTITY_PROMPT,ENTITY_TYPE_ROBOT);
                 return true;
             case GUI_ID_EDIT_ENTITY_SENSOR:
-                simGUI->promptEditEntity(ENTITY_TYPE_SENSOR);
+                gui->promptWindow(EDIT_ENTITY_PROMPT,ENTITY_TYPE_SENSOR);
                 return true;
             case GUI_ID_EDIT_ENTITY_ENVIRONMENT:
-                simGUI->promptEditEntity(ENTITY_TYPE_ENVIRONMENT);
+                gui->promptWindow(EDIT_ENTITY_PROMPT,ENTITY_TYPE_ENVIRONMENT);
                 return true;
             default:
                 return false;
@@ -117,29 +110,10 @@ bool EventHandler::OnEvent(const SEvent & event)
         case EGET_COMBO_BOX_CHANGED:
             s32 sid;
             sid = ((IGUIComboBox*)(caller))->getSelected();
-            if(sid == 0)
+            switch(caller->getID())
             {
-                switch(caller->getID())
-                {
-                case GUI_ID_ADD_ENTITY_WINDOW_COMBO:
-                    simGUI->setAddPromptWindowEnabled(false);
-                    break;
-                case GUI_ID_EDIT_ENTITY_WINDOW_COMBO:
-                    simGUI->setEditPromptWindowEnabled(false);
-                    break;
-                }
-            }
-            else
-            {
-                switch(caller->getID())
-                {
-                case GUI_ID_ADD_ENTITY_WINDOW_COMBO:
-                    simGUI->setAddPromptWindowEnabled(true);
-                    break;
-                case GUI_ID_EDIT_ENTITY_WINDOW_COMBO:
-                    simGUI->setEditPromptWindowEnabled(true);
-                    break;
-                }
+            default:
+                break;
             }
             break;
         default:
@@ -154,9 +128,9 @@ bool EventHandler::IsKeyDown(EKEY_CODE keyCode) const
     return KeyIsDown[keyCode];
 }
 
-EventHandler::EventHandler(SimEngine * eng)
+EventHandler::EventHandler(SimGUI * _gui)
 {
     for (u32 i = 0; i < KEY_KEY_CODES_COUNT; ++i)
         KeyIsDown[i] = false;
-    engine = eng;
+    gui = _gui;
 }
