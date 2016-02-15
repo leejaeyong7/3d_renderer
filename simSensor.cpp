@@ -32,23 +32,15 @@ SimSensor::SimSensor(string _name,
 
 void SimSensor::addAttachedRobot(SimRobot * obj)
 {
-    robotVector.push_back(obj); 
+    robot = obj;
 }
 
 void SimSensor::removeAttachedRobot(SimRobot * obj)
 {
-    robotVector.erase(
-        std::remove(robotVector.begin(),
-                    robotVector.end(),
-                    obj),
-        robotVector.end());
+    robot = 0;
 }
 void SimSensor::removeCallback()
 {
-    vector<SimRobot*>::iterator it;
-    for(it = robotVector.begin() ; it < robotVector.end(); ++it)
-    {
-        removeAttachedRobot(*it);
-        (*it)->removeSensor(this);
-    }
+    robot->removeSensor(this);
+
 }

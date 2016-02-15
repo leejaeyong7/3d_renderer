@@ -81,7 +81,7 @@ public:
      * Get sensor vector pointer attached to robot
      * @return vector<SimSensor*>* - pointer to vector
      */
-    vector<SimRobot*>* getRobotVector(){return &robotVector;}; 
+    SimRobot* getAttachedRobot(){return robot;}; 
     
     /**
      * Estimates sensor's new position
@@ -92,8 +92,7 @@ public:
     virtual void estimate() = 0;
     
 private:
-    vector<SimRobot*> robotVector;
-
+    SimRobot* robot;
 
 };
 #endif

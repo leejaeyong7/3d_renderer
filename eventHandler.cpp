@@ -53,6 +53,7 @@ bool EventHandler::OnEvent(const SEvent & event)
         IGUIElement * caller = event.GUIEvent.Caller;
         s32 id = caller->getID();
         IGUIEnvironment* env = device->getGUIEnvironment();
+        IGUIElement* rootelem = env->getRootGUIElement();
 
         switch(event.GUIEvent.EventType)
         {
@@ -61,12 +62,12 @@ bool EventHandler::OnEvent(const SEvent & event)
             switch(id)
             {
                 // when close button is clicked, close it's parent
-            case GUI_ID_CLOSE_BUTTON:
+            case CLOSE_BUTTON:
                 caller->getParent()->remove();
                 return false;
-            case GUI_ID_ENTITY_PROMPT_CONFIRM_BUTTON:
+            case CONFIRM_BUTTON:
                 break;
-            case GUI_ID_ENTITY_PROMPT_REMOVE_BUTTON:
+            case REMOVE_BUTTON:
                 return false;
             default:
                 return false;
@@ -81,25 +82,25 @@ bool EventHandler::OnEvent(const SEvent & event)
 
             switch(id)
             {
-            case GUI_ID_QUIT_BUTTON:
+            case QUIT_BUTTON:
                 device->closeDevice();
                 return true;
-            case GUI_ID_ADD_ENTITY_ROBOT:
+            case ADD_ROBOT:
                 gui->promptWindow(ADD_ENTITY_PROMPT,ENTITY_TYPE_ROBOT);
                 return true;
-            case GUI_ID_ADD_ENTITY_SENSOR:
+            case ADD_SENSOR:
                 gui->promptWindow(ADD_ENTITY_PROMPT,ENTITY_TYPE_SENSOR);
                 return true;
-            case GUI_ID_ADD_ENTITY_ENVIRONMENT:
+            case ADD_ENVIRONMENT:
                 gui->promptWindow(EDIT_ENTITY_PROMPT,ENTITY_TYPE_ENVIRONMENT);
                 return true;
-            case GUI_ID_EDIT_ENTITY_ROBOT:
+            case EDIT_ROBOT:
                 gui->promptWindow(EDIT_ENTITY_PROMPT,ENTITY_TYPE_ROBOT);
                 return true;
-            case GUI_ID_EDIT_ENTITY_SENSOR:
+            case EDIT_SENSOR:
                 gui->promptWindow(EDIT_ENTITY_PROMPT,ENTITY_TYPE_SENSOR);
                 return true;
-            case GUI_ID_EDIT_ENTITY_ENVIRONMENT:
+            case EDIT_ENVIRONMENT:
                 gui->promptWindow(EDIT_ENTITY_PROMPT,ENTITY_TYPE_ENVIRONMENT);
                 return true;
             default:
@@ -108,14 +109,20 @@ bool EventHandler::OnEvent(const SEvent & event)
             return false;
         }
         case EGET_COMBO_BOX_CHANGED:
+        {
             s32 sid;
             sid = ((IGUIComboBox*)(caller))->getSelected();
-            switch(caller->getID())
+            // if edit window is on
+            if(rootelem->getElementFromId(PROMPT_EDIT_WINDOW,true))
             {
-            default:
-                break;
+                gui->setPromptData(EDIT_ENTITY_PROMPT,sid);
+            }
+            else if(rootelem->getElementFromId(PROMPT_ADD_WINDOW,true))
+            {
+                gui->setPromptData(EDIT_ENTITY_PROMPT,sid);
             }
             break;
+        }
         default:
             break;
         }

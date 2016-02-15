@@ -146,26 +146,6 @@ public:
     void promptWindow(s32 prompt, u32 entityType);
 
 private:
-    // functor for remove_if predicate
-    struct checkEntityPointer
-    {
-        checkEntityPointer(SimEntity* ptr) : ptr_holder(ptr) {}
-        SimEntity* ptr_holder;
-        bool operator()(EntityMesh obj)
-        {
-            return obj.obj == ptr_holder;
-        }
-    };
-
-    // sets up common prompt window gui objects
-    void setPromptWindow();
-
-    // adds advanced option attribute 
-    void addPromptAdvancedAttribute(stringw p_name, s32 gui_id);
-
-    // Sets up context menu
-    void setContextMenu();
-
     // Pointer to SimEngine
     SimEngine * engine;
 
@@ -181,21 +161,37 @@ private:
     // Entity Mesh vector
     vector<EntityMesh> entityMeshVector;
 
-    // prompt window parameters 
-    s32 px,py,pw,ph;
-    s32 window_offset;
-    s32 boxMargin;
-    s32 combo_box_x,combo_box_y,combo_box_w,combo_box_h;
-    s32 combo_x,combo_y,combo_w,combo_h;
-    s32 name_x,name_y,name_w,name_h;
-    s32 nameInputMargin, nameText_w_offset;
-    s32 boxInputMargin;
-    s32 boxText_h_margin,boxText_w_margin, boxText_w_offset;
-    s32 boxInputText_h, boxInputText_w;
-    s32 dof_x, dof_y, dof_w, dof_h;
-    s32 boxWidth;
-    s32 boxInputText_w_offset;
-    s32 advSetting_y, advSetting_h;
-    s32 buttons_y, buttons_h;
+    // sets data for prompt window
+    void setPromptData(s32 prompt, s32 index);
+
+    // sets up common prompt window gui objects
+    void setPromptWindow(s32 prompt, u32 entityType,
+                         s32 wx, s32 wy, s32 ww, s32 wh);
+
+    void setPromptComboBox(s32 prompt, u32 entityType,
+                           s32 cx, s32 cy, s32 cw, s32 ch);
+
+    void setNameBox(s32 prompt, s32 nx, s32 ny, s32 nw, s32 nh, s32 nm);
+
+    void setDofBox(s32 prompt, s32 dx, s32 dy, s32 dw, s32 dh, s32 dm);
+
+    void setAdvancedSetting(s32 prompt, u32 entityType,
+                            s32 ax, s32 ay, s32 aw, s32 ah);
+
+    void setButtons(s32 prompt, s32 bx, s32 by, s32 bw, s32 bh);
+
+    void setContextMenu();
+
+    // functor for remove_if predicate
+    struct checkEntityPointer
+    {
+        checkEntityPointer(SimEntity* ptr) : ptr_holder(ptr) {}
+        SimEntity* ptr_holder;
+        bool operator()(EntityMesh obj)
+        {
+            return obj.obj == ptr_holder;
+        }
+    };
+
 };
 #endif
