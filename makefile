@@ -1,4 +1,5 @@
 CC = g++
+STD_VERSION = -std=c++11
 OS_NAME := $(shell uname)
 MKDIR_P  = mkdir -p
 
@@ -34,7 +35,7 @@ LINKFLAGS = -lIrrlicht -lGL -lGLU -lXxf86vm
 endif
 
 # FINAL FLAG
-FLAGS = $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
+FLAGS = $(STD_VERSION) $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
 SOURCES=main.cpp simEngine.cpp simGUI.cpp eventHandler.cpp simEntity.cpp\
 	simPhysics.cpp simSensor.cpp simSensorCamera.cpp simRobot.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
