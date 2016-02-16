@@ -46,7 +46,7 @@ void SimRobot::removeSensor(SimSensor* obj)
                     obj),
         sensorVector.end());
 
-    obj->removeAttachedRobot(this);
+    obj->removeAttachedRobot();
 }
 
 void SimRobot::removeCallback()
@@ -55,6 +55,6 @@ void SimRobot::removeCallback()
     for(it = sensorVector.begin() ; it < sensorVector.end(); ++it)
     {
         removeSensor(*it);
-        (*it)->removeAttachedRobot(this);
+        (*it)->removeAttachedRobot();
     }
 }

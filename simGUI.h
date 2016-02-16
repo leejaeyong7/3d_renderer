@@ -109,9 +109,9 @@ public:
      * creates entity object from add window
      * @param none
      * @see 
-     * @return SimEntity object with given params
+     * @return none
      */
-    SimEntity * createEntityObject();
+    void createEntityObject();
 
     /**
      * edits entity object from edit window
@@ -162,7 +162,9 @@ private:
     vector<EntityMesh> entityMeshVector;
 
     // sets data for prompt window
-    void setPromptData(s32 prompt, s32 index);
+    void setPromptData(s32 prompt, SimEntity* obj);
+    void setAddPromptData(s32 index);
+    void setEditPromptData(s32 index);
 
     // sets up common prompt window gui objects
     void setPromptWindow(s32 prompt, u32 entityType,
@@ -181,6 +183,9 @@ private:
     void setButtons(s32 prompt, s32 bx, s32 by, s32 bw, s32 bh);
 
     void setContextMenu();
+
+    SimEntity* currObj;
+    int currPrompt;
 
     // functor for remove_if predicate
     struct checkEntityPointer

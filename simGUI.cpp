@@ -75,6 +75,9 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
         col.setAlpha(255);
         skin->setColor((EGUI_DEFAULT_COLOR)i, col);
     }
+    // set current object to null;
+    currObj = 0;
+
     // set initial gui setup
     setup();
 
@@ -293,6 +296,18 @@ void SimGUI::removeEntitySceneNode(SimEntity * obj)
 {
     if(!obj)
         return;
+    vector<EntityMesh>::iterator it =
+        std::find_if(entityMeshVector.begin(),
+                     entityMeshVector.end(),
+                     checkEntityPointer(obj));
+
+    while(it != entityMeshVector.end())
+    {
+        it->mesh->remove();
+        it = std::find_if(std::next(it),
+                          entityMeshVector.end(),
+                          checkEntityPointer(obj));
+    }
     entityMeshVector.erase(
         std::remove_if(entityMeshVector.begin(),
                        entityMeshVector.end(),
@@ -301,9 +316,11 @@ void SimGUI::removeEntitySceneNode(SimEntity * obj)
 }
 
 
-SimEntity* SimGUI::createEntityObject()
+void SimGUI::createEntityObject()
 {
-    return 0;
+    engine->addEntity((EntityType)currPrompt, currObj);
+    currPrompt = 0;
+    currObj = 0;
 }
 
 SimEntity* SimGUI::editEntityObject(SimEntity * obj)
@@ -313,6 +330,9 @@ SimEntity* SimGUI::editEntityObject(SimEntity * obj)
 
 void SimGUI::promptWindow(s32 prompt, u32 entityType)
 {
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
     // set common prompt window theme
     s32 wx, wy, ww, wh;
     wx = 150;
@@ -359,7 +379,22 @@ void SimGUI::promptWindow(s32 prompt, u32 entityType)
     bh = 40;
     setButtons(prompt,bx,by,bw,bh);
 
-    setPromptData(prompt,0);
+
+    switch(prompt)
+    {
+    case EDIT_ENTITY_PROMPT:
+    {
+        setEditPromptData(0);
+        break;
+    }
+    case ADD_ENTITY_PROMPT:
+    {
+        setAddPromptData(0);
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 //----------------------------------------------------------------------------//
@@ -367,12 +402,94 @@ void SimGUI::promptWindow(s32 prompt, u32 entityType)
 //----------------------------------------------------------------------------//
 //                           Handles GUI positioning
 //----------------------------------------------------------------------------//
-void SimGUI::setPromptData(s32 prompt, s32 index)
+void SimGUI::setEditPromptData(s32 index)
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
+    IGUIComboBox* cb=
+        (IGUIComboBox*)(rootelem->getElementFromId(PROMPT_COMBO, true));
+
+    vector<SimEntity*>* vec= engine->getEntityVector();
+    int i = cb->getItemData(index);
+    SimEntity* obj= vec->at(i);
+    currObj = obj;
+    setPromptData(EDIT_ENTITY_PROMPT,obj);
+}
+void SimGUI::setAddPromptData(s32 index)
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    IGUIComboBox* cb=
+        (IGUIComboBox*)(rootelem->getElementFromId(PROMPT_COMBO, true));
+    int i = cb->getItemData(index);
+    SimEntity* obj = 0;
+    switch(currPrompt)
+    {
+    case ENTITY_TYPE_ROBOT:
+    {
+        switch(i)
+        {
+        case SUB_ENTITY_ROBOT_QUAD:
+        {
+            break;
+        }
+        case SUB_ENTITY_ROBOT_GROUND:
+        {
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    case ENTITY_TYPE_SENSOR:
+    {
+        switch(i)
+        {
+        case SUB_ENTITY_SENSOR_CAM:
+        {
+            obj = new SimCamera("",0,0,0,0,0,0,0,0,0);
+            currObj = obj;
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    case ENTITY_TYPE_ENVIRONMENT:
+    {
+        switch(i)
+        {
+        case SUB_ENTITY_ENVIRONMENT_APRIL:
+        {
+            break;
+        }
+        case SUB_ENTITY_ENVIRONMENT_CUBE:
+        {
+            break;
+        }
+        case SUB_ENTITY_ENVIRONMENT_SPHERE:
+        {
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    setPromptData(ADD_ENTITY_PROMPT,obj);
+}
+void SimGUI::setPromptData(s32 prompt, SimEntity * obj)
 {
     // checks whether prompt is properly called
-    if(prompt != EDIT_ENTITY_PROMPT)
+    if(obj == 0)
         return;
-    
+
     IGUIEnvironment* guienv = device->getGUIEnvironment();
     IGUIElement * rootelem = guienv->getRootGUIElement();
     IGUIWindow* window;
@@ -381,9 +498,11 @@ void SimGUI::setPromptData(s32 prompt, s32 index)
     case ADD_ENTITY_PROMPT:
         window =
             (IGUIWindow*)(rootelem-> getElementFromId(PROMPT_ADD_WINDOW,true));
+        break;
     case EDIT_ENTITY_PROMPT:
         window =
             (IGUIWindow*)(rootelem-> getElementFromId(PROMPT_EDIT_WINDOW,true));
+        break;
     }
     IGUIComboBox* cb=
         (IGUIComboBox*)(rootelem->getElementFromId(PROMPT_COMBO, true));
@@ -412,62 +531,84 @@ void SimGUI::setPromptData(s32 prompt, s32 index)
     IGUIStaticText * adv_box =
         (IGUIStaticText*)(rootelem->getElementFromId(PROMPT_ADVANCED_BOX,true));
 
-    // TODO: set name, position, rotation and advanced settings
-    
-    // get current object
-    vector<SimEntity*>* vec= engine->getEntityVector();
-    int i = cb->getItemData(index);
-    SimEntity* currObj = vec->at(i);
-
     // set name
-    std::string name = currObj->getName();
+    std::string name = obj->getName();
     std::wstring wname(name.length(), L' '); 
     std::copy(name.begin(), name.end(), wname.begin());
     en->setText(wname.c_str());
 
     // set Position
-    Position pos = currObj->getPosition();
+    Position pos = obj->getPosition();
     ex->setText(to_wstring(pos.X).c_str());
     ey->setText(to_wstring(pos.Y).c_str());
     ez->setText(to_wstring(pos.Z).c_str());
 
-    Rotation rot = currObj->getRotation();
+    Rotation rot = obj->getRotation();
     ea->setText(to_wstring(rot.Roll).c_str());
     eb->setText(to_wstring(rot.Pitch).c_str());
     ec->setText(to_wstring(rot.Yaw).c_str());
 
     // advanced settings
-    vector<AdvancedOption*>* advOV = currObj->getAdvancedOption();
+    vector<AdvancedOption*>* advOV = obj->getAdvancedOption();
     vector<AdvancedOption*>::iterator it;
 
     const rect<s32> advB = adv_box->getAbsolutePosition();
     s32 advW = advB.getWidth();
-    cout<<advW<<endl;
-    s32 advIW = advW/4;
+    s32 advIW = advW/3;
     int count = 0;
+    list<IGUIElement*> advChildren = adv_box->getChildren();
+    list<IGUIElement*>::Iterator lit;
+    for(lit = advChildren.begin(); lit != advChildren.end(); ++lit)
+    {
+        adv_box->removeChild(*lit);
+    }
 
     for(it = advOV->begin(); it!= advOV->end(); ++it)
     {
         std::string label = (*it)->label;
+        label.append(":");
         std::wstring wname(label.length(),L' ');
         std::copy(label.begin(), label.end(), wname.begin());
-        guienv->addStaticText(
+
+        IGUIStaticText* text = guienv->addStaticText(
             wname.c_str(),
             rect<s32>(
-                advIW*count%4,
-                20*count/4,
-                advIW*count%4 +1,
-                20*count/4 + 20
+                advIW*(count%4) + 10,
+                20 + 20*((int)count/4),
+                advIW*((count%4) +1),
+                20*((int)count/4) + 40
                 ),
             false, true, adv_box);
+
+        IGUIEditBox* input =  guienv->addEditBox(
+            L"0.0",
+            rect<s32>(100,0,advIW-20,20),
+            true,
+            text
+            );
+
         switch((*it)->type)
         {
         case INTEGER:
+        {
+            int val = ((AdvancedOption_Int*)(*it))->value;
+            input->setText(to_wstring(val).c_str());
             break;
+        }
         case DOUBLE:
+        {
+            double val = ((AdvancedOption_Double*)(*it))->value;
+            input->setText(to_wstring(val).c_str());
             break;
+        }
         case STRING:
+        {
+            std::string val = ((AdvancedOption_String*)(*it))->value;
+            std::wstring wval(label.length(),L' ');
+            std::copy(val.begin(), val.end(), wval.begin());
+            input->setText(wval.c_str());
             break;
+        }
         }
         count++;
         if(count == 24)
@@ -811,7 +952,7 @@ void SimGUI::setButtons(s32 prompt,s32 bx, s32 by, s32 bw, s32 bh)
                           CONFIRM_BUTTON,
                           L"Create",
                           L"Creates entity with above parameters");
-        guienv->addButton(rect<s32>(bx+bw*2+20,by,bx+bw*2+20,by+bh), window,
+        guienv->addButton(rect<s32>(bx+bw*2+20,by,bx+bw*3+20,by+bh), window,
                           CLOSE_BUTTON,
                           L"Close",
                           L"Cancel and close window");

@@ -63,7 +63,7 @@ public:
     virtual void removeCallback();
 
     /**
-     * adds a robot entity that added this sensor entity to vector 
+     * adds a robot entity that added this sensor
      * @param SimRobot* - robot that attached this sensor
      * @return None
      */
@@ -71,11 +71,11 @@ public:
 
 
     /**
-     * removes robot entity that added this sensor entity to vector
-     * @param SimRobot* - robot that removed this sensor
+     * removes robot entity that added this sensor entity
+     * @param None
      * @return None
      */
-    void removeAttachedRobot(SimRobot * obj);
+    void removeAttachedRobot();
     
     /**
      * Get sensor vector pointer attached to robot

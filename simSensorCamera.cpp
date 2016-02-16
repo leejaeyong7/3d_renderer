@@ -20,7 +20,7 @@ SimCamera::SimCamera(string _name,
     AdvancedOption_Double * fov_y =
         new AdvancedOption_Double("FOV Y",DOUBLE,fy);
     AdvancedOption_Double * focal_length =
-        new AdvancedOption_Double("Focal Length:",DOUBLE,fl);
+        new AdvancedOption_Double("Focal Length",DOUBLE,fl);
     advVector->push_back(fov_x);
     advVector->push_back(fov_y);
     advVector->push_back(focal_length);
@@ -39,7 +39,7 @@ SimCamera::SimCamera(string _name,
     AdvancedOption_Double * fov_y =
         new AdvancedOption_Double("FOV Y",DOUBLE,fy);
     AdvancedOption_Double * focal_length =
-        new AdvancedOption_Double("Focal Length:",DOUBLE,fl);
+        new AdvancedOption_Double("Focal Length",DOUBLE,fl);
     advVector->push_back(fov_x);
     advVector->push_back(fov_y);
     advVector->push_back(focal_length);

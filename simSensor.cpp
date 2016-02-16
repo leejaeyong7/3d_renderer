@@ -18,7 +18,7 @@ SimSensor::SimSensor(string _name,
                      double a, double b, double c)
     :SimEntity(_name,x,y,z,a,b,c)
 {
-
+    robot = 0;
 }
 
 SimSensor::SimSensor(string _name,
@@ -27,7 +27,7 @@ SimSensor::SimSensor(string _name,
                      string _meshPath)
     :SimEntity(_name,x,y,z,a,b,c,_meshPath)
 {
-
+    robot = 0;
 }
 
 void SimSensor::addAttachedRobot(SimRobot * obj)
@@ -35,12 +35,12 @@ void SimSensor::addAttachedRobot(SimRobot * obj)
     robot = obj;
 }
 
-void SimSensor::removeAttachedRobot(SimRobot * obj)
+void SimSensor::removeAttachedRobot()
 {
     robot = 0;
 }
 void SimSensor::removeCallback()
 {
-    robot->removeSensor(this);
-
+    if(robot)
+        robot->removeSensor(this);
 }
