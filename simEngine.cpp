@@ -108,7 +108,6 @@ void SimEngine::detachEntity(SimRobot* robot,SimSensor * sensor)
     {
         simGUI->detachEntityMesh(robot,sensor);
     }
-    removeEntity(sensor);
 }
 //----------------------------------------------------------------------------//
 //                                Private functions

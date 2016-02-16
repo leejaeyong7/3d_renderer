@@ -319,7 +319,7 @@ void SimGUI::removeEntitySceneNode(SimEntity * obj)
     while(it != entityMeshVector.end())
     {
         if(it->mesh)
-            it->mesh->remove();
+            it->mesh->drop();
         it = std::find_if(std::next(it),
                           entityMeshVector.end(),
                           checkEntityPointer(obj));
@@ -441,7 +441,7 @@ void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
     EntityMesh sensorMesh = (*it);
 
     if(robotMesh.mesh != 0 && sensorMesh.mesh != 0)
-        robotMesh.mesh->addChild(sensorMesh.mesh);
+        sensorMesh.mesh->setParent(robotMesh.mesh);
 }
 
 void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
@@ -462,7 +462,10 @@ void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
     EntityMesh sensorMesh = (*it);
 
     if(robotMesh.mesh != 0 && sensorMesh.mesh != 0)
-        robotMesh.mesh->removeChild(sensorMesh.mesh);
+    {
+        ISceneManager * smgr = device->getSceneManager();
+        sensorMesh.mesh->setParent(smgr->getRootSceneNode());
+    }
 }
 
 void SimGUI::promptWindow()
