@@ -1,5 +1,4 @@
-CC = g++
-STD_VERSION = -std=c++11
+CC = g++ -std=c++11
 OS_NAME := $(shell uname)
 MKDIR_P  = mkdir -p
 
