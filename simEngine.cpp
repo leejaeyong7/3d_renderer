@@ -84,7 +84,32 @@ void SimEngine::run()
 
     }
 }
+void SimEngine::attachEntity(SimRobot* robot,SimSensor * sensor)
+{
+    if(!robot)
+        return;
+    if(!sensor)
+        return;
+    robot->addSensor(sensor);
+    if(simGUI)
+    {
+        simGUI->attachEntityMesh(robot,sensor);
+    }
+}
 
+void SimEngine::detachEntity(SimRobot* robot,SimSensor * sensor)
+{
+    if(!robot)
+        return;
+    if(!sensor)
+        return;
+    robot->removeSensor(sensor);
+    if(simGUI)
+    {
+        simGUI->detachEntityMesh(robot,sensor);
+    }
+    removeEntity(sensor);
+}
 //----------------------------------------------------------------------------//
 //                                Private functions
 //----------------------------------------------------------------------------//

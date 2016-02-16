@@ -79,6 +79,12 @@ public:
     void draw();
 
     /**
+     * Updates position/rotation of entities
+     * @return None
+     */
+    void update();
+
+    /**
      * Checks device is running
      * @return None
      */
@@ -104,6 +110,21 @@ public:
      */
     void removeEntitySceneNode(SimEntity * obj);
 
+    /**
+     * Attaches Sensor to Camera
+     * @param SimRobot* robot - robot to attach sensor on
+     * @param SimSensor* sensor- sensor to attach 
+     * @return none
+     */
+    void attachEntityMesh(SimRobot * robot, SimSensor * sensor);
+
+    /**
+     * removes Sensor from Camera
+     * @param SimRobot* robot - robot to detach sensor on
+     * @param SimSensor* sensor- sensor to remove 
+     * @return none
+     */
+    void detachEntityMesh(SimRobot * robot, SimSensor * sensor);
 
     /**
      * creates entity object from add window
@@ -119,23 +140,7 @@ public:
      * @see 
      * @return SimEntity object with fixed params
      */
-    SimEntity * editEntityObject(SimEntity * obj);
-
-    /**
-     * checks entity creation is valid
-     * @param none
-     * @see 
-     * @return bool - true if valid
-     */
-    bool checkEntityValid();
-
-    /**
-     * alerts user for failing to create entity
-     * @param none
-     * @see 
-     * @return opens alert window
-     */
-    void alertCreationFailure(const wchar_t*  message);
+    void editEntityObject();
 
     /**
      * prompts user with modal window
@@ -143,7 +148,7 @@ public:
      * @param u32 entityType - entity type
      * @return creates prompt window accordingly to prompt type
      */
-    void promptWindow(s32 prompt, u32 entityType);
+    void promptWindow();
 
 private:
     // Pointer to SimEngine
@@ -162,30 +167,25 @@ private:
     vector<EntityMesh> entityMeshVector;
 
     // sets data for prompt window
-    void setPromptData(s32 prompt, SimEntity* obj);
+    void setPromptData(SimEntity* obj);
     void setAddPromptData(s32 index);
     void setEditPromptData(s32 index);
 
-    // sets up common prompt window gui objects
-    void setPromptWindow(s32 prompt, u32 entityType,
-                         s32 wx, s32 wy, s32 ww, s32 wh);
-
-    void setPromptComboBox(s32 prompt, u32 entityType,
-                           s32 cx, s32 cy, s32 cw, s32 ch);
-
-    void setNameBox(s32 prompt, s32 nx, s32 ny, s32 nw, s32 nh, s32 nm);
-
-    void setDofBox(s32 prompt, s32 dx, s32 dy, s32 dw, s32 dh, s32 dm);
-
-    void setAdvancedSetting(s32 prompt, u32 entityType,
-                            s32 ax, s32 ay, s32 aw, s32 ah);
-
-    void setButtons(s32 prompt, s32 bx, s32 by, s32 bw, s32 bh);
-
-    void setContextMenu();
-
+    // used for entity manipulation
     SimEntity* currObj;
     int currPrompt;
+    int currType;
+
+    // sets up common prompt window gui objects
+    void setPromptWindow(s32 wx, s32 wy, s32 ww, s32 wh);
+    void setPromptComboBox(s32 cx, s32 cy, s32 cw, s32 ch);
+    void setNameBox(s32 nx, s32 ny, s32 nw, s32 nh, s32 nm);
+    void setDofBox(s32 dx, s32 dy, s32 dw, s32 dh, s32 dm);
+    void setAdvancedSetting(s32 ax, s32 ay, s32 aw, s32 ah);
+    void setButtons(s32 bx, s32 by, s32 bw, s32 bh);
+
+    // sets up context menu(toolbar)
+    void setContextMenu();
 
     // functor for remove_if predicate
     struct checkEntityPointer

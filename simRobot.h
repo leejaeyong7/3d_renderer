@@ -73,7 +73,6 @@ public:
      * @return None
      */
     void removeSensor(SimSensor* obj);
-
     
     /**
      * Get sensor vector pointer attached to robot

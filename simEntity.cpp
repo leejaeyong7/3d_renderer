@@ -22,8 +22,8 @@ SimEntity::SimEntity(string _name,
     translation.Y = y;
     translation.Z = z;
 
-    rotation.Pitch = a;
-    rotation.Roll = b;
+    rotation.Roll = a;
+    rotation.Pitch = b;
     rotation.Yaw = c;
 
     name = _name;
@@ -39,8 +39,8 @@ SimEntity::SimEntity(string _name,
     translation.Y = y;
     translation.Z = z;
 
-    rotation.Pitch = a;
-    rotation.Roll = b;
+    rotation.Roll = a;
+    rotation.Pitch = b;
     rotation.Yaw = c;
 
     name = _name;
@@ -80,8 +80,8 @@ void SimEntity::setPosition(double x, double y, double z)
 
 void SimEntity::setRotation(double a, double b, double c)
 {
-    rotation.Pitch = a;
-    rotation.Roll = b;
+    rotation.Roll = a;
+    rotation.Pitch = b;
     rotation.Yaw = c;
 }
 

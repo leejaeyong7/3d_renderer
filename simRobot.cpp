@@ -39,7 +39,8 @@ void SimRobot::removeSensor(SimSensor* obj)
 {
     if(!obj)
         return;
-
+    if(obj->getAttachedRobot()!= this)
+        return;
     sensorVector.erase(
         std::remove(sensorVector.begin(),
                     sensorVector.end(),

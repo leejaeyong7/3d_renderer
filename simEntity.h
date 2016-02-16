@@ -35,8 +35,8 @@ typedef struct Position{
 } Position;
 
 typedef struct Rotation{
-    double Pitch;
     double Roll;
+    double Pitch;
     double Yaw;
 } Rotation;
 

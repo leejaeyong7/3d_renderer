@@ -22,6 +22,8 @@
 #include "simGUI.h"
 #include "simPhysics.h"
 #include "simEntity.h"
+#include "simRobot.h"
+#include "simSensor.h"
 #include "enumerations.h"
 
 //----------------------------------------------------------------------------//
@@ -93,7 +95,33 @@ public:
      */
     void removeEntity(SimEntity * obj);
 
+    /**
+     * Attaches Sensor to Camera
+     * @param SimRobot* robot - robot to attach sensor on
+     * @param SimSensor* sensor- sensor to attach 
+     * @return none
+     */
+    void attachEntity(SimRobot * robot, SimSensor * sensor);
+
+    /**
+     * removes Sensor from Camera
+     * @param SimRobot* robot - robot to detach sensor from  
+     * @param SimSensor* sensor- sensor to detach 
+     * @return none
+     */
+    void detachEntity(SimRobot * robot, SimSensor * sensor);
+
 private:
+    // Pointer to SimGUI object that handles irrlicht GUI design
+    SimGUI * simGUI;
+
+    // Pointer to SimPhysics object that handles all the physics works in
+    // simulation engine
+    SimPhysics * simPhysics;
+
+    // vector of SimEntity object
+    vector<SimEntity*> simEntityVector;
+
     //functor for find_if predicate
     struct checkEntityName 
     {
@@ -104,14 +132,5 @@ private:
             return obj->getName().compare(name_holder) == 0;
         }
     };
-    // Pointer to SimGUI object that handles irrlicht GUI design
-    SimGUI * simGUI;
-
-    // Pointer to SimPhysics object that handles all the physics works in
-    // simulation engine
-    SimPhysics * simPhysics;
-
-    // vector of SimEntity object
-    vector<SimEntity*> simEntityVector;
 };
 #endif
