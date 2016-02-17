@@ -72,7 +72,7 @@ bool EventHandler::OnEvent(const SEvent & event)
                 // sets parameter for entity
                 gui->editEntityObject();
                 // create new object if add window
-                if(gui->currPrompt == PROMPT_ADD_WINDOW)
+                if(gui->currPrompt == ADD_ENTITY_PROMPT)
                     gui->createEntityObject();
                 // update
                 gui->update();

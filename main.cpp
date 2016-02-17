@@ -20,7 +20,7 @@ int main()
 {
     SimEngine * eng= new SimEngine(true);
     SimCamera * cam1 = new SimCamera("test camera1",0,0,0,0,0,0,10,0,0);
-    SimRobot* bot = new SimRobot("Robot",10,10,10,0,0,0,"models/android.obj");
+    SimRobot* bot = new SimRobot("Robot",10,10,10,0,0,0,"Models/android.obj");
     eng->addEntity(ENTITY_TYPE_ROBOT,bot);
     eng->addEntity(ENTITY_TYPE_SENSOR,cam1);
     eng->attachEntity(bot,cam1);
