@@ -24,6 +24,7 @@
 #include "simEngine.h"
 #include "simEntity.h"
 #include "simRobot.h"
+#include "simRobotGround.h"
 #include "simSensor.h"
 #include "simSensorCamera.h"
 //----------------------------------------------------------------------------//
@@ -125,30 +126,19 @@ public:
      * @return none
      */
     void detachEntityMesh(SimRobot * robot, SimSensor * sensor);
-
-    /**
-     * creates entity object from add window
-     * @param none
-     * @see 
-     * @return none
-     */
-    void createEntityObject();
-
-    /**
-     * edits entity object from edit window
-     * @param none
-     * @see 
-     * @return SimEntity object with fixed params
-     */
-    void editEntityObject();
-
     /**
      * prompts user with modal window
-     * @param s32 prompt - Prompt type
-     * @param u32 entityType - entity type
+     * @param none
      * @return creates prompt window accordingly to prompt type
      */
-    void promptWindow();
+    void promptEntityWindow();
+
+    /**
+     * prompts user with entity attach window
+     * @param none
+     * @return attaches or detachs sensor to/from robot
+     */
+    void entityAttachWindow();
 
 private:
     // Pointer to SimEngine
@@ -175,6 +165,8 @@ private:
     SimEntity* currObj;
     int currPrompt;
     int currType;
+    void createEntityObject();
+    void editEntityObject();
 
     // sets up common prompt window gui objects
     void setPromptWindow(s32 wx, s32 wy, s32 ww, s32 wh);
@@ -183,6 +175,10 @@ private:
     void setDofBox(s32 dx, s32 dy, s32 dw, s32 dh, s32 dm);
     void setAdvancedSetting(s32 ax, s32 ay, s32 aw, s32 ah);
     void setButtons(s32 bx, s32 by, s32 bw, s32 bh);
+
+    // attach/detach entity object based on selected combo box name
+    void attachEntityObject();
+    void setDetachData(s32 index);
 
     // sets up context menu(toolbar)
     void setContextMenu();

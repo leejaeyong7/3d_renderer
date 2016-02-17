@@ -331,7 +331,275 @@ void SimGUI::removeEntitySceneNode(SimEntity * obj)
         entityMeshVector.end());
 }
 
+void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
+{
+    if(!robot)
+        return;
+    if(!sensor)
+        return;
+    vector<EntityMesh>::iterator it =
+        std::find_if(entityMeshVector.begin(),
+                     entityMeshVector.end(),
+                     checkEntityPointer(robot));
+    EntityMesh robotMesh = (*it);
+    
+    it = std::find_if(entityMeshVector.begin(),
+                      entityMeshVector.end(),
+                      checkEntityPointer(sensor));
+    EntityMesh sensorMesh = (*it);
 
+    if(robotMesh.mesh != 0 && sensorMesh.mesh != 0)
+        sensorMesh.mesh->setParent(robotMesh.mesh);
+}
+
+void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
+{
+    if(!robot)
+        return;
+    if(!sensor)
+        return;
+    vector<EntityMesh>::iterator it =
+        std::find_if(entityMeshVector.begin(),
+                     entityMeshVector.end(),
+                     checkEntityPointer(robot));
+    EntityMesh robotMesh = (*it);
+    
+    it = std::find_if(entityMeshVector.begin(),
+                      entityMeshVector.end(),
+                      checkEntityPointer(sensor));
+    EntityMesh sensorMesh = (*it);
+
+    if(robotMesh.mesh != 0 && sensorMesh.mesh != 0)
+    {
+        ISceneManager * smgr = device->getSceneManager();
+        sensorMesh.mesh->setParent(smgr->getRootSceneNode());
+    }
+}
+void SimGUI::entityAttachWindow()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    vector<SimEntity*>* eVector = engine->getEntityVector();
+    vector<SimEntity*>::iterator it;
+    s32 wx,wy,ww,wh;
+    wx = 100;
+    wy = 100;
+    ww = 400;
+    wh = 300;
+    IGUIWindow* window= guienv->addWindow(
+        rect<s32>(wx, wy, wx+ww, wy+wh), true, L"", 0, ATTACH_WINDOW);
+    switch(currPrompt)
+    {
+    case ATTACH_ENTITY_PROMPT:
+        window->setText(L"Attach Sensor To Robot");
+        break;
+    case DETACH_ENTITY_PROMPT:
+        window->setText(L"Detach Sensor from Robot");
+        break;
+    default:
+        break;
+    }
+
+    s32 cx,cy1,cy2,cw,ch;
+    s32 cbx;
+    cx = 10;
+    cw = ww - 2*cx;
+    cy1 = 30;
+    ch = 40;
+    cy2 = cy1 + ch + 10;
+    
+    // set text
+    IGUIStaticText* crt = guienv->addStaticText(
+        L"", rect<s32>(cx, cy1, cx+cw, cy1+20), false, true, window);
+
+    IGUIStaticText* cst = guienv->addStaticText(
+        L"", rect<s32>(cx, cy2, cx+cw, cy2+20), false, true, window);
+
+    // set dropdown box
+    IGUIComboBox *  crcb = guienv->addComboBox(
+        rect<s32>(cx, cy1+20, cx+cw, cy1+ch), window, ATTACH_COMBO1);
+
+    IGUIComboBox *  cscb= guienv->addComboBox(
+        rect<s32>(cx, cy2+20, cx+cw, cy2+ch), window, ATTACH_COMBO2);
+
+    // add combobox items
+    crt->setText(L"Choose Robot: ");
+    cst->setText(L"Choose Sensor: ");
+    int index = 0;
+    for(it = eVector->begin(); it!= eVector->end(); ++it)
+    {
+        SimRobot* s = dynamic_cast<SimRobot*>(*it);
+        if(s)
+        {
+            std::string name = (*it)->getName();
+            std::wstring wname(name.length(), L' '); 
+            std::copy(name.begin(), name.end(), wname.begin());
+            crcb->addItem(wname.c_str(),index);
+        }
+        index++;
+    }
+    index = 0;
+    if(currPrompt == ATTACH_ENTITY_PROMPT)
+    {
+        for(it = eVector->begin(); it!= eVector->end(); ++it)
+        {
+            SimSensor* s = dynamic_cast<SimSensor*>(*it);
+            if(s)
+            {
+                std::string name = (*it)->getName();
+                std::wstring wname(name.length(), L' '); 
+                std::copy(name.begin(), name.end(), wname.begin());
+                cscb->addItem(wname.c_str(),index);
+            }
+            index++;
+        }
+    }
+    else
+    {
+        setDetachData(0);
+    }
+    s32 bx,by,bw,bh;
+    by = cy2+ch + 10;
+    bw = 80;
+    bx = ww - 10 - bw*2 - 10;
+    bh = 40;
+
+    guienv->addButton(rect<s32>(bx,by,bx+bw*1,by+bh), window,
+                      CONFIRM_BUTTON,
+                      L"Confirm",
+                      L"Set with current settings");
+
+    guienv->addButton(rect<s32>(bx+bw*1+10,by,bx+bw*2+10,by+bh), window,
+                      CLOSE_BUTTON,
+                      L"Close",
+                      L"Cancel and close window");
+}
+
+void SimGUI::promptEntityWindow()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
+    // set common prompt window theme
+    s32 wx, wy, ww, wh;
+    wx = 150;
+    wy = 100;
+    ww = 600;
+    wh = 410;
+    setPromptWindow(wx,wy,ww,wh);
+
+    s32 cx,cy,cw,ch,cm;
+    cx = 10;
+    cy = 30;
+    cw = ww - 20;
+    ch = 40;
+    cm = 70;
+    setPromptComboBox(cx,cy,cw,ch);
+
+    s32 nx,ny,nw,nh,nm;
+    nx = 10;
+    ny = cy + ch + 10;
+    nw = ww - 20;
+    nh = 20;
+    nm = 70;
+    setNameBox(nx,ny,nw,nh,nm);
+
+    s32 dx,dy,dw,dh,dm;
+    dx = 10;
+    dy = ny + nh + 10;
+    dw = ww - 20;
+    dh = 20*2 + 30;
+    dm = 70;
+    setDofBox(dx,dy,dw,dh,dm);
+
+    s32 ax,ay,aw,ah;
+    ax = 10;
+    ay = dy + dh + 10;
+    aw = ww - 20;
+    ah = 20*6 + 20 + 20;
+    setAdvancedSetting(ax,ay,aw,ah);
+
+    s32 bx,by,bw,bh;
+    bx = ww - (80+10)*3 - 10;
+    by = ay + ah + 10;
+    bw = 80;
+    bh = 40;
+    setButtons(bx,by,bw,bh);
+
+
+    switch(currPrompt)
+    {
+    case EDIT_ENTITY_PROMPT:
+    {
+        setEditPromptData(0);
+        break;
+    }
+    case ADD_ENTITY_PROMPT:
+    {
+        setAddPromptData(0);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+//----------------------------------------------------------------------------//
+//                          Private Helper Functions
+//----------------------------------------------------------------------------//
+//                           Handles GUI positioning
+//----------------------------------------------------------------------------//
+void SimGUI::attachEntityObject()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
+    IGUIComboBox* crcb=
+        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO1, true));
+
+    IGUIComboBox* cscb=
+        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO2, true));
+
+    vector<SimEntity*>* vec= engine->getEntityVector();
+    int i = crcb->getItemData(crcb->getSelected());
+    SimRobot* robj= (SimRobot*)(vec->at(i));
+    i = cscb->getItemData(cscb->getSelected());
+    SimSensor* sobj= (SimSensor*)(vec->at(i));
+    if(currPrompt == ATTACH_ENTITY_PROMPT)
+        engine->attachEntity(robj,sobj);
+    else if(currPrompt == DETACH_ENTITY_PROMPT)
+        engine->detachEntity(robj,sobj);
+}
+
+void SimGUI::setDetachData(s32 index)
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
+    IGUIComboBox* crcb=
+        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO1, true));
+    IGUIComboBox* cscb=
+        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO2, true));
+    for(int i = 0; i < cscb->getItemCount(); i++)
+    {
+        cscb->removeItem(i);
+    }
+    vector<SimEntity*>* vec= engine->getEntityVector();
+    int i = crcb->getItemData(index);
+    SimRobot* robj= (SimRobot*)vec->at(i);
+    vector<SimSensor*>* sv = robj->getSensorVector();
+    vector<SimSensor*>::iterator it;
+    int c = 0;
+    for(it = sv->begin(); it != sv->end(); it++)
+    {
+        std::string name = (*it)->getName();
+        std::wstring wname(name.length(), L' '); 
+        std::copy(name.begin(), name.end(), wname.begin());
+        cscb->addItem(wname.c_str(),c);
+        c++;
+    }
+
+}
 void SimGUI::createEntityObject()
 {
     engine->addEntity((EntityType)currType, currObj);
@@ -423,125 +691,6 @@ void SimGUI::editEntityObject()
         }
     }
 }
-void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
-{
-    if(!robot)
-        return;
-    if(!sensor)
-        return;
-    vector<EntityMesh>::iterator it =
-        std::find_if(entityMeshVector.begin(),
-                     entityMeshVector.end(),
-                     checkEntityPointer(robot));
-    EntityMesh robotMesh = (*it);
-    
-    it = std::find_if(entityMeshVector.begin(),
-                      entityMeshVector.end(),
-                      checkEntityPointer(sensor));
-    EntityMesh sensorMesh = (*it);
-
-    if(robotMesh.mesh != 0 && sensorMesh.mesh != 0)
-        sensorMesh.mesh->setParent(robotMesh.mesh);
-}
-
-void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
-{
-    if(!robot)
-        return;
-    if(!sensor)
-        return;
-    vector<EntityMesh>::iterator it =
-        std::find_if(entityMeshVector.begin(),
-                     entityMeshVector.end(),
-                     checkEntityPointer(robot));
-    EntityMesh robotMesh = (*it);
-    
-    it = std::find_if(entityMeshVector.begin(),
-                      entityMeshVector.end(),
-                      checkEntityPointer(sensor));
-    EntityMesh sensorMesh = (*it);
-
-    if(robotMesh.mesh != 0 && sensorMesh.mesh != 0)
-    {
-        ISceneManager * smgr = device->getSceneManager();
-        sensorMesh.mesh->setParent(smgr->getRootSceneNode());
-    }
-}
-
-void SimGUI::promptWindow()
-{
-    IGUIEnvironment* guienv = device->getGUIEnvironment();
-    IGUIElement * rootelem = guienv->getRootGUIElement();
-
-    // set common prompt window theme
-    s32 wx, wy, ww, wh;
-    wx = 150;
-    wy = 100;
-    ww = 600;
-    wh = 410;
-    setPromptWindow(wx,wy,ww,wh);
-
-    s32 cx,cy,cw,ch,cm;
-    cx = 10;
-    cy = 30;
-    cw = ww - 20;
-    ch = 40;
-    cm = 70;
-    setPromptComboBox(cx,cy,cw,ch);
-
-    s32 nx,ny,nw,nh,nm;
-    nx = 10;
-    ny = cy + ch + 10;
-    nw = ww - 20;
-    nh = 20;
-    nm = 70;
-    setNameBox(nx,ny,nw,nh,nm);
-
-    s32 dx,dy,dw,dh,dm;
-    dx = 10;
-    dy = ny + nh + 10;
-    dw = ww - 20;
-    dh = 20*2 + 30;
-    dm = 70;
-    setDofBox(dx,dy,dw,dh,dm);
-
-    s32 ax,ay,aw,ah;
-    ax = 10;
-    ay = dy + dh + 10;
-    aw = ww - 20;
-    ah = 20*6 + 20 + 20;
-    setAdvancedSetting(ax,ay,aw,ah);
-
-    s32 bx,by,bw,bh;
-    bx = ww - (80+10)*3 - 10;
-    by = ay + ah + 10;
-    bw = 80;
-    bh = 40;
-    setButtons(bx,by,bw,bh);
-
-
-    switch(currPrompt)
-    {
-    case EDIT_ENTITY_PROMPT:
-    {
-        setEditPromptData(0);
-        break;
-    }
-    case ADD_ENTITY_PROMPT:
-    {
-        setAddPromptData(0);
-        break;
-    }
-    default:
-        break;
-    }
-}
-
-//----------------------------------------------------------------------------//
-//                          Private Helper Functions
-//----------------------------------------------------------------------------//
-//                           Handles GUI positioning
-//----------------------------------------------------------------------------//
 void SimGUI::setEditPromptData(s32 index)
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
@@ -576,6 +725,8 @@ void SimGUI::setAddPromptData(s32 index)
         }
         case SUB_ENTITY_ROBOT_GROUND:
         {
+            obj = new SimGroundRobot("",0,0,0,0,0,0);
+            currObj = obj;
             break;
         }
         default:
@@ -1141,6 +1292,11 @@ void SimGUI::setContextMenu()
 	u32 eA= entityMenu->addItem(L"Add", -1, true, true, false, false);
 
 	u32 eR= entityMenu->addItem(L"Edit", -1, true, true, false, false);
+
+	u32 eAt= entityMenu->addItem(
+        L"Attach", ATTACH_ENTITY, true, false, false, false);
+	u32 eDt= entityMenu->addItem(
+        L"Detach", DETACH_ENTITY, true, false, false, false);
 
     IGUIContextMenu * entityAdd = entityMenu->getSubMenu(eA);
     IGUIContextMenu * entityRemove= entityMenu->getSubMenu(eR);

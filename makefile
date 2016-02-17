@@ -34,9 +34,10 @@ LINKFLAGS = -lIrrlicht -lGL -lGLU -lXxf86vm
 endif
 
 # FINAL FLAG
-FLAGS = $(STD_VERSION) $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
+FLAGS = $(LLIBFLAGS) $(LDFLAGS) $(LINKFLAGS)
 SOURCES=main.cpp simEngine.cpp simGUI.cpp eventHandler.cpp simEntity.cpp\
-	simPhysics.cpp simSensor.cpp simSensorCamera.cpp simRobot.cpp
+	simPhysics.cpp simSensor.cpp simSensorCamera.cpp simRobot.cpp \
+	simRobotGround.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 
 ifeq ($(OS_NAME),Darwin)
@@ -54,38 +55,47 @@ main: $(OBJECTS)
 
 endif
 
+###############################################################################
+# DEPENDENCIES
+###############################################################################
 main.o: main.cpp simEngine.o
-	$(CC) -c main.cpp $(LDFLAGS)
+	$(CC) -c $< $(LDFLAGS)
 
-simEngine.o: simEngine.h simGUI.o simEntity.o simPhysics.o
-	$(CC) -c simEngine.cpp $(LDFLAGS)
+simEngine.o: simEngine.cpp simEngine.h simGUI.o simEntity.o simSensor.o simRobot.o simPhysics.o
+	$(CC) -c $< $(LDFLAGS)
 
-simGUI.o: simGUI.h eventHandler.o simEntity.o 
-	$(CC) -c simGUI.cpp $(LDFLAGS)
+simGUI.o: simGUI.cpp simGUI.h eventHandler.o simEntity.o simRobotGround.o simSensorCamera.o
+	$(CC) -c $< $(LDFLAGS)
 
-eventHandler.o: eventHandler.h 
-	$(CC) -c eventHandler.cpp $(LDFLAGS)
+eventHandler.o: eventHandler.cpp eventHandler.h 
+	$(CC) -c $< $(LDFLAGS)
 
-simSensorCamera.o: simSensorCamera.h simSensor.o
-	$(CC) -c simSensorCamera.cpp $(LDFLAGS)
+simSensorCamera.o: simSensorCamera.cpp simSensorCamera.h simSensor.o
+	$(CC) -c $< $(LDFLAGS)
 
-simSensor.o: simSensor.h simEntity.o
-	$(CC) -c simSensor.cpp $(LDFLAGS)
+simSensor.o: simSensor.cpp simSensor.h simEntity.o
+	$(CC) -c $< $(LDFLAGS)
 
-simRobot.o: simRobot.h simEntity.o
-	$(CC) -c simRobot.cpp $(LDFLAGS)
+simRobotGround.o: simRobotGround.cpp simRobotGround.h simRobot.o
+	$(CC) -c $< $(LDFLAGS)
 
-simEntity.o: simEntity.h
-	$(CC) -c simEntity.cpp $(LDFLAGS)
+simRobot.o: simRobot.cpp simRobot.h simEntity.o
+	$(CC) -c $< $(LDFLAGS)
 
-simPhysics.o: simPhysics.h
-	$(CC) -c simPhysics.cpp $(LDFLAGS)
+simEntity.o: simEntity.cpp simEntity.h
+	$(CC) -c $< $(LDFLAGS)
+
+simPhysics.o: simPhysics.cpp simPhysics.h
+	$(CC) -c $< $(LDFLAGS)
+
+clean:
+	rm *.o
 
 re: 
-	rm *.o; make
+	make clean; make
 
 rt: 
-	rm *.o; make test
+	make clean; make bin 
 
-test: $(OBJECTS)
+bin: $(OBJECTS)
 	$(CC) -o main.out $(OBJECTS) $(FLAGS)

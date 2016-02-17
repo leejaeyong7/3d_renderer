@@ -70,13 +70,24 @@ bool EventHandler::OnEvent(const SEvent & event)
                 return false;
             case CONFIRM_BUTTON:
                 // sets parameter for entity
-                gui->editEntityObject();
+                if(gui->currPrompt == EDIT_ENTITY_PROMPT)
+                {
+                    gui->editEntityObject();
+                }
                 // create new object if add window
-                if(gui->currPrompt == ADD_ENTITY_PROMPT)
+                else if(gui->currPrompt == ADD_ENTITY_PROMPT)
+                {
+                    gui->editEntityObject();
                     gui->createEntityObject();
-                // update
+                }
+                else if(gui->currPrompt == ATTACH_ENTITY_PROMPT ||
+                    gui->currPrompt == DETACH_ENTITY_PROMPT)
+                {
+                    gui->attachEntityObject();
+                }
                 gui->update();
                 caller->getParent()->remove();
+                // update
                 break;
             case REMOVE_BUTTON:
                 gui->engine->removeEntity(gui->currObj);
@@ -101,32 +112,40 @@ bool EventHandler::OnEvent(const SEvent & event)
             case ADD_ROBOT:
                 gui->currPrompt= ADD_ENTITY_PROMPT;
                 gui->currType= ENTITY_TYPE_ROBOT;
-                gui->promptWindow();
+                gui->promptEntityWindow();
                 return true;
             case ADD_SENSOR:
                 gui->currPrompt= ADD_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_SENSOR;
-                gui->promptWindow();
+                gui->promptEntityWindow();
                 return true;
             case ADD_ENVIRONMENT:
                 gui->currPrompt= ADD_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_ENVIRONMENT;
-                gui->promptWindow();
+                gui->promptEntityWindow();
                 return true;
             case EDIT_ROBOT:
                 gui->currPrompt= EDIT_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_ROBOT;
-                gui->promptWindow();
+                gui->promptEntityWindow();
                 return true;
             case EDIT_SENSOR:
                 gui->currPrompt= EDIT_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_SENSOR;
-                gui->promptWindow();
+                gui->promptEntityWindow();
                 return true;
             case EDIT_ENVIRONMENT:
                 gui->currPrompt= EDIT_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_ENVIRONMENT;
-                gui->promptWindow();
+                gui->promptEntityWindow();
+                return true;
+            case ATTACH_ENTITY:
+                gui->currPrompt = ATTACH_ENTITY_PROMPT;
+                gui->entityAttachWindow();
+                return true;
+            case DETACH_ENTITY:
+                gui->currPrompt = DETACH_ENTITY_PROMPT;
+                gui->entityAttachWindow();
                 return true;
             default:
                 return false;
@@ -144,6 +163,11 @@ bool EventHandler::OnEvent(const SEvent & event)
             else if(gui->currPrompt == ADD_ENTITY_PROMPT)
             {
                 gui->setAddPromptData(sid);
+            }
+            else if(gui->currPrompt == DETACH_ENTITY)
+            {
+                if(id == ATTACH_COMBO1)
+                    gui->setDetachData(sid);
             }
             break;
         }
@@ -168,6 +192,10 @@ bool EventHandler::OnEvent(const SEvent & event)
                 gui->currType = 0;
                 gui->currPrompt = 0;
                 break;
+            }
+            case ATTACH_WINDOW:
+            {
+                gui->currPrompt = 0;
             }
             default:
                 break;

@@ -28,6 +28,7 @@ typedef enum entityType{
     ENTITY_TYPE_ENVIRONMENT
 } EntityType;
 
+// gui elements
 enum
 {
     QUIT_BUTTON = 0x10000,
@@ -51,15 +52,25 @@ enum
     CONFIRM_BUTTON,
     REMOVE_BUTTON,
 
+    // context menu
     ADD_ROBOT,
     ADD_SENSOR,
     ADD_ENVIRONMENT,
 
     EDIT_ROBOT,
     EDIT_SENSOR,
-    EDIT_ENVIRONMENT
+    EDIT_ENVIRONMENT,
+
+    ATTACH_ENTITY,
+    DETACH_ENTITY,
+
+    // used for attach window
+    ATTACH_WINDOW,
+    ATTACH_COMBO1,
+    ATTACH_COMBO2
 };
 
+// subentities
 enum
 {
     SUB_ENTITY_ROBOT_QUAD,
@@ -69,9 +80,12 @@ enum
     SUB_ENTITY_ENVIRONMENT_CUBE,
     SUB_ENTITY_ENVIRONMENT_SPHERE
 };
+// prompts
 enum{
     ADD_ENTITY_PROMPT = 0x5000,
-    EDIT_ENTITY_PROMPT
+    EDIT_ENTITY_PROMPT,
+    ATTACH_ENTITY_PROMPT,
+    DETACH_ENTITY_PROMPT
 };
 
 #endif

@@ -29,6 +29,7 @@ SimRobot::SimRobot(string _name,
 {
 
 }
+
 void SimRobot::addSensor(SimSensor* obj)
 {
     sensorVector.push_back(obj); 
