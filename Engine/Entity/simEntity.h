@@ -166,6 +166,11 @@ public:
      */
     vector<AdvancedOption*>* getAdvancedOption() {return &advancedOption;};
 
+    /**
+     * gets keypoint vector pointer
+     */
+    vector<double>* getKeyPoints() {return &keyPoints;};
+
 private:
     // check advanced option label
     struct checkLabel
@@ -191,6 +196,9 @@ private:
 
     // Advanced options vector
     vector<AdvancedOption*> advancedOption;
+
+    // Vector of keypoints for each entity
+    vector<double> keyPoints;
     
 };
 #endif

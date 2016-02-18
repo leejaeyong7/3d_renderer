@@ -6,7 +6,7 @@
  *      Definition file for monocular sensor object
  *
  *============================================================================*/
-#include "simSensorCamera.h"
+#include "simCamera.h"
 
 SimCamera::SimCamera(string _name,
                      double x, double y, double z,

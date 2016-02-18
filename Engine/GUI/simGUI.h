@@ -24,9 +24,9 @@
 #include "simEngine.h"
 #include "simEntity.h"
 #include "simRobot.h"
-#include "simRobotGround.h"
+#include "simGroundRobot.h"
 #include "simSensor.h"
-#include "simSensorCamera.h"
+#include "simCamera.h"
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//

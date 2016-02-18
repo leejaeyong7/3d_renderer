@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------//
 //                               INCLUDES
 //----------------------------------------------------------------------------//
-#include "simRobotGround.h"
+#include "simGroundRobot.h"
 SimGroundRobot::SimGroundRobot(std::string _name,
                                double x, double y, double z,
                                double a, double b, double c)

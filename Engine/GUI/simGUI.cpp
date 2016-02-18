@@ -19,33 +19,8 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
                u32 m_width_r, u32 m_height_r,
                bool fullscreen)
 {
-    device = createDevice(
-        // device type : opengl 
-        // using video namespace
-        // is able to choose between EDT_OPENGL, EDT_DIRECT3D8/9, etc
-        EDT_OPENGL,
+    device = createDevice(EDT_OPENGL, dimension2d<u32>(m_width,m_height));
 
-        // window size
-        // dimension2d from core namespace
-        // using macro values for window size
-        dimension2d<u32>(m_width,m_height),
-
-        // bits per pixel : 16 (default 16)
-        // if not specified, set to 16
-        16,
-
-        // full screen mode : false (default false)
-        false,
-
-        // stencil buffer(??) : false (default false)
-        false,
-
-        // vsync : false (default false)
-        false,
-
-        // custom event handler
-        0
-        );
     // set window parameters
     width = m_width;
     height = m_height;
@@ -59,11 +34,7 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
     engine = eng;
 
     // sets IGUIEnvironment object
-    // under gui namespace
-    // grants access to GUI environment
     IGUIEnvironment* guienv = device->getGUIEnvironment();
-    
-    // set event handler taking care of all events
     
     // set GUI skin
     IGUISkin * skin = guienv->getSkin();
@@ -75,7 +46,10 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
         col.setAlpha(255);
         skin->setColor((EGUI_DEFAULT_COLOR)i, col);
     }
+
     // set current object to null;
+    currType = 0;
+    currPrompt = 0;
     currObj = 0;
 
     // set initial gui setup
@@ -134,7 +108,7 @@ void SimGUI::setup()
         // hill count
         dimension2df(0.0f,0.0f),
         // texture repeat count
-        dimension2df(40.0f,40.0f)
+        dimension2df(400.0f,400.0f)
         );
     IAnimatedMeshSceneNode *floor=smgr->addAnimatedMeshSceneNode(movingplane);
 
@@ -564,11 +538,17 @@ void SimGUI::attachEntityObject()
     int i = crcb->getItemData(crcb->getSelected());
     SimRobot* robj= (SimRobot*)(vec->at(i));
     i = cscb->getItemData(cscb->getSelected());
-    SimSensor* sobj= (SimSensor*)(vec->at(i));
     if(currPrompt == ATTACH_ENTITY_PROMPT)
+    {
+        SimSensor* sobj= (SimSensor*)(vec->at(i));
         engine->attachEntity(robj,sobj);
+    }
     else if(currPrompt == DETACH_ENTITY_PROMPT)
+    {
+        vector<SimSensor*>* svec= robj->getSensorVector();
+        SimSensor* sobj= (SimSensor*)(svec->at(i));
         engine->detachEntity(robj,sobj);
+    }
 }
 
 void SimGUI::setDetachData(s32 index)

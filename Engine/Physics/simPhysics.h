@@ -33,7 +33,7 @@ using namespace std;
 class SimPhysics
 {
 public:
-    SimPhysics(){test = 1;};
+    SimPhysics();
 private:
     int test;
 };
