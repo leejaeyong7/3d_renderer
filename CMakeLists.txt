@@ -5,23 +5,22 @@ find_package(X11)
 find_package(GLUT)
 find_package(ZLIB)
 find_package(OpenGL)
-find_library(IOKIT_LIBRARY IOKit)
-find_library(COCOA_LIBRARY Cocoa)
 
 #-----------------------------------------------------#
 #----------------------- Build -----------------------#
 #-----------------------------------------------------#
 include_directories(
     Engine
-    Engine/GUI)
+    Engine/GUI
+    /usr/include/irrlicht
+    )
 
 add_subdirectory(Engine)
 
-include_directories("/usr/local/Cellar/irrlicht/1.8.1/include/irrlicht")
 
 add_executable( main main.cpp)
 target_link_libraries( main SimEngine )
-
+target_compile_features(main PRIVATE cxx_range_for)
 #-----------------------------------------------------#
 #--------------------- End Build ---------------------#
 #-----------------------------------------------------#
