@@ -1,7 +1,6 @@
 /*============================================================================
  * @author: Jae Yong Lee
  * @file: main.cpp
- * @version: 1.0 
  * @summary:
  *      contains main loop for visual odometry simulation engine
  *

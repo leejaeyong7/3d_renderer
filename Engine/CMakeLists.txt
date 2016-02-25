@@ -11,7 +11,7 @@ add_subdirectory(Physics)
 #                                   Settings
 #-----------------------------------------------------------------------------#
 
-file( GLOB ENGINE_SRC *.cpp )
+file( GLOB ENGINE_SRC *.*pp )
 add_library( SimEngine STATIC ${ENGINE_SRC} )
 target_compile_features(SimEngine PRIVATE cxx_range_for)
 

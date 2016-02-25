@@ -27,6 +27,7 @@
 #include "simGroundRobot.h"
 #include "simSensor.h"
 #include "simCamera.h"
+#include "simGridNode.hpp"
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//

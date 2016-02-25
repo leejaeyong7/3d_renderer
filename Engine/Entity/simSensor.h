@@ -36,61 +36,61 @@ using namespace std;
 class SimRobot;
 class SimSensor : public SimEntity
 {
-public:
-    /**
-     * Default Constructor
-     * Initialize Sensor with default parameters
-     */
-    SimSensor(std::string _name,
-              double x, double y, double z,
-              double a, double b, double c);
+    public:
+        /**
+         * Default Constructor
+         * Initialize Sensor with default parameters
+         */
+        SimSensor(std::string _name,
+                double x, double y, double z,
+                double a, double b, double c);
 
-    /**
-     * Default Constructor with mesh path
-     * Initialize Sensor with default parameters
-     */
-    SimSensor(std::string _name,
-              double x, double y, double z,
-              double a, double b, double c,
-              std::string _meshPath);
+        /**
+         * Default Constructor with mesh path
+         * Initialize Sensor with default parameters
+         */
+        SimSensor(std::string _name,
+                double x, double y, double z,
+                double a, double b, double c,
+                std::string _meshPath);
 
-    /**
-     * Callback function when removing entity is called
-     * All robots that has this sensor will remove this sensor
-     */
-    virtual void removeCallback();
+        /**
+         * Callback function when removing entity is called
+         * All robots that has this sensor will remove this sensor
+         */
+        virtual void removeCallback();
 
-    /**
-     * adds a robot entity that added this sensor
-     * @param SimRobot* - robot that attached this sensor
-     * @return None
-     */
-    void addAttachedRobot(SimRobot * obj);
+        /**
+         * adds a robot entity that added this sensor
+         * @param SimRobot* - robot that attached this sensor
+         * @return None
+         */
+        void addAttachedRobot(SimRobot * obj);
 
 
-    /**
-     * removes robot entity that added this sensor entity
-     * @param None
-     * @return None
-     */
-    void removeAttachedRobot();
-    
-    /**
-     * Get sensor vector pointer attached to robot
-     * @return vector<SimSensor*>* - pointer to vector
-     */
-    SimRobot* getAttachedRobot(){return robot;}; 
-    
-    /**
-     * Estimates sensor's new position
-     * This is pure virtual function and needs to be overridden!
-     * @param None
-     * @return None
-     */
-    virtual void estimate() = 0;
-    
-private:
-    SimRobot* robot;
+        /**
+         * removes robot entity that added this sensor entity
+         * @param None
+         * @return None
+         */
+        void removeAttachedRobot();
+
+        /**
+         * Get sensor vector pointer attached to robot
+         * @return vector<SimSensor*>* - pointer to vector
+         */
+        SimRobot* getAttachedRobot(){return robot;}; 
+
+        /**
+         * Estimates sensor's new position
+         * This is pure virtual function and needs to be overridden!
+         * @param None
+         * @return None
+         */
+        virtual void estimate() = 0;
+
+    private:
+        SimRobot* robot;
 
 };
 #endif

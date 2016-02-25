@@ -31,25 +31,25 @@ using namespace std;
 //----------------------------------------------------------------------------//
 class SimEnvironment : public SimEntity
 {
-public:
-    /**
-     * Default Constructor
-     * Initialize Environment with default parameters
-     */
-    SimEnvironment(std::string _name,
-                   double x, double y, double z,
-                   double a, double b, double c);
+    public:
+        /**
+         * Default Constructor
+         * Initialize Environment with default parameters
+         */
+        SimEnvironment(std::string _name,
+                double x, double y, double z,
+                double a, double b, double c);
 
-    /**
-     * Default Constructor with mesh path
-     * Initialize Environment with default parameters
-     */
-    SimEnvironment(std::string _name,
-                   double x, double y, double z,
-                   double a, double b, double c,
-                   std::string _meshPath);
+        /**
+         * Default Constructor with mesh path
+         * Initialize Environment with default parameters
+         */
+        SimEnvironment(std::string _name,
+                double x, double y, double z,
+                double a, double b, double c,
+                std::string _meshPath);
 
-private:
+    private:
 
-}
+};
 #endif

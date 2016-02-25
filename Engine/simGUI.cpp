@@ -69,55 +69,14 @@ void SimGUI::setup()
     // declare pointers to engine devices
     IVideoDriver * driver = device->getVideoDriver();
     ISceneManager * smgr = device->getSceneManager();
-//----------------------------------------------------------------------------//
-//                             Sky setup
-//----------------------------------------------------------------------------//
-    ITexture* skyTexture  = driver->getTexture("Textures/sky.png");
-    smgr->addSkyDomeSceneNode(
-        skyTexture);
-        
-//----------------------------------------------------------------------------//
-//                             Floor setup
-//----------------------------------------------------------------------------//
-    SMaterial * floor_material = new SMaterial();
-    ITexture* floorTexture= driver->getTexture("Textures/floor.png");
-    if(floor_material)
-    {
-        // floor will be affected by ambient light
-        floor_material->AmbientColor  = SColor(255, 110, 110, 110);
-        floor_material->DiffuseColor  = SColor(255, 0, 0, 0);
-        floor_material->SpecularColor = SColor(255, 0, 0, 0);
-        // and emit gray-ish color
-        floor_material->EmissiveColor = SColor(255, 110, 110, 110);
-        floor_material->ColorMaterial = ECM_NONE;
-        floor_material->setTexture(0,floorTexture);
-    }
-    // add floor for FPS like rendering
-    // for basic testing only
-    IAnimatedMesh * movingplane= smgr->addHillPlaneMesh(
-        // mesh name
-        "floor", 
-        // tileSize
-        dimension2d<f32>(15, 15),
-        // tilecount
-        dimension2d<u32>(40, 40),
-        // material
-        floor_material,
-        // hillheight
-        0.0f,
-        // hill count
-        dimension2df(0.0f,0.0f),
-        // texture repeat count
-        dimension2df(400.0f,400.0f)
-        );
-    IAnimatedMeshSceneNode *floor=smgr->addAnimatedMeshSceneNode(movingplane);
 
     // set global lighting (weak gray)
     smgr->setAmbientLight(SColorf(0.1f,0.1f,0.1f,0.1f));
 
-//----------------------------------------------------------------------------//
-//                             sky setup
-//----------------------------------------------------------------------------//
+    // setup floor grid
+    GridNode * gridNode = new GridNode(smgr->getRootSceneNode(),smgr,-1,1000,1000);
+    gridNode->drop();
+
     // add sun light lighting (diffusive light)
     ILightSceneNode* sun_light = smgr->addLightSceneNode(
         //parent node
@@ -125,22 +84,10 @@ void SimGUI::setup()
         //scenemanager
         vector3df(0,10000,0), 
         // sun color
-        SColorf(0.906f,0.882f,0.488f),
+        SColorf(1.0f,0.906f,0.882f,0.488f),
         // sun position
         15000.0f,
-
         -1 );
-    // add sun sphere for view
-    ISceneNode * sun_node = smgr->addSphereSceneNode();
-    if(sun_node)
-    {
-        // put sun up high
-        sun_node->setPosition(vector3df(0,10000,0));
-        // scale sun large
-        sun_node->setScale(vector3df(100,100,100));
-        // sun is not affected by any lighting
-        sun_node->setMaterialFlag(EMF_LIGHTING,false);
-    }
 
 //----------------------------------------------------------------------------//
 //                             Movement setup
@@ -203,6 +150,11 @@ void SimGUI::draw()
         if(device->isWindowActive())
         {
             driver->beginScene(true,true,SColor(255,200,200,200));
+
+            // make background black for 3D rendering area
+            //
+            driver->draw2DRectangle(SColor(255,0,0,0), 
+                    rect<s32>(0,20,width_r,height_r));
             driver->setViewPort(rect<s32>(0,20,width_r,height_r));
             smgr->drawAll();
             driver->setViewPort(rect<s32>(0,0,width,height));
