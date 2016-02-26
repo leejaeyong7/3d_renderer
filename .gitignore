@@ -1,6 +1,19 @@
+!.gitignore
+!*.h
+!*.cpp
+!*.txt
+*.h.*
+*.cpp.*
+*.txt.*
+Makefile
+makefile
+GTAGS
+GPATH
+GRTAGS
 *~
 main.out
 *.o
 *#
 .#*
+build
 
