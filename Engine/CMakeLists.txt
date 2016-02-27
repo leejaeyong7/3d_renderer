@@ -22,5 +22,4 @@ target_link_libraries(SimEngine
 	SimPhysics 
 	${IRRLICHT_LIBRARY} 
 	${OPENGL_LIBRARIES} 
-	${ZLIB_LIBRARIES} 
 	${X11_LIBRARIES})

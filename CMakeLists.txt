@@ -30,7 +30,6 @@ endif()
 #-----------------------------------------------------------------------------#
 
 find_package(X11 REQUIRED)
-find_package(ZLIB REQUIRED)
 find_package(OpenGL REQUIRED)
 
 if(APPLE)
@@ -42,7 +41,6 @@ endif()
 include_directories(
     ${IRRLICHT_INCLUDE_DIRS}
     ${OpenGL_INCLUDE_DIRS}
-    ${ZLIB_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
     )
 
