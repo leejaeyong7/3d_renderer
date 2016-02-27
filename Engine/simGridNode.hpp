@@ -102,6 +102,7 @@ class GridNode: public ISceneNode
         }
         virtual SMaterial& getMaterial(u32 i)
         {
+            i = i * 1;
             return Material;
         }
     private:
