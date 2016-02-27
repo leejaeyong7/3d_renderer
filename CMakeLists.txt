@@ -1,4 +1,5 @@
 project (SimEngine)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 cmake_minimum_required(VERSION 2.8)
 
 #-----------------------------------------------------------------------------#
@@ -12,7 +13,14 @@ if(APPLE)
 elseif(UNIX)
 	message("Launching SimEngine in Linux")
 	set(IRRLICHT_INCLUDE_DIRS "/usr/include/irrlicht")
-	set(IRRLICHT_LIBRARY "/usr/lib/libIrrlicht.so")
+	if(EXISTS "/usr/lib/libIrrlicht.so")
+		set(IRRLICHT_LIBRARY "/usr/lib/libIrrlicht.so")
+	elseif(EXISTS "/usr/lib/x86_64-linux-gnu/libIrrlicht.so")
+		set(IRRLICHT_LIBRARY 
+			"/usr/lib/x86_64-linux-gnu/libIrrlicht.so")
+	else()
+		message("Irrlicht library Not found...")
+	endif()
 else()
 	message("Windows currently not supported")
 endif()
@@ -52,7 +60,6 @@ file(COPY Engine/Textures DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY Engine/font DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable( main main.cpp)
-target_compile_features(main PRIVATE cxx_range_for)
 
 #-----------------------------------------------------------------------------#
 #                                   Linking

@@ -12,10 +12,15 @@ add_subdirectory(Physics)
 #-----------------------------------------------------------------------------#
 
 file( GLOB ENGINE_SRC *.*pp )
-add_library( SimEngine STATIC ${ENGINE_SRC} )
-target_compile_features(SimEngine PRIVATE cxx_range_for)
+add_library( SimEngine STATIC ${ENGINE_SRC}  )
 
 #-----------------------------------------------------------------------------#
 #                                   Linking
 #-----------------------------------------------------------------------------#
-target_link_libraries(SimEngine SimEntity SimPhysics ${IRRLICHT_LIBRARY} ${OPENGL_LIBRARIES} ${ZLIB_LIBRARIES} ${X11_LIBRARIES})
+target_link_libraries(SimEngine 
+	SimEntity 
+	SimPhysics 
+	${IRRLICHT_LIBRARY} 
+	${OPENGL_LIBRARIES} 
+	${ZLIB_LIBRARIES} 
+	${X11_LIBRARIES})
