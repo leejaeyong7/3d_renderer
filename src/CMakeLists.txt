@@ -10,6 +10,7 @@ if(APPLE)
 	message("Assuming Homebrew install")
 	set(IRRLICHT_INCLUDE_DIRS "/usr/local/include/irrlicht")
 	set(IRRLICHT_LIBRARY "/usr/local/lib/libIrrlicht.a")
+	set(BIN_DIRECTORY ${SimEngine_SOURCE_DIR}/irr.app/Contents/MacOS/irr)
 elseif(UNIX)
 	message("Launching SimEngine in Linux")
 	set(IRRLICHT_INCLUDE_DIRS "/usr/include/irrlicht")
@@ -21,6 +22,7 @@ elseif(UNIX)
 	else()
 		message("Irrlicht library Not found...")
 	endif()
+	set(BIN_DIRECTORY ${SimEngine_SOURCE_DIR})
 else()
 	message("Windows currently not supported")
 endif()
@@ -56,9 +58,10 @@ add_subdirectory(Engine)
 #file(COPY Engine/Models DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 #file(COPY Engine/Textures DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 #file(COPY Engine/font DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+message(${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_executable( main main.cpp)
-
+INSTALL(TARGETS main DESTINATION ${BIN_DIRECTORY})
 #-----------------------------------------------------------------------------#
 #                                   Linking
 #-----------------------------------------------------------------------------#

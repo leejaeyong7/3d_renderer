@@ -39,6 +39,11 @@ typedef struct Rotation{
     double Yaw;
 } Rotation;
 
+typedef struct KeyPoint{
+    double x;
+    double y;
+    double val;
+} KeyPoint;
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
@@ -168,7 +173,7 @@ class SimEntity
         /**
          * gets keypoint vector pointer
          */
-        vector<double>* getKeyPoints() {return &keyPoints;};
+        vector<KeyPoint>* getKeyPoints() {return &keyPoints;};
 
     private:
         // check advanced option label
@@ -197,7 +202,7 @@ class SimEntity
         vector<AdvancedOption*> advancedOption;
 
         // Vector of keypoints for each entity
-        vector<double> keyPoints;
+        vector<KeyPoint> keyPoints;
 
 };
 #endif
