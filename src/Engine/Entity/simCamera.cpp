@@ -12,7 +12,7 @@ SimCamera::SimCamera(string _name,
                      double x, double y, double z,
                      double a, double b, double c,
                      double fx, double fy, double fl):
-    SimSensor(_name,x,y,z,a,b,c,"Models/camera.obj")
+    SimSensor(_name,x,y,z,a,b,c,"data/models/camera.obj")
 {
     vector<AdvancedOption*>* advVector = getAdvancedOption();
     AdvancedOption_Double * fov_x =

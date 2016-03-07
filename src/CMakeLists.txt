@@ -53,9 +53,9 @@ add_subdirectory(Engine)
 #-----------------------------------------------------------------------------#
 #                                   Settings
 #-----------------------------------------------------------------------------#
-file(COPY Engine/Models DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY Engine/Textures DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY Engine/font DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+#file(COPY Engine/Models DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+#file(COPY Engine/Textures DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+#file(COPY Engine/font DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable( main main.cpp)
 

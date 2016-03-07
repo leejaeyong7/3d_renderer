@@ -14,7 +14,7 @@
 SimGroundRobot::SimGroundRobot(std::string _name,
                                double x, double y, double z,
                                double a, double b, double c)
-    :SimRobot(_name,x,y,z,a,b,c,"Models/android.obj")
+    :SimRobot(_name,x,y,z,a,b,c,"data/models/android.obj")
 {
 
 }

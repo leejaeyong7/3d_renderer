@@ -38,7 +38,7 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
     
     // set GUI skin
     IGUISkin * skin = guienv->getSkin();
-    IGUIFont * font = guienv->getFont("font/inconsolata.xml");
+    IGUIFont * font = guienv->getFont("data/font/inconsolata.xml");
     skin->setFont(font);
     for (s32 i=0; i<EGDC_COUNT ; ++i)
     {
