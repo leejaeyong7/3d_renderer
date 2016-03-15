@@ -57,6 +57,7 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
 
     // set context menu
     setContextMenu();
+    setCameraDropdown();
 
 }
 
@@ -69,25 +70,31 @@ void SimGUI::setup()
     // declare pointers to engine devices
     IVideoDriver * driver = device->getVideoDriver();
     ISceneManager * smgr = device->getSceneManager();
+    ISceneNode * r = smgr->getRootSceneNode();
 
     // set global lighting (weak gray)
-    smgr->setAmbientLight(SColorf(0.1f,0.1f,0.1f,0.1f));
+    smgr->setAmbientLight(SColorf(0.1f,0.1f,0.1f,1.0f));
 
     // setup floor grid
-    GridNode * gridNode = new GridNode(smgr->getRootSceneNode(),smgr,-1,1000,1000);
+    GridNode * gridNode = new GridNode(smgr->getRootSceneNode(),
+                                       smgr,-1,100,100,10);
     gridNode->drop();
 
-    // add sun light lighting (diffusive light)
-    ILightSceneNode* sun_light = smgr->addLightSceneNode(
-        //parent node
-        0, 
-        //scenemanager
-        vector3df(0,10000,0), 
-        // sun color
-        SColorf(1.0f,0.906f,0.882f,0.488f),
-        // sun position
-        15000.0f,
-        -1 );
+    // add 4 sun lights at corners
+    ILightSceneNode* sunu = smgr->addLightSceneNode(
+        0, vector3df(0,10000,0), 
+        SColorf(0.906f,0.882f,0.488f,1.0f),
+        25000.0f, -1 );
+    
+    SColorf side(0.151f,0.146f,0.81f,1.0f);
+    ILightSceneNode* sun1 = smgr->addLightSceneNode(
+        0, vector3df(5000,0,5000), side, 25000.0f, -1 );
+    ILightSceneNode* sun2 = smgr->addLightSceneNode(
+        0, vector3df(5000,0,-5000), side, 25000.0f, -1 );
+    ILightSceneNode* sun3 = smgr->addLightSceneNode(
+        0, vector3df(-5000,0,5000), side, 25000.0f, -1 );
+    ILightSceneNode* sun4 = smgr->addLightSceneNode(
+        0, vector3df(-5000,0,-5000), side, 25000.0f, -1 );
 
 //----------------------------------------------------------------------------//
 //                             Movement setup
@@ -115,13 +122,13 @@ void SimGUI::setup()
     keyMap[7].Action = EKA_STRAFE_RIGHT;
     keyMap[7].KeyCode = KEY_KEY_D;
 
-    ICameraSceneNode* rc = smgr->addCameraSceneNodeFPS(
+    wc = smgr->addCameraSceneNodeFPS(
         // parent node : default null
-        0, 
+        0,
         // rotation speed : default 100
         30,
         // movement speed : default 0.5
-        0.03, 
+        0.03,
         // id
         -1,
         // key mapping input
@@ -131,13 +138,14 @@ void SimGUI::setup()
         );
 
     // set camera position
-    rc->setPosition(vector3df(0,5,0));
+    wc->setPosition(vector3df(0,5,0));
     // sets far value of camera
     // extended for sun support
-    rc->setFarValue(20000.0f);
+    wc->setFarValue(20000.0f);
     // hides mouse
     device->getCursorControl()->setVisible(false);
 
+    sc = new Sim::CameraSceneNode(r,smgr,-1);
 }
 
 void SimGUI::draw()
@@ -167,17 +175,12 @@ void SimGUI::draw()
 }
 void SimGUI::update()
 {
-    vector<EntityMesh>::iterator it;
+    vector<SimSceneNode*>::iterator it;
     for(it = entityMeshVector.begin(); it != entityMeshVector.end(); it++)
     {
-        if(((*it).obj == 0) || ((*it).mesh == 0))
+        if((*it) == 0)
             continue;
-        Position pos = (*it).obj->getPosition();
-        Rotation rot = (*it).obj->getRotation();
-        vector3df mpos(pos.X,pos.Y,pos.Z);
-        (*it).mesh->setPosition(mpos);
-        vector3df mrot(rot.Roll,rot.Pitch,rot.Yaw);
-        (*it).mesh->setRotation(mrot);
+        (*it)->update();
     }
 }
 
@@ -195,57 +198,37 @@ void SimGUI::addEntitySceneNode(EntityType type, SimEntity * obj)
 {
     if(!obj)
         return;
-    EntityMesh newEntityMesh;
     ISceneManager* smgr = device->getSceneManager();
-    vector3df pos;
-    vector3df rot;
-    Position ePos = obj->getPosition();
-    Rotation eRot = obj->getRotation();
-    pos.X = ePos.X;
-    pos.Y = ePos.Y;
-    pos.Z = ePos.Z;
-    
-    rot.X = eRot.Pitch;
-    rot.Y = eRot.Roll;
-    rot.Z = eRot.Yaw;
-
-    newEntityMesh.obj = obj;
-    std::string pathname = obj->getMeshPath();
-    irr::core::string<fschar_t> pname = pathname.c_str();
-    if(pathname != "")
+    ISceneNode * r = smgr->getRootSceneNode();
+    Sim::SimSceneNode * node = new Sim::SimSceneNode(r,smgr,-1,obj);
+    if(type == ENTITY_TYPE_ENVIRONMENT)
     {
-        IAnimatedMesh* mesh = smgr->getMesh(pname);
-        newEntityMesh.mesh = smgr->addMeshSceneNode(
-            // mesh
-            mesh->getMesh(0),
-            //parent scene node
-            0,
-            // id
-            -1,
-            // position
-            pos,
-            // rotation
-            rot
-            // scale by default
-            );
+        node->getMaterial(1).Lighting = false;
     }
-    else
-        newEntityMesh.mesh = 0;
-    entityMeshVector.push_back(newEntityMesh);
+    entityMeshVector.push_back(node);
+    setCameraDropdown();
+    /* SimCamera* s = dynamic_cast<SimCamera*>(obj); */
+    /* if(s) */
+    /* { */
+    /*     ((CameraSceneNode*)sc)->attachCamera(s); */
+    /*     smgr->setActiveCamera(sc); */
+    /* } */
 }
 void SimGUI::removeEntitySceneNode(SimEntity * obj)
 {
     if(!obj)
         return;
-    vector<EntityMesh>::iterator it =
+    vector<SimSceneNode*>::iterator it =
         std::find_if(entityMeshVector.begin(),
                      entityMeshVector.end(),
                      checkEntityPointer(obj));
 
     while(it != entityMeshVector.end())
     {
-        if(it->mesh)
-            it->mesh->drop();
+        if(*it)
+        {
+            (*it)->remove();
+        }
         it = std::find_if(std::next(it),
                           entityMeshVector.end(),
                           checkEntityPointer(obj));
@@ -255,6 +238,7 @@ void SimGUI::removeEntitySceneNode(SimEntity * obj)
                        entityMeshVector.end(),
                        checkEntityPointer(obj)),
         entityMeshVector.end());
+    setCameraDropdown();
 }
 
 void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
@@ -263,19 +247,19 @@ void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
         return;
     if(!sensor)
         return;
-    vector<EntityMesh>::iterator it =
+    vector<SimSceneNode*>::iterator it =
         std::find_if(entityMeshVector.begin(),
                      entityMeshVector.end(),
                      checkEntityPointer(robot));
-    EntityMesh robotMesh = (*it);
+    SimSceneNode * robotMesh = (*it);
     
     it = std::find_if(entityMeshVector.begin(),
                       entityMeshVector.end(),
                       checkEntityPointer(sensor));
-    EntityMesh sensorMesh = (*it);
+    SimSceneNode * sensorMesh = (*it);
 
-    if(robotMesh.mesh != 0 && sensorMesh.mesh != 0)
-        sensorMesh.mesh->setParent(robotMesh.mesh);
+    if(robotMesh != 0 && sensorMesh != 0)
+        sensorMesh->setParent(robotMesh);
 }
 
 void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
@@ -284,21 +268,21 @@ void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
         return;
     if(!sensor)
         return;
-    vector<EntityMesh>::iterator it =
+    vector<SimSceneNode*>::iterator it =
         std::find_if(entityMeshVector.begin(),
                      entityMeshVector.end(),
                      checkEntityPointer(robot));
-    EntityMesh robotMesh = (*it);
+    SimSceneNode* robotMesh = (*it);
     
     it = std::find_if(entityMeshVector.begin(),
                       entityMeshVector.end(),
                       checkEntityPointer(sensor));
-    EntityMesh sensorMesh = (*it);
+    SimSceneNode* sensorMesh = (*it);
 
-    if(robotMesh.mesh != 0 && sensorMesh.mesh != 0)
+    if(robotMesh != 0 && sensorMesh != 0)
     {
         ISceneManager * smgr = device->getSceneManager();
-        sensorMesh.mesh->setParent(smgr->getRootSceneNode());
+        sensorMesh->setParent(smgr->getRootSceneNode());
     }
 }
 void SimGUI::entityAttachWindow()
@@ -475,6 +459,46 @@ void SimGUI::promptEntityWindow()
 //----------------------------------------------------------------------------//
 //                           Handles GUI positioning
 //----------------------------------------------------------------------------//
+
+void SimGUI::setCameraDropdown()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    s32 cx,cy,cw,ch;
+    cx = width_r + 10;
+    cw = width - width_r -20;
+    cy = 40;
+    ch = 40;
+
+    IGUIStaticText * ct = guienv->addStaticText(
+        L"Choose Camera",
+        rect<s32>(cx,cy,cx+cw,cy+20),
+        false, true);
+    IGUIComboBox* ccb = guienv->addComboBox( 
+        rect<s32>(cx, cy+20, cx+cw, cy+ch), 0, CAMERA_COMBO);
+
+    vector<SimEntity*>* eVector = engine->getEntityVector();
+    vector<SimEntity*>::iterator it;
+
+    ccb->addItem(L"World Camera",-1);
+    int index = 0;
+    for(it = eVector->begin(); it!= eVector->end(); ++it)
+    {
+        SimCamera* s = dynamic_cast<SimCamera*>(*it);
+        if(s)
+        {
+            std::string name = (*it)->getName();
+            std::wstring wname(name.length(), L' '); 
+            std::copy(name.begin(), name.end(), wname.begin());
+            ccb->addItem(wname.c_str(),index);
+        }
+        index++;
+    }
+    
+}
+
+
+
 void SimGUI::attachEntityObject()
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
@@ -601,9 +625,9 @@ void SimGUI::editEntityObject()
 
     list<IGUIElement*> advChildren = adv_box->getChildren();
     list<IGUIElement*>::Iterator lit = advChildren.begin();;
-    for(int i = 0; i < advChildren.size(); i++)
+    for(int i = 0; i < advChildren.size(); i++,lit++,it++)
     {
-        cstr = (*lit)->getText();
+        cstr = (*lit)->getElementFromId(PROMPT_ADV_INPUT)->getText();
         switch((*it)->type)
         {
         case INTEGER:
@@ -622,6 +646,7 @@ void SimGUI::editEntityObject()
             break;
         }
     }
+    currObj->update();
 }
 void SimGUI::setEditPromptData(s32 index)
 {
@@ -657,7 +682,7 @@ void SimGUI::setAddPromptData(s32 index)
         }
         case SUB_ENTITY_ROBOT_GROUND:
         {
-            obj = new SimGroundRobot("",0,0,0,0,0,0);
+            obj = new SimGroundRobot("",0,0,0,0,0,0,0,0,0);
             currObj = obj;
             break;
         }
@@ -685,8 +710,10 @@ void SimGUI::setAddPromptData(s32 index)
     {
         switch(i)
         {
-        case SUB_ENTITY_ENVIRONMENT_APRIL:
+        case SUB_ENTITY_ENVIRONMENT_PLANE:
         {
+            obj = new SimPlane("",0,0,0,0,0,0,0,0,0);
+            currObj = obj;
             break;
         }
         case SUB_ENTITY_ENVIRONMENT_CUBE:
@@ -839,6 +866,10 @@ void SimGUI::setPromptData(SimEntity * obj)
             break;
     }
 }
+
+
+
+
 void SimGUI::setPromptWindow(s32 wx, s32 wy, s32 ww, s32 wh)
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
@@ -933,7 +964,7 @@ void SimGUI::setPromptComboBox(s32 cx, s32 cy, s32 cw, s32 ch)
             break;
         case ENTITY_TYPE_ENVIRONMENT:
             text->setText(L"Choose Entity");
-            cb->addItem(L"April Tag",SUB_ENTITY_ENVIRONMENT_APRIL);
+            cb->addItem(L"Plane",SUB_ENTITY_ENVIRONMENT_PLANE);
             cb->addItem(L"Cube",SUB_ENTITY_ENVIRONMENT_CUBE);
             cb->addItem(L"Sphere",SUB_ENTITY_ENVIRONMENT_SPHERE);
             break;
@@ -987,7 +1018,7 @@ void SimGUI::setPromptComboBox(s32 cx, s32 cy, s32 cw, s32 ch)
             text->setText(L"Choose Entity by name to edit");
             for(it = eVector->begin(); it!= eVector->end(); ++it)
             {
-                SimEntity* s = dynamic_cast<SimEntity*>(*it);
+                SimEnvironment* s = dynamic_cast<SimEnvironment*>(*it);
                 if(s)
                 {
                     std::string name = (*it)->getName();
@@ -1218,6 +1249,8 @@ void SimGUI::setContextMenu()
     
     //---------------------------Engine Menu----------------------------------//
 
+	engineMenu->addItem(L"Show Features", FEATURE_BUTTON,
+                        true, false, true, false);
 	engineMenu->addItem(L"Quit", QUIT_BUTTON, true, false, false, false);
 
     //---------------------------Entity Menu----------------------------------//

@@ -6,89 +6,58 @@
  *      Declaration file for simEntity Robot object
  *
  *============================================================================*/
-//----------------------------------------------------------------------------//
-//                                INCLUDE GUARDS
-//----------------------------------------------------------------------------//
 #ifndef _SIM_ROBOT_H_
 #define _SIM_ROBOT_H_
-
 //----------------------------------------------------------------------------//
-//                                   Includes
+//                                  INCLUDES                                  //
 //----------------------------------------------------------------------------//
 #include <algorithm> 
 #include <vector> 
 #include "simEntity.h"
 #include "simSensor.h"
-
 //----------------------------------------------------------------------------//
-//                                  Namespaces
+//                                END INCLUDES                                //
+//----------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
+//                                 NAMESPACES                                 //
 //----------------------------------------------------------------------------//
 using namespace std;
-
 //----------------------------------------------------------------------------//
-//                                Global Variables
+//                               END NAMESPACES                               //
 //----------------------------------------------------------------------------//
-
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
-
+/* forward declaration */
 class SimSensor;
 class SimRobot: public SimEntity
 {
-    public:
-        /**
-         * Default Constructor
-         * Initialize Sensor with default parameters
-         */
-        SimRobot(std::string _name,
-                double x, double y, double z,
-                double a, double b, double c);
+public:
+    /* default constructor */
+    SimRobot(std::string _name,
+             double x, double y, double z,
+             double a, double b, double c,
+             std::string _meshPath);
 
-        /**
-         * Default Constructor
-         * Initialize Sensor with default parameters
-         */
-        SimRobot(std::string _name,
-                double x, double y, double z,
-                double a, double b, double c,
-                std::string _meshPath);
+    /* default destructor */
+    ~SimRobot();
 
-        /**
-         * Callback function when remove entity is called
-         * All sensors will be removed from this robot
-         */
-        virtual void removeCallback();
+    /* update callback */
+    virtual void update()= 0;
 
-        /**
-         * Adds Sensor to robot
-         * @param SimSensor* - pointer to sensor object to add
-         * @return None
-         */
-        void addSensor(SimSensor* obj);
+    /* adds sensor to robot */
+    void addSensor(SimSensor* obj);
+    /* removes sensor to robot */
+    void removeSensor(SimSensor* obj);
 
-        /**
-         * Remove Sensor to robot
-         * @param SimSensor* - pointer to sensor object to remove 
-         * @return None
-         */
-        void removeSensor(SimSensor* obj);
+    /**
+     * Get sensor vector pointer attached to robot
+     * @return vector<SimSensor*>* - pointer to vector
+     */
+    vector<SimSensor*>* getSensorVector(){return &sensorVector;}; 
 
-        /**
-         * Get sensor vector pointer attached to robot
-         * @return vector<SimSensor*>* - pointer to vector
-         */
-        vector<SimSensor*>* getSensorVector(){return &sensorVector;}; 
-        /**
-         * Estimates sensor's new position
-         * This is pure virtual function and needs to be overridden!
-         * @param None
-         * @return None
-         */
-        //virtual void estimate() = 0;
-
-    private:
-        vector<SimSensor*> sensorVector;
+private:
+    vector<SimSensor*> sensorVector;
 
 
 };

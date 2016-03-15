@@ -1,7 +1,7 @@
 /*=============================================================================
  * @author     : Jae Yong Lee
  * @file       : simPlane.h
- * @description: 
+ * @description:
  *      Reference file for primitive environment Plane
  * Copyright (c) Jae Yong Lee / UIUC Spring 2016
  ============================================================================*/
@@ -13,8 +13,8 @@
 //----------------------------------------------------------------------------//
 //                                   Includes
 //----------------------------------------------------------------------------//
-#include <algorithm> 
-#include <vector> 
+#include <algorithm>
+#include <vector>
 #include "simEnvironment.h"
 //----------------------------------------------------------------------------//
 //                                  Namespaces
@@ -36,16 +36,10 @@ public:
      */
     SimPlane(std::string _name,
              double x, double y, double z,
-             double a, double b, double c);
-
-    /**
-     * Default Constructor
-     * Initialize plane with default parameters
-     */
-    SimPlane(std::string _name,
-             double x, double y, double z,
              double a, double b, double c,
-             std::string _meshPath);
-    
+             double w, double h, int num_feature);
+
+    virtual void update();
+  private:
 };
 #endif

@@ -9,20 +9,18 @@
 //-------------------------------INCLUDE GUARDS-------------------------------//
 //----------------------------------------------------------------------------//
 #ifndef _SIM_FLOOR_H
-#define _SIM_FLOOR_H 
+#define _SIM_FLOOR_H
 //----------------------------------------------------------------------------//
 //----------------------------------INCLUDES----------------------------------//
 //----------------------------------------------------------------------------//
-#include "simEnvironment.h"
-class SimFloor : public SimEnvironment
+#include "simPlane.h"
+class SimFloor : public SimPlane 
 {
-    public:
-        /**
-         * Default constructor; floor only needs height
-         */
-        SimFloor(std::string _name, double y, std::string _meshPath);
-
-
-    private:
+public:
+    /**
+     * Default constructor; floor only needs height
+     */
+    SimFloor(std::string _name, double y, double w);
+private:
 };
 #endif /* ifndef _SIM_FLOOR_H */

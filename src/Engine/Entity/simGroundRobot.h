@@ -7,26 +7,25 @@
  *      Declaration file for simRobot Ground Robot
  * Copyright (c) Jae Yong Lee / UIUC Spring 2016
  ============================================================================*/
-//----------------------------------------------------------------------------//
-//                                INCLUDE GUARDS
-//----------------------------------------------------------------------------//
 #ifndef _SIM_GROUND_ROBOT_H_
 #define _SIM_GROUND_ROBOT_H_
 //----------------------------------------------------------------------------//
-//                                   Includes
+//                                  INCLUDES                                  //
 //----------------------------------------------------------------------------//
 #include <algorithm> 
 #include <vector> 
 #include "simEntity.h"
 #include "simRobot.h"
 //----------------------------------------------------------------------------//
-//                                  Namespaces
+//                                END INCLUDES                                //
+//----------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
+//                                 NAMESPACES                                 //
 //----------------------------------------------------------------------------//
 using namespace std;
 //----------------------------------------------------------------------------//
-//                                Global Variables
+//                               END NAMESPACES                               //
 //----------------------------------------------------------------------------//
-
 //----------------------------------------------------------------------------//
 //                               Class Declaration
 //----------------------------------------------------------------------------//
@@ -38,16 +37,13 @@ public:
      * Initialize Sensor with default parameters
      */
     SimGroundRobot(std::string _name,
-             double x, double y, double z,
-             double a, double b, double c);
+                   double x, double y, double z,
+                   double a, double b, double c,
+                   double w, double h, double d,
+                   std::string _meshPath="");
 
-    /**
-     * Default Constructor
-     * Initialize Sensor with default parameters
-     */
-    SimGroundRobot(std::string _name,
-             double x, double y, double z,
-             double a, double b, double c,
-             std::string _meshPath);
+    /* default destructor */
+    ~SimGroundRobot();
+    virtual void update();
 };
 #endif

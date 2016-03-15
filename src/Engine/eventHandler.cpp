@@ -106,6 +106,30 @@ bool EventHandler::OnEvent(const SEvent & event)
 
             switch(id)
             {
+            case FEATURE_BUTTON:
+            {
+            IGUIContextMenu* cm = ((IGUIContextMenu*)(caller));
+            if(cm->isItemChecked(sid))
+            {
+                cm->setItemChecked(sid,false);
+                
+                vector<SimSceneNode*>* v = &(gui->entityMeshVector);
+                for(int i = 0; i < v->size(); i++)
+                {
+                    v->at(i)->setDrawFeature(false);
+                }
+            }
+            else
+            {
+                cm->setItemChecked(sid,true);
+                vector<SimSceneNode*>* v = &(gui->entityMeshVector);
+                for(int i = 0; i < v->size(); i++)
+                {
+                    v->at(i)->setDrawFeature(true);
+                }
+            }
+            }
+                    return false;
             case QUIT_BUTTON:
                 device->closeDevice();
                 return true;
@@ -156,18 +180,36 @@ bool EventHandler::OnEvent(const SEvent & event)
         {
             s32 sid;
             sid = ((IGUIComboBox*)(caller))->getSelected();
-            if(gui->currPrompt == EDIT_ENTITY_PROMPT)
+            switch(id)
             {
-                gui->setEditPromptData(sid);
+            case CAMERA_COMBO:
+            {
+                if(sid == -1)
+                    gui->device->getSceneManager()->setActiveCamera(gui->wc);
+                else
+                {
+                vector<SimEntity*>* ev= gui->engine->getEntityVector();
+                SimCamera* s = dynamic_cast<SimCamera*>(ev->at(sid));
+                if(s)
+                {
+                    ((CameraSceneNode*)gui->sc)->attachCamera(s);
+                    gui->device->getSceneManager()->setActiveCamera(gui->sc);
+                }
+
+                }
             }
-            else if(gui->currPrompt == ADD_ENTITY_PROMPT)
-            {
-                gui->setAddPromptData(sid);
-            }
-            else if(gui->currPrompt == DETACH_ENTITY)
-            {
+                break;
+                
+            case PROMPT_COMBO:
+                if(gui->currPrompt == EDIT_ENTITY_PROMPT)
+                    gui->setEditPromptData(sid);
+                else if(gui->currPrompt == ADD_ENTITY_PROMPT)
+                    gui->setAddPromptData(sid);
+                break;
+            case ATTACH_COMBO1:
                 if(id == ATTACH_COMBO1)
                     gui->setDetachData(sid);
+                break;
             }
             break;
         }

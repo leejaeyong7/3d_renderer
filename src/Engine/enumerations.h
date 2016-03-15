@@ -32,6 +32,7 @@ typedef enum entityType{
 enum
 {
     QUIT_BUTTON = 0x10000,
+    FEATURE_BUTTON,
 
     // used for add prompt
     PROMPT_ADD_WINDOW,
@@ -67,7 +68,9 @@ enum
     // used for attach window
     ATTACH_WINDOW,
     ATTACH_COMBO1,
-    ATTACH_COMBO2
+    ATTACH_COMBO2,
+
+    CAMERA_COMBO
 };
 
 // subentities
@@ -76,7 +79,7 @@ enum
     SUB_ENTITY_ROBOT_QUAD,
     SUB_ENTITY_ROBOT_GROUND,
     SUB_ENTITY_SENSOR_CAM,
-    SUB_ENTITY_ENVIRONMENT_APRIL,
+    SUB_ENTITY_ENVIRONMENT_PLANE,
     SUB_ENTITY_ENVIRONMENT_CUBE,
     SUB_ENTITY_ENVIRONMENT_SPHERE
 };

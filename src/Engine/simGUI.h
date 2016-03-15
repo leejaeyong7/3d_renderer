@@ -27,7 +27,13 @@
 #include "simGroundRobot.h"
 #include "simSensor.h"
 #include "simCamera.h"
+#include "simEnvironment.h"
+#include "simPlane.h"
+#include "simFloor.h"
 #include "simGridNode.hpp"
+#include "simEntitySceneNode.hpp"
+#include "simCameraSceneNode.hpp"
+
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
@@ -38,13 +44,14 @@ using namespace scene;
 using namespace video;
 using namespace io;
 using namespace gui;
+using namespace Sim;
 
 //----------------------------------------------------------------------------//
 //                                Global Variables
 //----------------------------------------------------------------------------//
 typedef struct EntityMesh{
     SimEntity* obj;
-    IMeshSceneNode * mesh;
+    Sim::SimSceneNode* node;
 } EntityMesh;
 //----------------------------------------------------------------------------//
 //                               Class Declaration
@@ -151,11 +158,17 @@ private:
     // event handler for device
     EventHandler * eh;
 
+    // world camera
+    ICameraSceneNode * wc;
+    
+    // attached camera
+    ICameraSceneNode * sc;
+
     // window sizes
     u32 width, height, width_r, height_r;
 
     // Entity Mesh vector
-    vector<EntityMesh> entityMeshVector;
+    vector<SimSceneNode*> entityMeshVector;
 
     // sets data for prompt window
     void setPromptData(SimEntity* obj);
@@ -168,6 +181,7 @@ private:
     int currType;
     void createEntityObject();
     void editEntityObject();
+    void setCameraDropdown();
 
     // sets up common prompt window gui objects
     void setPromptWindow(s32 wx, s32 wy, s32 ww, s32 wh);
@@ -189,11 +203,10 @@ private:
     {
         checkEntityPointer(SimEntity* ptr) : ptr_holder(ptr) {}
         SimEntity* ptr_holder;
-        bool operator()(EntityMesh obj)
+        bool operator()(SimSceneNode* obj)
         {
-            return obj.obj == ptr_holder;
+            return obj->getEntity() == ptr_holder;
         }
     };
-
 };
 #endif

@@ -1,31 +1,32 @@
 /*============================================================================
  * @author: Jae Yong Lee
  * @file: simEntity.h
- * @version:  
+ * @version:
  * @summary:
  *      Declaration file for simulation objects
  *
  *============================================================================*/
-//----------------------------------------------------------------------------//
-//                                INCLUDE GUARDS
-//----------------------------------------------------------------------------//
 #ifndef _SIM_ENTITY_H_
 #define _SIM_ENTITY_H_
-
 //----------------------------------------------------------------------------//
-//                                   Includes
+//                                  INCLUDES                                  //
 //----------------------------------------------------------------------------//
 #include <string>
 #include <vector>
+#include <cmath>
 #include "simEntityOption.h"
-
 //----------------------------------------------------------------------------//
-//                                  Namespaces
+//                                END INCLUDES                                //
+//----------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
+//                                 NAMESPACES                                 //
 //----------------------------------------------------------------------------//
 using namespace std;
-
 //----------------------------------------------------------------------------//
-//                                Global Variables
+//                               END NAMESPACES                               //
+//----------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
+//                            TYPEDEF DEFINITIONS                             //
 //----------------------------------------------------------------------------//
 typedef struct Position{
     double X;
@@ -39,170 +40,168 @@ typedef struct Rotation{
     double Yaw;
 } Rotation;
 
-typedef struct KeyPoint{
+/* typedef struct KeyPoint{ */
+/*     double x; */
+/*     double y; */
+/* } KeyPoint; */
+
+typedef struct Point{
     double x;
     double y;
-    double val;
-} KeyPoint;
-//----------------------------------------------------------------------------//
-//                               Class Declaration
-//----------------------------------------------------------------------------//
+    double z;
+} Point;
 
+typedef struct Triangle{
+    Point a;
+    Point b;
+    Point c;
+} Triangle;
+
+typedef struct Rectangle{
+    Triangle u;
+    Triangle d;
+} Rectangle;
+//----------------------------------------------------------------------------//
+//                          END TYPEDEF DEFINITIONS                           //
+//----------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
+//                              CLASS DEFINITION                              //
+//----------------------------------------------------------------------------//
 class SimEntity
 {
-    public:
-        /**
-         * Constructor with position/rotation and empty scenenode
-         * @param double x - x axis coordinate
-         * @param double y - y axis coordinate
-         * @param double z - z axis coordinate
-         * @param double a - a axis coordinate
-         * @param double b - b axis coordinate
-         * @param double c - c axis coordinate
-         * @param std::stringw p_name - name of entity
-         * @return SimEntity object with no mesh to render
-         */
-        SimEntity(std::string _name,
-                double x, double y, double z,
-                double a, double b, double c);
+public:
+    /* Default constructor */
+    SimEntity(std::string _name,
+              double x, double y, double z,
+              double a, double b, double c,
+              std::string _meshPath = "");
 
-        /**
-         * Constructor with position/rotation and empty scenenode
-         * @param std::string _name - name of entity
-         * @param double x - x axis coordinate
-         * @param double y - y axis coordinate
-         * @param double z - z axis coordinate
-         * @param double a - a axis coordinate
-         * @param double b - b axis coordinate
-         * @param double c - c axis coordinate
-         * @param std::string _meshPath - path of mesh file
-         * @return SimEntity object with no mesh to render
-         */
-        SimEntity(std::string _name,
-                double x, double y, double z,
-                double a, double b, double c,
-                std::string _meshPath);
+    /* copy constructor */
+    SimEntity(const SimEntity & obj);
 
-        /**
-         * Copy Constructor
-         * @param SimEntity - SimEntity Object to copy from
-         * @return Copied SimEntity object
-         */
-        SimEntity(const SimEntity & obj);
+    /* assignment operator */
+    SimEntity& operator= (const SimEntity & rhs);
 
-        /**
-         * Assignment Operator
-         * @param SimEntity - Simentity Object to copy from
-         * @return Copied SimEntity object
-         */
-        SimEntity& operator= (const SimEntity & rhs);
+    /* default desructor. needs overloading */
+    ~SimEntity();
 
-        /**
-         * Destructor
-         * Initialize Irrlicht, Entities, and physics
-         */
-        virtual ~SimEntity();
+//----------------------------------------------------------------------------//
+//                                  SETTERS                                   //
+//----------------------------------------------------------------------------//
+    void setPosition(double x, double y, double z);
+
+    void setRotation(double a, double b, double c);
+
+    void setName(std::string new_name);
+
+    void setMeshPath(std::string new_path);
+
+//----------------------------------------------------------------------------//
+//                                  GETTERS                                   //
+//----------------------------------------------------------------------------//
+    /**
+     * gets position of entity
+     * @param none
+     * @return array size of 3 of double representing positional vector
+     */
+    const Position getPosition() const {return translation;};
+
+    /**
+     * gets position of entity
+     * @param none
+     * @return vector size of 3 of double representing rotational matrix
+     */
+    const Rotation getRotation() const {return rotation;};
+
+    /**
+     * gets name of this entity
+     */
+    const std::string getName() const {return name;};
+
+    /**
+     * gets name of this entity
+     */
+    const std::string getMeshPath() const {return meshPath;};
+
+    /**
+     * gets advanced option pointer
+     */
+    vector<AdvancedOption*>* getAdvancedOption() {return &advancedOption;};
+
+    /**
+     * gets keypoint vector pointer
+     */
+    vector<Point>* getKeyPoints() {return &keyPoints;};
+
+    /**
+     * gets Point vector pointer
+     */
+    vector<Point>* getPoints() {return &points;};
+
+    /**
+     * gets Triangle vector pointer
+     */
+    vector<Triangle>* getTriangles() {return &triangles;};
+
+    /**
+     * gets Rectangle vector pointer
+     */
+    vector<Rectangle>* getRectangles() {return &rectangles;};
+//----------------------------------------------------------------------------//
+//                                 CALLBACKS                                  //
+//----------------------------------------------------------------------------//
+    /**
+     * callback called when edit is done
+     */
+    /* virtual void editCallback() = 0; */
+    virtual void update() = 0;
+
+    /**
+     * Callback function when removeEntity is called
+     * This is pure virtual function that must be overwritten
+     */
+    /* virtual void removeCallback() = 0; */
 
 
-        /**
-         * Callback function when removeEntity is called 
-         * This is pure virtual function that must be overwritten
-         */
-        virtual void removeCallback() = 0;
-
-        /**
-         * sets position of entity
-         * @param double x - x axis coordinate
-         * @param double y - y axis coordinate
-         * @param double z - z axis coordinate
-         * @return none
-         */
-        void setPosition(double x, double y, double z);
-
-        /**
-         * sets rotation of entity
-         * @param double a - a axis coordinate
-         * @param double b - b axis coordinate
-         * @param double c - c axis coordinate
-         * @return none
-         */
-        void setRotation(double a, double b, double c);
-
-        /**
-         * sets name of entity
-         * @return none
-         */
-        void setName(std::string new_name);
-
-        /**
-         * sets path name of entity
-         * @return none
-         */
-        void setMeshPath(std::string new_path);
 
 
-        /**
-         * gets position of entity
-         * @param none
-         * @return array size of 3 of double representing positional vector
-         */
-        const Position getPosition() const {return translation;};
+private:
+    // translation coordinates
+    Position translation;
 
-        /**
-         * gets position of entity
-         * @param none
-         * @return vector size of 3 of double representing rotational matrix 
-         */
-        const Rotation getRotation() const {return rotation;};
+    // rotation coordinates
+    Rotation rotation;
 
-        /**
-         * gets name of this entity
-         */
-        const std::string getName() const {return name;};
+    // name of entity
+    std::string name;
 
-        /**
-         * gets name of this entity
-         */
-        const std::string getMeshPath() const {return meshPath;};
+    // path of mesh file
+    std::string meshPath;
 
-        /**
-         * gets advanced option pointer
-         */
-        vector<AdvancedOption*>* getAdvancedOption() {return &advancedOption;};
+    // Advanced options vector
+    vector<AdvancedOption*> advancedOption;
 
-        /**
-         * gets keypoint vector pointer
-         */
-        vector<KeyPoint>* getKeyPoints() {return &keyPoints;};
+    // Vector of keypoints for each entity
+    vector<Point> keyPoints;
 
-    private:
-        // check advanced option label
-        struct checkLabel
-        {
-            checkLabel(std::string label) : str_holder(label) {}
-            std::string str_holder;
-            bool operator()(AdvancedOption* obj)
+    // Vector of Points for each entities
+    vector<Point> points;
+
+    // Vector of Triangles for each entity
+    vector<Triangle> triangles;
+
+    // Vector of Rectangles for each entity
+    vector<Rectangle> rectangles;
+
+    // check advanced option label
+    struct checkLabel
+    {
+        checkLabel(std::string label) : str_holder(label) {}
+        std::string str_holder;
+        bool operator()(AdvancedOption* obj)
             {
                 return obj->label == str_holder;
             }
-        };
-        // translation coordinates
-        Position translation;
-
-        // rotation coordinates
-        Rotation rotation;
-
-        // name of entity
-        std::string name;
-
-        // path of mesh file
-        std::string meshPath;
-
-        // Advanced options vector
-        vector<AdvancedOption*> advancedOption;
-
-        // Vector of keypoints for each entity
-        vector<KeyPoint> keyPoints;
-
+    };
 };
 #endif

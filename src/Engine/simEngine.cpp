@@ -29,7 +29,7 @@ SimEngine::SimEngine(bool enableGUI)
 
 void SimEngine::setupGUI()
 {
-    simGUI = new SimGUI(this,L"TEST WINDOW",840,600,640,480,false);
+    simGUI = new SimGUI(this,L"TEST WINDOW",840,480,640,480,false);
 }
 
 void SimEngine::addEntity(EntityType type, SimEntity * obj)
@@ -63,7 +63,6 @@ void SimEngine::removeEntity(SimEntity * obj)
                     simEntityVector.end(),
                     obj),
         simEntityVector.end());
-    obj->removeCallback();
     if(simGUI)
     {
         simGUI->removeEntitySceneNode(obj);

@@ -6,8 +6,8 @@
  *
  *============================================================================*/
 #include "simFloor.h"
-SimFloor::SimFloor(std::string _name, double y, std::string _meshPath):
-    SimEnvironment(_name,0,y,0,0,0,0,_meshPath)
+SimFloor::SimFloor(std::string _name, double y, double w)
+    :SimPlane(_name,0,y,0,0,0,0,w,w,0)
 {
     
 }

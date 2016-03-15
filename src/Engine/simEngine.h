@@ -24,6 +24,7 @@
 #include "simEntity.h"
 #include "simRobot.h"
 #include "simSensor.h"
+#include "simEnvironment.h"
 #include "enumerations.h"
 
 //----------------------------------------------------------------------------//

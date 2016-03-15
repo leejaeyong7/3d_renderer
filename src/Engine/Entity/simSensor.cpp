@@ -7,20 +7,19 @@
  *
  *============================================================================*/
 //----------------------------------------------------------------------------//
-//                               INCLUDES
+//                                  INCLUDES                                  //
 //----------------------------------------------------------------------------//
 #include "simSensor.h"
 //----------------------------------------------------------------------------//
-//                               DEFINITION
+//                                END INCLUDES                                //
 //----------------------------------------------------------------------------//
-SimSensor::SimSensor(string _name,
-                     double x, double y, double z,
-                     double a, double b, double c)
-    :SimEntity(_name,x,y,z,a,b,c)
-{
-    robot = 0;
-}
-
+//----------------------------------------------------------------------------//
+//                                 DEFINITION                                 //
+//----------------------------------------------------------------------------//
+/**
+ * Default Constructor with mesh path
+ * Initialize Sensor with default parameters
+ */
 SimSensor::SimSensor(string _name,
                      double x, double y, double z,
                      double a, double b, double c,
@@ -30,17 +29,38 @@ SimSensor::SimSensor(string _name,
     robot = 0;
 }
 
+/**
+ * Destructor when removing entity is called
+ * All robots that has this sensor will remove this sensor
+ */
+SimSensor::~SimSensor()
+{
+    if(robot)
+        robot->removeSensor(this);
+}
+
+/**
+ * adds a robot entity that added this sensor
+ * @param SimRobot* - robot that attached this sensor
+ * @return None
+ */
 void SimSensor::addAttachedRobot(SimRobot * obj)
 {
     robot = obj;
 }
 
+/**
+ * removes robot entity that added this sensor entity
+ * @param None
+ * @return None
+ */
 void SimSensor::removeAttachedRobot()
 {
     robot = 0;
 }
-void SimSensor::removeCallback()
-{
-    if(robot)
-        robot->removeSensor(this);
-}
+
+/* void SimSensor::removeCallback() */
+/* { */
+/*     if(robot) */
+/*         robot->removeSensor(this); */
+/* } */
