@@ -23,10 +23,16 @@ int main( int argc, char** argv)
                                      (60.0f/180.0f*3.141592f),
                                      (45.0f/180.0f*3.141592f),
                                      1);
+
+    SimCamera * cam2 = new SimCamera("test camera2",1,2,1,0,0,0,
+                                     (80.0f/180.0f*3.141592f),
+                                     (60.0f/180.0f*3.141592f),
+                                     1);
     SimGroundRobot* bot = new SimGroundRobot("Robot",10,10,10,0,0,0,1,1,1);
     SimPlane* plane = new SimPlane("test Plane",-10,10,-10,0,0,0,10,10,100);
     eng->addEntity(ENTITY_TYPE_ROBOT,bot);
     eng->addEntity(ENTITY_TYPE_SENSOR,cam1);
+    eng->addEntity(ENTITY_TYPE_SENSOR,cam2);
     eng->addEntity(ENTITY_TYPE_ENVIRONMENT,plane);
     eng->attachEntity(bot,cam1);
     eng->run();

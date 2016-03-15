@@ -33,7 +33,7 @@ namespace Sim{
             {
                 obj = 0;
                 UpVector = vector3df(0,1,0);
-                Target = vector3df(0,0,1);
+                Target = vector3df(0,0,0);
                 InputReceiverEnabled = false;
                 TargetAndRotationAreBound = false;
                 
@@ -43,47 +43,81 @@ namespace Sim{
         void attachCamera(SimCamera * _obj)
             {
                 obj = _obj;
+                if(obj)
+                    update();
+              
+            }
+        void detachCamera()
+            {
+                obj = 0;
+            }
+        void update()
+            {
+                if(!obj)
+                    return;
                 SimRobot* r = 0;
+                vector<AdvancedOption*>* av = obj->getAdvancedOption();
+                double fov_x = ((AdvancedOption_Double*)av->at(0))->value;
+                double fov_y = ((AdvancedOption_Double*)av->at(1))->value;
+                double fl = ((AdvancedOption_Double*)av->at(2))->value;
+
+                vector3df rp;
+                vector3df rr;
+
+                vector3df cp = pos2vec(obj->getPosition());
+                vector3df cr = rot2vec(obj->getRotation());
                 if((r = obj->getAttachedRobot()))
                 {
-                    ISceneNode::setRotation(
-                        rot2vec(obj->getRotation())+
-                        rot2vec(r->getRotation()));
-
-                    ISceneNode::setPosition(
-                        pos2vec(obj->getPosition())+
-                        pos2vec(r->getPosition()));
+                    rp = pos2vec(r->getPosition());
+                    rr = rot2vec(r->getRotation());
                 }
                 else
                 {
-                    ISceneNode::setRotation(rot2vec(obj->getRotation()));
-                    ISceneNode::setPosition(pos2vec(obj->getPosition()));
+                    rp = vector3df(0,0,0);
+                    rr = vector3df(0,0,0);
                 }
+                vector3df mp = cp;
+
+                mp.rotateYZBy(rr.X,rp);
+                mp.rotateXZBy(rr.Y,rp);
+                mp.rotateXYBy(rr.Z,rp);
+
+                vector3df tv(0,0,fl+1);
+                vector3df uv(0,1,0);
+                vector3df fv(0,0,fl);
+
+                tv.rotateYZBy(cr.X,vector3df(0,0,0));
+                tv.rotateXZBy(cr.Y,vector3df(0,0,0));
+                tv.rotateXYBy(cr.Z,vector3df(0,0,0));
+
+                uv.rotateYZBy(cr.X,vector3df(0,0,0));
+                uv.rotateXZBy(cr.Y,vector3df(0,0,0));
+                uv.rotateXYBy(cr.Z,vector3df(0,0,0));
+
+                fv.rotateYZBy(cr.X,vector3df(0,0,0));
+                fv.rotateXZBy(cr.Y,vector3df(0,0,0));
+                fv.rotateXYBy(cr.Z,vector3df(0,0,0));
+
+                ISceneNode::setRotation(cr);
+                ISceneNode::setPosition(cp+rp+fv);
+
+
+                Target = tv + cp + rp;
+                UpVector = uv;
+
+                Aspect = (tan(fov_x/2.0f)/tan(fov_y/2.0f));
+                fovy = fov_y;
+
                 recalculateProjectionMatrix();
                 recalculateviewport();
             }
         virtual void setRotation(const vector3df& rotation)
             {
-                if(obj!=0)
-                {
-                    ISceneNode::setRotation(rotation);
-                    obj->setRotation(
-                        rotation.X,
-                        rotation.Y,
-                        rotation.Z);
-                }
+                ISceneNode::setRotation(rotation);
             }
         virtual void setPosition(const vector3df& position)
             {
-                if(obj!=0)
-                {
-                    ISceneNode::setPosition(position);
-                    obj->setPosition(
-                        position.X,
-                        position.Y,
-                        position.Z);
-                }
-                
+                ISceneNode::setPosition(position);
             }
 //----------------------------------------------------------------------------//
 //                             TO BE IMPLEMENTED                              //
@@ -184,16 +218,11 @@ namespace Sim{
             }
         virtual f32 getAspectRatio() const
             {
-                vector<AdvancedOption*>* av = obj->getAdvancedOption();
-                double fov_x = ((AdvancedOption_Double*)av->at(0))->value;
-                double fov_y = ((AdvancedOption_Double*)av->at(1))->value;
-                return (tan(fov_x/2.0f)/tan(fov_y/2.0f));
+                return Aspect;
             }
         virtual f32 getFOV() const
             {
-                vector<AdvancedOption*>* av = obj->getAdvancedOption();
-                double fov_y = ((AdvancedOption_Double*)av->at(1))->value;
-                return (f32)fov_y;
+                return fovy;
             }
         virtual void setNearValue(f32 zn)
             {
@@ -207,16 +236,12 @@ namespace Sim{
             }
         virtual void setAspectRatio(f32 aspect)
             {
-                vector<AdvancedOption*>* av = obj->getAdvancedOption();
-                double fov_y = ((AdvancedOption_Double*)av->at(1))->value;
-                ((AdvancedOption_Double*)av->at(0))->value =
-                    2*atan( aspect * tan(fov_y/2));
+                Aspect = aspect;
                 recalculateProjectionMatrix();
             }
-        virtual void setFOV(f32 fovy)
+        virtual void setFOV(f32 _fovy)
             {
-                vector<AdvancedOption*>* av = obj->getAdvancedOption();
-                ((AdvancedOption_Double*)av->at(1))->value = fovy;   
+                fovy = _fovy;
                 recalculateProjectionMatrix();
             }
         virtual const SViewFrustum* getViewFrustum() const
@@ -251,10 +276,9 @@ namespace Sim{
 
         void recalculateProjectionMatrix()
             {
-
                 viewport.getTransform (ETS_PROJECTION)
-                    .buildProjectionMatrixPerspectiveFovLH(getFOV(),
-                                                           getAspectRatio(),
+                    .buildProjectionMatrixPerspectiveFovLH(fovy,
+                                                           Aspect,
                                                            ZNear,
                                                            ZFar);
             }
@@ -277,6 +301,9 @@ namespace Sim{
         vector3df UpVector;
         
         matrix4 Affector;
+
+        f32 fovy;
+        f32 Aspect;
         f32 ZNear;
         f32 ZFar;
 

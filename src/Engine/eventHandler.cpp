@@ -93,6 +93,9 @@ bool EventHandler::OnEvent(const SEvent & event)
                 gui->engine->removeEntity(gui->currObj);
                 caller->getParent()->remove();
                 return false;
+            case CAPTURE_BUTTON:
+                gui->capture();
+                return false;
             default:
                 return false;
             }
@@ -184,12 +187,19 @@ bool EventHandler::OnEvent(const SEvent & event)
             {
             case CAMERA_COMBO:
             {
-                if(sid == -1)
+
+                u32 d;
+                if(sid != -1)
+                    d = ((IGUIComboBox*)(caller))->getItemData(sid);
+                if(d == -1)
+                {
                     gui->device->getSceneManager()->setActiveCamera(gui->wc);
+                    ((CameraSceneNode*)gui->sc)->detachCamera();
+                }
                 else
                 {
                 vector<SimEntity*>* ev= gui->engine->getEntityVector();
-                SimCamera* s = dynamic_cast<SimCamera*>(ev->at(sid));
+                SimCamera* s = dynamic_cast<SimCamera*>(ev->at(d));
                 if(s)
                 {
                     ((CameraSceneNode*)gui->sc)->attachCamera(s);

@@ -181,7 +181,12 @@ private:
     int currType;
     void createEntityObject();
     void editEntityObject();
+
+
+    // used for camera manipulation
     void setCameraDropdown();
+    void setCameraCapture();
+    void capture();
 
     // sets up common prompt window gui objects
     void setPromptWindow(s32 wx, s32 wy, s32 ww, s32 wh);

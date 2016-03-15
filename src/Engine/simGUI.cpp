@@ -58,6 +58,7 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
     // set context menu
     setContextMenu();
     setCameraDropdown();
+    setCameraCapture();
 
 }
 
@@ -260,6 +261,7 @@ void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
 
     if(robotMesh != 0 && sensorMesh != 0)
         sensorMesh->setParent(robotMesh);
+    ((CameraSceneNode*)sc)->update();
 }
 
 void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
@@ -284,6 +286,7 @@ void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
         ISceneManager * smgr = device->getSceneManager();
         sensorMesh->setParent(smgr->getRootSceneNode());
     }
+    ((CameraSceneNode*)sc)->update();
 }
 void SimGUI::entityAttachWindow()
 {
@@ -497,6 +500,27 @@ void SimGUI::setCameraDropdown()
     
 }
 
+void SimGUI::setCameraCapture()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    s32 cx,cy,cw,ch;
+    cx = width_r + 10;
+    cw = width - width_r -20;
+    cy = 90;
+    ch = 30;
+    guienv->addButton(rect<s32>(cx,cy,cx+cw,cy+ch), 0,
+                      CAPTURE_BUTTON,
+                      L"Capture",
+                      L"Captures Current scene");
+}
+void SimGUI::capture()
+{
+    IVideoDriver * driver = device->getVideoDriver();
+    driver->writeImageToFile(
+        driver->createScreenShot(),
+        L"test.jpg");
+}
 
 
 void SimGUI::attachEntityObject()
@@ -647,6 +671,7 @@ void SimGUI::editEntityObject()
         }
     }
     currObj->update();
+    ((CameraSceneNode*)sc)->update();
 }
 void SimGUI::setEditPromptData(s32 index)
 {

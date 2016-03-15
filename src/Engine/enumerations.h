@@ -70,7 +70,8 @@ enum
     ATTACH_COMBO1,
     ATTACH_COMBO2,
 
-    CAMERA_COMBO
+    CAMERA_COMBO,
+    CAPTURE_BUTTON
 };
 
 // subentities
