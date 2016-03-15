@@ -208,12 +208,6 @@ void SimGUI::addEntitySceneNode(EntityType type, SimEntity * obj)
     }
     entityMeshVector.push_back(node);
     setCameraDropdown();
-    /* SimCamera* s = dynamic_cast<SimCamera*>(obj); */
-    /* if(s) */
-    /* { */
-    /*     ((CameraSceneNode*)sc)->attachCamera(s); */
-    /*     smgr->setActiveCamera(sc); */
-    /* } */
 }
 void SimGUI::removeEntitySceneNode(SimEntity * obj)
 {
@@ -396,7 +390,7 @@ void SimGUI::promptEntityWindow()
     // set common prompt window theme
     s32 wx, wy, ww, wh;
     wx = 150;
-    wy = 100;
+    wy = 30;
     ww = 600;
     wh = 410;
     setPromptWindow(wx,wy,ww,wh);

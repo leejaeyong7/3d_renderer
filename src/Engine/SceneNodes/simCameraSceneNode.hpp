@@ -76,12 +76,6 @@ namespace Sim{
                     rp = vector3df(0,0,0);
                     rr = vector3df(0,0,0);
                 }
-                vector3df mp = cp;
-
-                mp.rotateYZBy(rr.X,rp);
-                mp.rotateXZBy(rr.Y,rp);
-                mp.rotateXYBy(rr.Z,rp);
-
                 vector3df tv(0,0,fl+1);
                 vector3df uv(0,1,0);
                 vector3df fv(0,0,fl);
@@ -98,11 +92,32 @@ namespace Sim{
                 fv.rotateXZBy(cr.Y,vector3df(0,0,0));
                 fv.rotateXYBy(cr.Z,vector3df(0,0,0));
 
-                ISceneNode::setRotation(cr);
-                ISceneNode::setPosition(cp+rp+fv);
+                tv = tv + cp;
+               //uv = uv + cp;
+                fv = fv + cp;
+
+                tv.rotateYZBy(rr.X,vector3df(0,0,0));
+                tv.rotateXZBy(rr.Y,vector3df(0,0,0));
+                tv.rotateXYBy(rr.Z,vector3df(0,0,0));
+
+                uv.rotateYZBy(rr.X,vector3df(0,0,0));
+                uv.rotateXZBy(rr.Y,vector3df(0,0,0));
+                uv.rotateXYBy(rr.Z,vector3df(0,0,0));
+
+                fv.rotateYZBy(rr.X,vector3df(0,0,0));
+                fv.rotateXZBy(rr.Y,vector3df(0,0,0));
+                fv.rotateXYBy(rr.Z,vector3df(0,0,0));
 
 
-                Target = tv + cp + rp;
+                tv = tv + rp;
+               // uv = uv + rp;
+                fv = fv + rp;
+
+                //ISceneNode::setRotation(cr);
+                ISceneNode::setPosition(fv);
+
+
+                Target = tv;
                 UpVector = uv;
 
                 Aspect = (tan(fov_x/2.0f)/tan(fov_y/2.0f));
