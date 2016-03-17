@@ -166,6 +166,7 @@ private:
 
     // window sizes
     u32 width, height, width_r, height_r;
+    rect<s32> renderView;
 
     // Entity Mesh vector
     vector<SimSceneNode*> entityMeshVector;

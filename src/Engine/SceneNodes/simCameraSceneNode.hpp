@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------//
 //                                  INCLUDES                                  //
 //----------------------------------------------------------------------------//
-#include <Irrlicht.h>
+#include <irrlicht.h>
 #include "simCamera.h"
 //----------------------------------------------------------------------------//
 //                                 NAMESPACE                                  //
@@ -80,6 +80,41 @@ namespace Sim{
                 vector3df uv(0,1,0);
                 vector3df fv(0,0,fl);
 
+/*
+                tv.rotateYZBy(cr.X,vector3df(0,0,0));
+                tv.rotateXZBy(-cr.Y,vector3df(0,0,0));
+                tv.rotateXYBy(cr.Z,vector3df(0,0,0));
+
+                uv.rotateYZBy(cr.X,vector3df(0,0,0));
+                uv.rotateXZBy(cr.Y,vector3df(0,0,0));
+                uv.rotateXYBy(cr.Z,vector3df(0,0,0));
+
+                fv.rotateYZBy(cr.X,vector3df(0,0,0));
+                fv.rotateXZBy(-cr.Y,vector3df(0,0,0));
+                fv.rotateXYBy(cr.Z,vector3df(0,0,0));
+
+                tv = tv + cp;
+               //uv = uv + cp;
+                fv = fv + cp;
+
+                tv.rotateYZBy(rr.X,vector3df(0,0,0));
+                tv.rotateXZBy(-rr.Y,vector3df(0,0,0));
+                tv.rotateXYBy(rr.Z,vector3df(0,0,0));
+
+                uv.rotateYZBy(rr.X,vector3df(0,0,0));
+                uv.rotateXZBy(rr.Y,vector3df(0,0,0));
+                uv.rotateXYBy(rr.Z,vector3df(0,0,0));
+
+                fv.rotateYZBy(rr.X,vector3df(0,0,0));
+                fv.rotateXZBy(-rr.Y,vector3df(0,0,0));
+                fv.rotateXYBy(rr.Z,vector3df(0,0,0));
+
+
+                tv = tv + rp;
+               // uv = uv + rp;
+                fv = fv + rp;
+*/
+
                 tv.rotateYZBy(cr.X,vector3df(0,0,0));
                 tv.rotateXZBy(cr.Y,vector3df(0,0,0));
                 tv.rotateXYBy(cr.Z,vector3df(0,0,0));
@@ -93,7 +128,7 @@ namespace Sim{
                 fv.rotateXYBy(cr.Z,vector3df(0,0,0));
 
                 tv = tv + cp;
-               //uv = uv + cp;
+                uv = uv + cp;
                 fv = fv + cp;
 
                 tv.rotateYZBy(rr.X,vector3df(0,0,0));
@@ -108,17 +143,15 @@ namespace Sim{
                 fv.rotateXZBy(rr.Y,vector3df(0,0,0));
                 fv.rotateXYBy(rr.Z,vector3df(0,0,0));
 
-
                 tv = tv + rp;
-               // uv = uv + rp;
+                uv = uv + rp;
                 fv = fv + rp;
+
 
                 //ISceneNode::setRotation(cr);
                 ISceneNode::setPosition(fv);
-
-
                 Target = tv;
-                UpVector = uv;
+                UpVector = uv - cp - rp;
 
                 Aspect = (tan(fov_x/2.0f)/tan(fov_y/2.0f));
                 fovy = fov_y;

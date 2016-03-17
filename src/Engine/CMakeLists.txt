@@ -7,6 +7,7 @@ include_directories(
 #-----------------------------------------------------------------------------#
 add_subdirectory (Entity)
 add_subdirectory(Physics)
+add_subdirectory(SceneNodes)
 
 #-----------------------------------------------------------------------------#
 #                                   Settings

@@ -26,6 +26,7 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
     height = m_height;
     width_r = m_width_r;
     height_r = m_height_r;
+    renderView = rect<s32>(0,20,width_r,height_r+20);
 
     // set window title
     device->setWindowCaption(text);
@@ -162,9 +163,8 @@ void SimGUI::draw()
 
             // make background black for 3D rendering area
             //
-            driver->draw2DRectangle(SColor(255,0,0,0), 
-                    rect<s32>(0,20,width_r,height_r));
-            driver->setViewPort(rect<s32>(0,20,width_r,height_r));
+            driver->draw2DRectangle(SColor(255,0,0,0),renderView);
+            driver->setViewPort(renderView);
             smgr->drawAll();
             driver->setViewPort(rect<s32>(0,0,width,height));
             guienv->drawAll();
@@ -511,9 +511,16 @@ void SimGUI::setCameraCapture()
 void SimGUI::capture()
 {
     IVideoDriver * driver = device->getVideoDriver();
+    IImage *img = driver->createScreenShot();
+    IImage * view = driver->createImage(
+        ECF_A1R5G5B5,
+        dimension2d<u32>(width_r,height_r));
+    img->copyTo(view,position2d<s32>(0,20),renderView);
     driver->writeImageToFile(
-        driver->createScreenShot(),
+        view,
         L"test.jpg");
+    img->drop();
+    view->drop();
 }
 
 
