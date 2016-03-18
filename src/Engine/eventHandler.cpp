@@ -193,6 +193,9 @@ bool EventHandler::OnEvent(const SEvent & event)
                     d = ((IGUIComboBox*)(caller))->getItemData(sid);
                 if(d == -1)
                 {
+                    if(gui->sc == camera)
+                        gui->sc->setInputReceiverEnabled(false);
+                    gui->wc->setInputReceiverEnabled(true);
                     gui->device->getSceneManager()->setActiveCamera(gui->wc);
                     ((CameraSceneNode*)gui->sc)->detachCamera();
                 }
@@ -202,7 +205,10 @@ bool EventHandler::OnEvent(const SEvent & event)
                 SimCamera* s = dynamic_cast<SimCamera*>(ev->at(d));
                 if(s)
                 {
+                    if(gui->wc == camera)
+                        gui->wc->setInputReceiverEnabled(false);
                     ((CameraSceneNode*)gui->sc)->attachCamera(s);
+                    gui->sc->setInputReceiverEnabled(true);
                     gui->device->getSceneManager()->setActiveCamera(gui->sc);
                 }
 

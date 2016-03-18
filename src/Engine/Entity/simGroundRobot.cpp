@@ -78,13 +78,13 @@ void SimGroundRobot::update()
     p8.y = -h/2;
     p8.z = d/2;
 
-    t1.a = p1;
+    t1.a = p3;
     t1.b = p2;
-    t1.c = p3;
+    t1.c = p1;
 
-    t2.a = p4;
+    t2.a = p2;
     t2.b = p3;
-    t2.c = p2;
+    t2.c = p4;
 
     t3.a = p1;
     t3.b = p2;
@@ -102,22 +102,21 @@ void SimGroundRobot::update()
     t6.b = p6;
     t6.c = p4;
 
-    t7.a = p1;
+    t7.a = p5;
     t7.b = p3;
-    t7.c = p5;
+    t7.c = p1;
 
-    t8.a = p7;
+    t8.a = p3;
     t8.b = p5;
-    t8.c = p3;
+    t8.c = p7;
 
-    t9.a = p3;
+    t9.a = p7;
     t9.b = p4;
-    t9.c = p7;
+    t9.c = p3;
 
-    t10.a = p8;
+    t10.a = p4;
     t10.b = p7;
-    t10.c = p4;
-
+    t10.c = p8;
     t11.a = p5;
     t11.b = p6;
     t11.c = p7;

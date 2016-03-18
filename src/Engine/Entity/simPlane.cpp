@@ -40,8 +40,8 @@ void SimPlane::update()
     double h = ((AdvancedOption_Double*)(av->at(1)))->value;
     int num_f = ((AdvancedOption_Int*)(av->at(2)))->value;    
     Point p1,p2,p3,p4;
-    Triangle t1, t2;
-    Rectangle r1;
+    Triangle t1, t2,t3,t4;
+    Rectangle r1,r2;
 
     p1.x = -w/2;
     p1.y = h/2;
@@ -70,8 +70,19 @@ void SimPlane::update()
     r1.u = t1;
     r1.d = t2;
 
+    t3.a = p3;
+    t3.b = p2;
+    t3.c = p1;
+
+    t4.a = p2;
+    t4.b = p3;
+    t4.c = p4;
+
+    r2.u = t3;
+    r2.d = t4;
 
     rv->push_back(r1);
+    rv->push_back(r2);
     vector<Point>* keyPoints = getKeyPoints();
     keyPoints->clear();
     if(num_f != 0)

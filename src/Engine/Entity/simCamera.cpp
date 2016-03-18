@@ -86,21 +86,42 @@ void SimCamera::update()
     t4.b = r4;
     t4.c = f;
     
-    tr1.a = r1;
-    tr1.b = r2;
-    tr1.c = r3;
+    /* tr1.a = r1; */
+    /* tr1.b = r2; */
+    /* tr1.c = r3; */
     
-    tr2.a = r4;
-    tr2.b = r3;
-    tr2.c = r2;
+    /* tr2.a = r4; */
+    /* tr2.b = r3; */
+    /* tr2.c = r2; */
 
-    rect1.u = tr1;
-    rect1.d = tr2;
+    /* rect1.u = tr1; */
+    /* rect1.d = tr2; */
 
     tv->push_back(t1);
     tv->push_back(t2);
     tv->push_back(t3);
     tv->push_back(t4);
 
-    rv->push_back(rect1);
+    t1.a = r2;
+    t1.b = r1;
+    t1.c = f;
+
+    t2.a = r3;
+    t2.b = r1;
+    t2.c = f;
+
+    t3.a = r4;
+    t3.b = r2;
+    t3.c = f;
+
+    t4.a = r4;
+    t4.b = r3;
+    t4.c = f;
+
+    tv->push_back(t1);
+    tv->push_back(t2);
+    tv->push_back(t3);
+    tv->push_back(t4);
+
+    /* rv->push_back(rect1); */
 }

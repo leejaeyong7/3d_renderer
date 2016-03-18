@@ -40,6 +40,10 @@ namespace Sim{
                 ZNear = 0.001f;
                 ZFar = 2000.0f;
             }
+        SimCamera* getCamera()
+            {
+                return obj;
+            }
         void attachCamera(SimCamera * _obj)
             {
                 obj = _obj;
@@ -47,10 +51,12 @@ namespace Sim{
                     update();
               
             }
+
         void detachCamera()
             {
                 obj = 0;
             }
+
         void update()
             {
                 if(!obj)
@@ -66,6 +72,9 @@ namespace Sim{
 
                 vector3df cp = pos2vec(obj->getPosition());
                 vector3df cr = rot2vec(obj->getRotation());
+
+                vector3df ocp = cp;
+                vector3df ocr = cr;
                 if((r = obj->getAttachedRobot()))
                 {
                     rp = pos2vec(r->getPosition());
@@ -76,17 +85,16 @@ namespace Sim{
                     rp = vector3df(0,0,0);
                     rr = vector3df(0,0,0);
                 }
-                vector3df tv(0,0,fl+1);
+                vector3df tv(0,0,fl);
                 vector3df uv(0,1,0);
-                vector3df fv(0,0,fl);
+                vector3df fv(0,0,0.00001);
 
-/*
                 tv.rotateYZBy(cr.X,vector3df(0,0,0));
                 tv.rotateXZBy(-cr.Y,vector3df(0,0,0));
                 tv.rotateXYBy(cr.Z,vector3df(0,0,0));
 
                 uv.rotateYZBy(cr.X,vector3df(0,0,0));
-                uv.rotateXZBy(cr.Y,vector3df(0,0,0));
+                uv.rotateXZBy(-cr.Y,vector3df(0,0,0));
                 uv.rotateXYBy(cr.Z,vector3df(0,0,0));
 
                 fv.rotateYZBy(cr.X,vector3df(0,0,0));
@@ -94,64 +102,39 @@ namespace Sim{
                 fv.rotateXYBy(cr.Z,vector3df(0,0,0));
 
                 tv = tv + cp;
-               //uv = uv + cp;
+                uv = uv + cp;
                 fv = fv + cp;
+
+                cr.rotateYZBy(rr.X,vector3df(0,0,0));
+                cr.rotateXZBy(-rr.Y,vector3df(0,0,0));
+                cr.rotateXYBy(rr.Z,vector3df(0,0,0));
+
+                cp.rotateYZBy(rr.X,vector3df(0,0,0));
+                cp.rotateXZBy(-rr.Y,vector3df(0,0,0));
+                cp.rotateXYBy(rr.Z,vector3df(0,0,0));
 
                 tv.rotateYZBy(rr.X,vector3df(0,0,0));
                 tv.rotateXZBy(-rr.Y,vector3df(0,0,0));
                 tv.rotateXYBy(rr.Z,vector3df(0,0,0));
 
                 uv.rotateYZBy(rr.X,vector3df(0,0,0));
-                uv.rotateXZBy(rr.Y,vector3df(0,0,0));
+                uv.rotateXZBy(-rr.Y,vector3df(0,0,0));
                 uv.rotateXYBy(rr.Z,vector3df(0,0,0));
 
                 fv.rotateYZBy(rr.X,vector3df(0,0,0));
                 fv.rotateXZBy(-rr.Y,vector3df(0,0,0));
                 fv.rotateXYBy(rr.Z,vector3df(0,0,0));
 
-
-                tv = tv + rp;
-               // uv = uv + rp;
-                fv = fv + rp;
-*/
-
-                tv.rotateYZBy(cr.X,vector3df(0,0,0));
-                tv.rotateXZBy(cr.Y,vector3df(0,0,0));
-                tv.rotateXYBy(cr.Z,vector3df(0,0,0));
-
-                uv.rotateYZBy(cr.X,vector3df(0,0,0));
-                uv.rotateXZBy(cr.Y,vector3df(0,0,0));
-                uv.rotateXYBy(cr.Z,vector3df(0,0,0));
-
-                fv.rotateYZBy(cr.X,vector3df(0,0,0));
-                fv.rotateXZBy(cr.Y,vector3df(0,0,0));
-                fv.rotateXYBy(cr.Z,vector3df(0,0,0));
-
-                tv = tv + cp;
-                uv = uv + cp;
-                fv = fv + cp;
-
-                tv.rotateYZBy(rr.X,vector3df(0,0,0));
-                tv.rotateXZBy(rr.Y,vector3df(0,0,0));
-                tv.rotateXYBy(rr.Z,vector3df(0,0,0));
-
-                uv.rotateYZBy(rr.X,vector3df(0,0,0));
-                uv.rotateXZBy(rr.Y,vector3df(0,0,0));
-                uv.rotateXYBy(rr.Z,vector3df(0,0,0));
-
-                fv.rotateYZBy(rr.X,vector3df(0,0,0));
-                fv.rotateXZBy(rr.Y,vector3df(0,0,0));
-                fv.rotateXYBy(rr.Z,vector3df(0,0,0));
-
                 tv = tv + rp;
                 uv = uv + rp;
                 fv = fv + rp;
+                cp = cp + rp;
 
 
-                //ISceneNode::setRotation(cr);
-                ISceneNode::setPosition(fv);
+                ISceneNode::setRotation(cr);
+                ISceneNode::setPosition(cp);
                 Target = tv;
-                UpVector = uv - cp - rp;
+                UpVector = uv - ocp - rp;
 
                 Aspect = (tan(fov_x/2.0f)/tan(fov_y/2.0f));
                 fovy = fov_y;

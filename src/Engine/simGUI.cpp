@@ -511,6 +511,11 @@ void SimGUI::setCameraCapture()
 void SimGUI::capture()
 {
     IVideoDriver * driver = device->getVideoDriver();
+    ISceneManager * smgr = device->getSceneManager();
+
+    ISceneCollisionManager * cm = smgr->getSceneCollisionManager();
+
+    // create image and crop
     IImage *img = driver->createScreenShot();
     IImage * view = driver->createImage(
         ECF_A1R5G5B5,
@@ -521,7 +526,106 @@ void SimGUI::capture()
         L"test.jpg");
     img->drop();
     view->drop();
+
+
+    // iterate scene nodes
+    vector<SimSceneNode*>::iterator it;
+
+    ICameraSceneNode * cc;
+    if(!sc)
+        return;
+
+    cc = sc;
+    IMetaTriangleSelector* ts = smgr->createMetaTriangleSelector();
+    for(it = entityMeshVector.begin();
+        it != entityMeshVector.end();
+        it++)
+    {
+        // check whether entity is environment
+        SimEnvironment* s = dynamic_cast<SimEnvironment*>((*it)->getEntity());
+        if(s)
+        {
+            ts->addTriangleSelector(
+                (smgr)->createTriangleSelectorFromBoundingBox(*it));
+        }
+    }
+    
+    ofstream myfile;
+    myfile.open ("test.txt");
+    double fovy = sc->getFOV();
+    double fovx = 2*atan(sc->getAspectRatio()*tan(fovy/2.0f));
+    vector3df cp = cc->getPosition();
+    vector3df cr = cc->getRotation();
+    myfile <<cp.X<<" "<<cp.Y<<" "<<cp.Z<<" "<<cr.X<<" "<<cr.Y<<" "<<cr.Z<<"\n";
+    for(it = entityMeshVector.begin();
+        it != entityMeshVector.end();
+        it++)
+    {
+        // check whether entity is environment
+        SimEnvironment* s = dynamic_cast<SimEnvironment*>((*it)->getEntity());
+        if(s)
+        {
+            if(!(smgr->isCulled(*it)))
+            {
+                vector<Point>* kv = s->getKeyPoints();
+               
+                vector<Point>::iterator itk;
+                for(itk = kv->begin();
+                    itk != kv->end();
+                    itk++)
+                {
+
+                    vector3df ip = (*it)->getPosition();
+                    vector3df p = ip + convertPoint(*itk);
+                    vector3df r = (*it)->getRotation();
+                    p.rotateYZBy(r.X,ip);
+                    p.rotateXZBy(r.Y,ip);
+                    p.rotateXYBy(r.Z,ip);
+                    vector3df tp = p;
+
+                    p.rotateYZBy(-cr.X,cp);
+                    p.rotateXZBy(-cr.Y,cp);
+                    p.rotateXYBy(-cr.Z,cp);
+                    vector3df dp = p - cp;
+
+                    double dx = (dp.X/dp.Z);
+                    double dy = (dp.Y/dp.Z);
+
+                    if((dx)< tan(fovx/2) && (dx)> -tan(fovx/2) &&
+                       (dy)< tan(fovy/2) && (dy)> -tan(fovy/2))
+                    {
+                        vector3df rp = tp;
+                        triangle3df rt;
+                    
+                        ISceneNode * ret = 0;
+                        bool covered = 
+                            cm->getCollisionPoint(
+                                line3d<f32>(cp,tp), ts, rp, rt, ret);
+
+                        SimSceneNode * cov =dynamic_cast<SimSceneNode*>(ret);
+                        if((!covered) ||
+                           (cov==(*it)))
+                        {
+                                double sx = ((dx / tan(fovx/2))+1)*
+                                    (width_r/2.0f);
+                                double sy = ((-1*dy / tan(fovy/2))+1)*
+                                    (height_r/2.0f);
+                                myfile<<sx<<" "<<sy<<" "<<tp.X
+                                      <<" "<<tp.Y<<" "<<tp.Z<<"\n";
+                        }
+                    }
+                }
+            }
+        }
+    }
+    ts->drop();
+    myfile.close();
 }
+vector3df SimGUI::convertPoint(Point p)
+{
+    return vector3df(p.x,p.y,p.z);
+}
+
 
 
 void SimGUI::attachEntityObject()

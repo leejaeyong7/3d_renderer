@@ -19,6 +19,7 @@
 #include <vector>
 #include <typeinfo>
 #include <string>
+#include <fstream>
 #include "enumerations.h"
 #include "eventHandler.h"
 #include "simEngine.h"
@@ -170,6 +171,9 @@ private:
 
     // Entity Mesh vector
     vector<SimSceneNode*> entityMeshVector;
+
+    // converts point into vector
+    vector3df convertPoint(Point p);
 
     // sets data for prompt window
     void setPromptData(SimEntity* obj);

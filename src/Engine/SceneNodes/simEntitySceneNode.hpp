@@ -38,6 +38,7 @@ namespace Sim{
                 Material.Lighting = true;
                 obj = _obj;
                 setScale(vector3df(1,1,1));
+                setAutomaticCulling(EAC_FRUSTUM_BOX);
                 update();
                 drawfeature = true;
             }
@@ -67,13 +68,13 @@ namespace Sim{
                 {
                     driver->draw3DTriangle(convertTriangle(itr->u),c);
                     driver->draw3DTriangle(convertTriangle(itr->d),c);
-                    driver->draw3DTriangle(convertTriangleInv(itr->u),c);
-                    driver->draw3DTriangle(convertTriangleInv(itr->d),c);
+                    /* driver->draw3DTriangle(convertTriangleInv(itr->u),c); */
+                    /* driver->draw3DTriangle(convertTriangleInv(itr->d),c); */
                 }
                 for(itt = tv->begin(); itt != tv->end(); itt++)
                 {
                     driver->draw3DTriangle(convertTriangle(*itt),c);
-                    driver->draw3DTriangle(convertTriangleInv(*itt),c);
+                    /* driver->draw3DTriangle(convertTriangleInv(*itt),c); */
                 }
                 for(itp = pv->begin(); itp != pv->end(); itp++)
                 {
@@ -89,6 +90,7 @@ namespace Sim{
                         driver->draw3DBox(convertPoint(*itk),r);
                     }
                 }
+                driver->draw3DBox(box,c);
             }
         void setDrawFeature(bool v)
             {
@@ -151,7 +153,7 @@ namespace Sim{
             }
         void updateBox()
             {
-                box = aabbox3d<f32>();
+                box.reset(vector3df(0,0,0));
                 vector<Rectangle>* rv = obj->getRectangles();
                 vector<Triangle>* tv = obj->getTriangles();
                 vector<Point>* pv = obj->getPoints();
