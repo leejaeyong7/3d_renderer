@@ -40,10 +40,15 @@ namespace Sim{
                 ZNear = 0.001f;
                 ZFar = 2000.0f;
             }
+
+        // return current camera obj ptr
         SimCamera* getCamera()
             {
                 return obj;
             }
+
+
+        // attaches camera and update
         void attachCamera(SimCamera * _obj)
             {
                 obj = _obj;
@@ -52,13 +57,16 @@ namespace Sim{
               
             }
 
+        // sets obj to null
         void detachCamera()
             {
                 obj = 0;
             }
 
+        // updates camera view/ position / translation
         void update()
             {
+                // check for null
                 if(!obj)
                     return;
                 SimRobot* r = 0;
@@ -67,14 +75,18 @@ namespace Sim{
                 double fov_y = ((AdvancedOption_Double*)av->at(1))->value;
                 double fl = ((AdvancedOption_Double*)av->at(2))->value;
 
+                // robot's position / rotation(default 0,0,0)
                 vector3df rp;
                 vector3df rr;
 
+                // camera's position / rotation
                 vector3df cp = pos2vec(obj->getPosition());
                 vector3df cr = rot2vec(obj->getRotation());
 
+                // camera's position / rotation holder
                 vector3df ocp = cp;
                 vector3df ocr = cr;
+                // check for robot
                 if((r = obj->getAttachedRobot()))
                 {
                     rp = pos2vec(r->getPosition());
@@ -85,9 +97,11 @@ namespace Sim{
                     rp = vector3df(0,0,0);
                     rr = vector3df(0,0,0);
                 }
+
+                // target vector before rotation is at focal length
+                // upvector before rotation is y = 1 
                 vector3df tv(0,0,fl);
                 vector3df uv(0,1,0);
-                vector3df fv(0,0,0.00001);
 
                 tv.rotateYZBy(cr.X,vector3df(0,0,0));
                 tv.rotateXZBy(-cr.Y,vector3df(0,0,0));
@@ -97,13 +111,8 @@ namespace Sim{
                 uv.rotateXZBy(-cr.Y,vector3df(0,0,0));
                 uv.rotateXYBy(cr.Z,vector3df(0,0,0));
 
-                fv.rotateYZBy(cr.X,vector3df(0,0,0));
-                fv.rotateXZBy(-cr.Y,vector3df(0,0,0));
-                fv.rotateXYBy(cr.Z,vector3df(0,0,0));
-
                 tv = tv + cp;
                 uv = uv + cp;
-                fv = fv + cp;
 
                 cr.rotateYZBy(rr.X,vector3df(0,0,0));
                 cr.rotateXZBy(-rr.Y,vector3df(0,0,0));
@@ -121,27 +130,25 @@ namespace Sim{
                 uv.rotateXZBy(-rr.Y,vector3df(0,0,0));
                 uv.rotateXYBy(rr.Z,vector3df(0,0,0));
 
-                fv.rotateYZBy(rr.X,vector3df(0,0,0));
-                fv.rotateXZBy(-rr.Y,vector3df(0,0,0));
-                fv.rotateXYBy(rr.Z,vector3df(0,0,0));
-
                 tv = tv + rp;
                 uv = uv + rp;
-                fv = fv + rp;
                 cp = cp + rp;
 
-
+                // update position / rotation / target / up vectors
                 ISceneNode::setRotation(cr);
                 ISceneNode::setPosition(cp);
                 Target = tv;
                 UpVector = uv - ocp - rp;
 
+                // set aspect and fov_y
                 Aspect = (tan(fov_x/2.0f)/tan(fov_y/2.0f));
                 fovy = fov_y;
 
+                // recalculate projection matrix and frustum
                 recalculateProjectionMatrix();
                 recalculateviewport();
             }
+        // set scene node rotation / position
         virtual void setRotation(const vector3df& rotation)
             {
                 ISceneNode::setRotation(rotation);
@@ -151,8 +158,9 @@ namespace Sim{
                 ISceneNode::setPosition(position);
             }
 //----------------------------------------------------------------------------//
-//                             TO BE IMPLEMENTED                              //
-//----------------------------------------------------------------------------//
+//                 ICAMERASCENENODE INHERITED IMPLEMENTATIONS                 //
+//----------------------------------------------------------------------------//     
+        
         virtual void render()
             {
                 vector3df pos = getAbsolutePosition();
@@ -295,6 +303,9 @@ namespace Sim{
             {
                 return TargetAndRotationAreBound;
             }
+//----------------------------------------------------------------------------//
+//                    PRIVATE HELPER VARIABLE / FUNCTIONS                     //
+//----------------------------------------------------------------------------//
     private:
         vector3df pos2vec(Position pos)
             {

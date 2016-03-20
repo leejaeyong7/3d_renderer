@@ -155,14 +155,14 @@ void SimGUI::draw()
     IGUIEnvironment* guienv = device->getGUIEnvironment();
     ISceneManager * smgr = device->getSceneManager();
     IVideoDriver * driver = device->getVideoDriver();
+    // if running, draw
     if(device->run())
     {
+        // is window is shown
         if(device->isWindowActive())
         {
             driver->beginScene(true,true,SColor(255,200,200,200));
-
             // make background black for 3D rendering area
-            //
             driver->draw2DRectangle(SColor(255,0,0,0),renderView);
             driver->setViewPort(renderView);
             smgr->drawAll();
@@ -176,6 +176,7 @@ void SimGUI::draw()
 }
 void SimGUI::update()
 {
+    // update all scene nodes
     vector<SimSceneNode*>::iterator it;
     for(it = entityMeshVector.begin(); it != entityMeshVector.end(); it++)
     {
@@ -197,33 +198,39 @@ void SimGUI::end()
 
 void SimGUI::addEntitySceneNode(EntityType type, SimEntity * obj)
 {
+    // null check
     if(!obj)
         return;
+
     ISceneManager* smgr = device->getSceneManager();
     ISceneNode * r = smgr->getRootSceneNode();
+    // create scene node that takes object
     Sim::SimSceneNode * node = new Sim::SimSceneNode(r,smgr,-1,obj);
+    // if this is entity, set lighting to false.(to be seen easier)
     if(type == ENTITY_TYPE_ENVIRONMENT)
     {
         node->getMaterial(1).Lighting = false;
     }
     entityMeshVector.push_back(node);
+    // reset camera dropdown menu
     setCameraDropdown();
 }
 void SimGUI::removeEntitySceneNode(SimEntity * obj)
 {
+    // null check
     if(!obj)
         return;
+    // find entity scene node by entity pointer
     vector<SimSceneNode*>::iterator it =
         std::find_if(entityMeshVector.begin(),
                      entityMeshVector.end(),
                      checkEntityPointer(obj));
 
+    // remove all entity scene node that uses given obj as pointer
     while(it != entityMeshVector.end())
     {
         if(*it)
-        {
             (*it)->remove();
-        }
         it = std::find_if(std::next(it),
                           entityMeshVector.end(),
                           checkEntityPointer(obj));
@@ -238,50 +245,65 @@ void SimGUI::removeEntitySceneNode(SimEntity * obj)
 
 void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
 {
+    // null check
     if(!robot)
         return;
     if(!sensor)
         return;
+
+    // get first scenenode that uses robot ptr as entity
     vector<SimSceneNode*>::iterator it =
         std::find_if(entityMeshVector.begin(),
                      entityMeshVector.end(),
                      checkEntityPointer(robot));
     SimSceneNode * robotMesh = (*it);
     
+    // same for sensor
     it = std::find_if(entityMeshVector.begin(),
                       entityMeshVector.end(),
                       checkEntityPointer(sensor));
     SimSceneNode * sensorMesh = (*it);
 
+    // set robot as parent of sensor
     if(robotMesh != 0 && sensorMesh != 0)
         sensorMesh->setParent(robotMesh);
+
+    // for possible case where sensor was camera, update sc.
     ((CameraSceneNode*)sc)->update();
 }
 
 void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
 {
+    // null check
     if(!robot)
         return;
     if(!sensor)
         return;
+
+    // get first scene node that uses robot as ptr 
     vector<SimSceneNode*>::iterator it =
         std::find_if(entityMeshVector.begin(),
                      entityMeshVector.end(),
                      checkEntityPointer(robot));
     SimSceneNode* robotMesh = (*it);
     
+    // same for sensor
     it = std::find_if(entityMeshVector.begin(),
                       entityMeshVector.end(),
                       checkEntityPointer(sensor));
     SimSceneNode* sensorMesh = (*it);
 
+    // if they are not both null, set sensor's parent to root
     if(robotMesh != 0 && sensorMesh != 0)
     {
         ISceneManager * smgr = device->getSceneManager();
         sensorMesh->setParent(smgr->getRootSceneNode());
     }
+    // for possible case where sensor was camera, update
     ((CameraSceneNode*)sc)->update();
 }
+
+// sets attach window appropriately.
 void SimGUI::entityAttachWindow()
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
@@ -382,6 +404,7 @@ void SimGUI::entityAttachWindow()
                       L"Cancel and close window");
 }
 
+// sets entity add / edit window appropriately.
 void SimGUI::promptEntityWindow()
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
@@ -457,6 +480,148 @@ void SimGUI::promptEntityWindow()
 //                           Handles GUI positioning
 //----------------------------------------------------------------------------//
 
+void SimGUI::capture()
+{
+    IVideoDriver * driver = device->getVideoDriver();
+    ISceneManager * smgr = device->getSceneManager();
+
+    ISceneCollisionManager * cm = smgr->getSceneCollisionManager();
+
+    // create image and crop
+    IImage *img = driver->createScreenShot();
+    IImage * view = driver->createImage(
+        ECF_A1R5G5B5,
+        dimension2d<u32>(width_r,height_r));
+    img->copyTo(view,
+                position2d<s32>(0,0),
+                rect<s32>(0,20,width_r,height_r+20));
+    driver->writeImageToFile(
+        view,
+        L"test.jpg");
+    img->drop();
+    view->drop();
+
+    // iterate scene nodes
+    vector<SimSceneNode*>::iterator it;
+
+    // if camera is sensor camera output capture data
+    ICameraSceneNode * cc;
+    if(!sc)
+        return;
+    cc = sc;
+
+    // meta triangle selector for ray collision detection
+    IMetaTriangleSelector* ts = smgr->createMetaTriangleSelector();
+
+    // add all environment's bounding box for collision detection
+    for(it = entityMeshVector.begin();
+        it != entityMeshVector.end();
+        it++)
+    {
+        // check whether entity is environment
+        SimEnvironment* s = dynamic_cast<SimEnvironment*>((*it)->getEntity());
+        if(s)
+        {
+            ts->addTriangleSelector(
+                (smgr)->createTriangleSelectorFromBoundingBox(*it));
+        }
+    }
+    
+    // output file
+    ofstream myfile;
+    myfile.open ("test.txt");
+    // get fov, position and rotation of camera
+    double fovy = sc->getFOV();
+    double fovx = 2*atan(sc->getAspectRatio()*tan(fovy/2.0f));
+    vector3df cp = cc->getPosition();
+    vector3df cr = cc->getRotation();
+
+    // write camera info on first line
+    myfile<<cp.X<<" "<<cp.Y<<" "<<cp.Z<<" "<<cr.X<<" "<<cr.Y<<" "<<cr.Z<<"\n";
+
+    // iterate entity scennodes
+    for(it = entityMeshVector.begin();
+        it != entityMeshVector.end();
+        it++)
+    {
+        // check whether entity is environment
+        SimEnvironment* s = dynamic_cast<SimEnvironment*>((*it)->getEntity());
+        if(s)
+        {
+            // check whether scene node is drawn
+            if(!(smgr->isCulled(*it)))
+            {
+                vector<Point>* kv = s->getKeyPoints();
+                vector<Point>::iterator itk;
+                for(itk = kv->begin();
+                    itk != kv->end();
+                    itk++)
+                {
+                    // calculate keypoint's absolute postion
+                    vector3df ip = (*it)->getPosition();
+                    vector3df p = ip + convertPoint(*itk);
+                    vector3df r = (*it)->getRotation();
+                    p.rotateYZBy(r.X,ip);
+                    p.rotateXZBy(r.Y,ip);
+                    p.rotateXYBy(r.Z,ip);
+
+                    // tp holds absolute position
+                    vector3df tp = p;
+
+                    // rotate keypoint to fit in camera view before rotation
+                    p.rotateYZBy(-cr.X,cp);
+                    p.rotateXZBy(-cr.Y,cp);
+                    p.rotateXYBy(-cr.Z,cp);
+
+                    // dp holds absolute translation; p viewed from camera
+                    // as if it is viewed without rotation
+                    vector3df dp = p - cp;
+
+                    // calculate tangent value of angle
+                    double dx = (dp.X/dp.Z);
+                    double dy = (dp.Y/dp.Z);
+
+                    // if point is between frustum angles, check for collision
+                    if((dx)< tan(fovx/2) && (dx)> -tan(fovx/2) &&
+                       (dy)< tan(fovy/2) && (dy)> -tan(fovy/2))
+                    {
+                        vector3df rp = tp;
+                        triangle3df rt;
+                        ISceneNode * ret = 0;
+
+                        // check for collision. if covered is true, it means
+                        // that it may be blocked by some environment entity
+                        bool covered = 
+                            cm->getCollisionPoint(
+                                line3d<f32>(cp,tp), ts, rp, rt, ret);
+
+                        // if not blocked, add to file
+                        if(!covered)
+                        {
+                                double sx = ((dx / tan(fovx/2))+1)*
+                                    (width_r/2.0f);
+                                double sy = ((-1*dy / tan(fovy/2))+1)*
+                                    (height_r/2.0f);
+                                myfile<<sx<<" "<<sy<<" "<<tp.X
+                                      <<" "<<tp.Y<<" "<<tp.Z<<"\n";
+                        }
+                    }
+                }
+            }
+        }
+    }
+    ts->drop();
+    myfile.close();
+}
+// quick little helper function to convert point to vector
+vector3df SimGUI::convertPoint(Point p)
+{
+    return vector3df(p.x,p.y,p.z);
+}
+
+//----------------------------------------------------------------------------//
+//                        GUI PRIVATE HELPER FUNCTIONS                        //
+//----------------------------------------------------------------------------//
 void SimGUI::setCameraDropdown()
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
@@ -508,126 +673,6 @@ void SimGUI::setCameraCapture()
                       L"Capture",
                       L"Captures Current scene");
 }
-void SimGUI::capture()
-{
-    IVideoDriver * driver = device->getVideoDriver();
-    ISceneManager * smgr = device->getSceneManager();
-
-    ISceneCollisionManager * cm = smgr->getSceneCollisionManager();
-
-    // create image and crop
-    IImage *img = driver->createScreenShot();
-    IImage * view = driver->createImage(
-        ECF_A1R5G5B5,
-        dimension2d<u32>(width_r,height_r));
-    img->copyTo(view,position2d<s32>(0,20),renderView);
-    driver->writeImageToFile(
-        view,
-        L"test.jpg");
-    img->drop();
-    view->drop();
-
-
-    // iterate scene nodes
-    vector<SimSceneNode*>::iterator it;
-
-    ICameraSceneNode * cc;
-    if(!sc)
-        return;
-
-    cc = sc;
-    IMetaTriangleSelector* ts = smgr->createMetaTriangleSelector();
-    for(it = entityMeshVector.begin();
-        it != entityMeshVector.end();
-        it++)
-    {
-        // check whether entity is environment
-        SimEnvironment* s = dynamic_cast<SimEnvironment*>((*it)->getEntity());
-        if(s)
-        {
-            ts->addTriangleSelector(
-                (smgr)->createTriangleSelectorFromBoundingBox(*it));
-        }
-    }
-    
-    ofstream myfile;
-    myfile.open ("test.txt");
-    double fovy = sc->getFOV();
-    double fovx = 2*atan(sc->getAspectRatio()*tan(fovy/2.0f));
-    vector3df cp = cc->getPosition();
-    vector3df cr = cc->getRotation();
-    myfile <<cp.X<<" "<<cp.Y<<" "<<cp.Z<<" "<<cr.X<<" "<<cr.Y<<" "<<cr.Z<<"\n";
-    for(it = entityMeshVector.begin();
-        it != entityMeshVector.end();
-        it++)
-    {
-        // check whether entity is environment
-        SimEnvironment* s = dynamic_cast<SimEnvironment*>((*it)->getEntity());
-        if(s)
-        {
-            if(!(smgr->isCulled(*it)))
-            {
-                vector<Point>* kv = s->getKeyPoints();
-               
-                vector<Point>::iterator itk;
-                for(itk = kv->begin();
-                    itk != kv->end();
-                    itk++)
-                {
-
-                    vector3df ip = (*it)->getPosition();
-                    vector3df p = ip + convertPoint(*itk);
-                    vector3df r = (*it)->getRotation();
-                    p.rotateYZBy(r.X,ip);
-                    p.rotateXZBy(r.Y,ip);
-                    p.rotateXYBy(r.Z,ip);
-                    vector3df tp = p;
-
-                    p.rotateYZBy(-cr.X,cp);
-                    p.rotateXZBy(-cr.Y,cp);
-                    p.rotateXYBy(-cr.Z,cp);
-                    vector3df dp = p - cp;
-
-                    double dx = (dp.X/dp.Z);
-                    double dy = (dp.Y/dp.Z);
-
-                    if((dx)< tan(fovx/2) && (dx)> -tan(fovx/2) &&
-                       (dy)< tan(fovy/2) && (dy)> -tan(fovy/2))
-                    {
-                        vector3df rp = tp;
-                        triangle3df rt;
-                    
-                        ISceneNode * ret = 0;
-                        bool covered = 
-                            cm->getCollisionPoint(
-                                line3d<f32>(cp,tp), ts, rp, rt, ret);
-
-                        SimSceneNode * cov =dynamic_cast<SimSceneNode*>(ret);
-                        if((!covered) ||
-                           (cov==(*it)))
-                        {
-                                double sx = ((dx / tan(fovx/2))+1)*
-                                    (width_r/2.0f);
-                                double sy = ((-1*dy / tan(fovy/2))+1)*
-                                    (height_r/2.0f);
-                                myfile<<sx<<" "<<sy<<" "<<tp.X
-                                      <<" "<<tp.Y<<" "<<tp.Z<<"\n";
-                        }
-                    }
-                }
-            }
-        }
-    }
-    ts->drop();
-    myfile.close();
-}
-vector3df SimGUI::convertPoint(Point p)
-{
-    return vector3df(p.x,p.y,p.z);
-}
-
-
-
 void SimGUI::attachEntityObject()
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
