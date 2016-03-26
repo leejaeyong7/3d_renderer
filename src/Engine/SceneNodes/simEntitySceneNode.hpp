@@ -33,7 +33,6 @@ namespace Sim{
                      SimEntity* _obj):
             ISceneNode(parent,mgr,id)
             {
-                /* set material */
                 Material.Wireframe = false;
                 Material.Lighting = true;
                 obj = _obj;
@@ -42,12 +41,14 @@ namespace Sim{
                 update();
                 drawfeature = true;
             }
-        virtual void OnRegisterSceneNode()
+
+        // gets entity pointer
+        SimEntity* getEntity()
             {
-                if(IsVisible)
-                    SceneManager->registerNodeForRendering(this);
-                ISceneNode::OnRegisterSceneNode();
+                return obj;
             }
+
+        // draws scene node onto screen
         virtual void render()
             {
                 IVideoDriver * driver = SceneManager->getVideoDriver();
@@ -92,10 +93,12 @@ namespace Sim{
                 }
                 driver->draw3DBox(box,c);
             }
+        // checks whether to draw feature or not
         void setDrawFeature(bool v)
             {
                 drawfeature = v;
             }
+        // updates position / rotation
         virtual void update()
             {
                 setPosition(pos2vec(obj->getPosition()));
@@ -115,10 +118,16 @@ namespace Sim{
                 i = i * 1;
                 return Material;
             }
-        SimEntity* getEntity()
+
+        virtual void OnRegisterSceneNode()
             {
-                return obj;
+                if(IsVisible)
+                    SceneManager->registerNodeForRendering(this);
+                ISceneNode::OnRegisterSceneNode();
             }
+//----------------------------------------------------------------------------//
+//                    PRIVATE HELPER VARIABLES / FUNCTIONS                    //
+//----------------------------------------------------------------------------//
     private:
         triangle3df convertTriangle(Triangle t)
             {
