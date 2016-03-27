@@ -91,7 +91,7 @@ namespace Sim{
                         driver->draw3DBox(convertPoint(*itk),r);
                     }
                 }
-                driver->draw3DBox(box,c);
+                /* driver->draw3DBox(box,c); */
             }
         // checks whether to draw feature or not
         void setDrawFeature(bool v)
