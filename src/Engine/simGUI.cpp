@@ -148,6 +148,21 @@ void SimGUI::setup()
     device->getCursorControl()->setVisible(false);
 
     sc = new Sim::CameraSceneNode(r,smgr,-1);
+
+    // minimap camera
+    mc = smgr->addCameraSceneNode(0, vector3df(0,50,0), vector3df(0,0,0));
+
+    // setup path scenenode
+    paths = new Sim::PathSceneNode(r,smgr,-1);
+    paths->addPathNode(vector3df(4,0,0),
+                      vector3df(0,1,0),
+                      1);
+
+    paths->addPathNode(vector3df(9,5,3),
+                      vector3df(0,-1,0),
+                      1);
+
+    smgr->setActiveCamera(wc);
 }
 
 void SimGUI::draw()
@@ -155,19 +170,29 @@ void SimGUI::draw()
     IGUIEnvironment* guienv = device->getGUIEnvironment();
     ISceneManager * smgr = device->getSceneManager();
     IVideoDriver * driver = device->getVideoDriver();
+    rect<s32> minimap(width_r + 10, 300, width - 10, height - 10);
     // if running, draw
     if(device->run())
     {
         // is window is shown
         if(device->isWindowActive())
         {
+            ICameraSceneNode* cc = smgr->getActiveCamera();
             driver->beginScene(true,true,SColor(255,200,200,200));
             // make background black for 3D rendering area
             driver->draw2DRectangle(SColor(255,0,0,0),renderView);
+            driver->draw2DRectangle(SColor(255,0,0,0),minimap);
             driver->setViewPort(renderView);
             smgr->drawAll();
+
+            smgr->setActiveCamera(mc);
+            driver->setViewPort(minimap);
+            //Draw scene
+            smgr->drawAll();
+            smgr->setActiveCamera(cc);
             driver->setViewPort(rect<s32>(0,0,width,height));
             guienv->drawAll();
+
             driver->endScene();
         }
         else
@@ -797,8 +822,8 @@ void SimGUI::editEntityObject()
     vector<AdvancedOption*>* advOV = currObj->getAdvancedOption();
     vector<AdvancedOption*>::iterator it = advOV->begin();
 
-    list<IGUIElement*> advChildren = adv_box->getChildren();
-    list<IGUIElement*>::Iterator lit = advChildren.begin();;
+    core::list<IGUIElement*> advChildren = adv_box->getChildren();
+    core::list<IGUIElement*>::Iterator lit = advChildren.begin();;
     for(int i = 0; i < advChildren.size(); i++,lit++,it++)
     {
         cstr = (*lit)->getElementFromId(PROMPT_ADV_INPUT)->getText();
@@ -981,8 +1006,8 @@ void SimGUI::setPromptData(SimEntity * obj)
     s32 advW = advB.getWidth();
     s32 advIW = advW/3;
     int count = 0;
-    list<IGUIElement*> advChildren = adv_box->getChildren();
-    list<IGUIElement*>::Iterator lit;
+    core::list<IGUIElement*> advChildren = adv_box->getChildren();
+    core::list<IGUIElement*>::Iterator lit;
     for(lit = advChildren.begin(); lit != advChildren.end(); ++lit)
     {
         adv_box->removeChild(*lit);

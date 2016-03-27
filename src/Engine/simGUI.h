@@ -34,6 +34,7 @@
 #include "simGridNode.hpp"
 #include "simEntitySceneNode.hpp"
 #include "simCameraSceneNode.hpp"
+#include "simPathSceneNode.hpp"
 
 //----------------------------------------------------------------------------//
 //                                  Namespaces
@@ -164,6 +165,13 @@ private:
     
     // attached camera
     ICameraSceneNode * sc;
+
+    // minimap camera
+    ICameraSceneNode * mc;
+
+
+    // holds paths
+    Sim::PathSceneNode * paths;
 
     // window sizes
     u32 width, height, width_r, height_r;
