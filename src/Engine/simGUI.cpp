@@ -60,7 +60,9 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
     setContextMenu();
     setCameraDropdown();
     setCameraCapture();
+    setPathExec();
 
+    exec = false;
 }
 
 void SimGUI::setup()
@@ -154,13 +156,6 @@ void SimGUI::setup()
 
     // setup path scenenode
     paths = new Sim::PathSceneNode(r,smgr,-1);
-    paths->addPathNode(vector3df(4,0,0),
-                      vector3df(0,1,0),
-                      1);
-
-    paths->addPathNode(vector3df(9,5,3),
-                      vector3df(0,-1,0),
-                      1);
 
     smgr->setActiveCamera(wc);
 }
@@ -192,8 +187,17 @@ void SimGUI::draw()
             smgr->setActiveCamera(cc);
             driver->setViewPort(rect<s32>(0,0,width,height));
             guienv->drawAll();
-
             driver->endScene();
+            if(exec)
+            {
+                curr_t= clock();
+                if((((double)(curr_t - prev_t))/ CLOCKS_PER_SEC) >
+                   (1.0f / cap_fps))
+                {
+                    execUpdate();
+                    prev_t = curr_t;
+                }
+            }
         }
         else
             device->yield();
@@ -220,7 +224,516 @@ void SimGUI::end()
 {
     device->drop();
 }
+void SimGUI::execPath()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    ISceneManager * smgr = device->getSceneManager();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    std::list<PathNode>* plist = paths->getPathList();
+    std::list<PathNode>::iterator it = plist->begin();
+    if(plist->size() < 1)
+        return;
+    exec = true;
+    cap_id = 0;
+    struct stat sb;
+    IGUIStaticText * fn =
+        (IGUIStaticText*)(rootelem->getElementFromId(PATH_FOLDER,true));
 
+    IGUIScrollBar* scr =
+        (IGUIScrollBar*)(rootelem->getElementFromId(PATH_FPS_SCROLL,true));
+
+    IGUIComboBox* cb=
+        (IGUIComboBox*)(rootelem->getElementFromId(PATH_CAMERA_COMBO,true));
+
+    wstring pn = fn->getText();
+    std::string oname(pn.begin(),pn.end());
+    std::string pathname = oname;
+    int i = 1;
+
+    while((stat(pathname.c_str(),&sb) == 0 && S_ISDIR(sb.st_mode)))
+    {
+        pathname = oname + " (" + to_string(i) + ")";
+        i++;
+    }
+
+    cap_path = wstring(pathname.length(), L' ');
+    std::copy(pathname.begin(),pathname.end(),cap_path.begin());
+    mkdir(pathname.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    cap_fps = scr->getPos();
+    curr_node = 1;
+    cap_node_count = 0;
+
+    s32 sid = cb->getSelected();
+    u32 d = cb->getItemData(sid);
+        
+    vector<SimEntity*>* ev= engine->getEntityVector();
+    SimCamera* s = dynamic_cast<SimCamera*>(ev->at(d));
+    if(s)
+    {
+        if(wc == smgr->getActiveCamera())
+            wc->setInputReceiverEnabled(false);
+        ((CameraSceneNode*)sc)->attachCamera(s);
+        sc->setInputReceiverEnabled(true);
+        device->getSceneManager()->setActiveCamera(sc);
+    }
+
+    ICameraSceneNode * cc = smgr->getActiveCamera();
+    SimCamera* cam = ((Sim::CameraSceneNode*)cc)->getCamera();
+    cam->removeAttachedRobot();
+    vector3df new_pos = (*it).Pos;
+    vector3df new_rot = (*it).Rot;
+    cam->setPosition(new_pos.X,new_pos.Y,new_pos.Z);
+    cam->setRotation(new_rot.X,new_rot.Y,new_rot.Z);
+
+    ((Sim::CameraSceneNode*)cc)->update();
+    curr_t = clock();
+}
+
+void SimGUI::execUpdate()
+{
+    // capture and update
+    capture();
+
+    ISceneManager * smgr = device->getSceneManager();
+    std::list<PathNode>* plist = paths->getPathList();
+    std::list<PathNode>::iterator it = plist->begin();
+    std::advance(it,(int)curr_node-1);
+    PathNode pN = (*it);
+    std::advance(it,1);
+    PathNode cN = (*it);
+
+    
+    vector3df pos_update = cN.Pos - pN.Pos;
+    vector3df rot_update = cN.Rot - pN.Rot;
+
+    pos_update = pos_update / floor(cap_fps*cN.dur);
+    rot_update = rot_update / floor(cap_fps*cN.dur);
+
+    ICameraSceneNode * cc = smgr->getActiveCamera();
+
+    SimCamera* cam = ((Sim::CameraSceneNode*)cc)->getCamera();
+    Position pos = cam->getPosition();
+    Rotation rot = cam->getRotation();
+    vector3df new_pos = vector3df(pos.X,pos.Y,pos.Z) + pos_update;
+    vector3df new_rot = vector3df(rot.Roll,rot.Pitch,rot.Yaw) +rot_update;
+
+    cam->setPosition(new_pos.X,new_pos.Y,new_pos.Z);
+    cam->setRotation(new_rot.X,new_rot.Y,new_rot.Z);
+
+    ((Sim::CameraSceneNode*)cc)->update();
+
+    cap_node_count++;
+    if(cap_node_count == floor(cap_fps*cN.dur))
+    {
+        curr_node++;
+        cap_node_count = 0;
+    }
+    if(curr_node == plist->size())
+    {
+        exec = false;
+        cap_path = L".";
+        cap_id = 0;
+    }
+}
+
+//----------------------------------------------------------------------------//
+//                            GUI WINDOW HANDLERS                             //
+//----------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
+//                             PATH EXEC HANDLERS                             //
+//----------------------------------------------------------------------------//
+void SimGUI::setPathExec()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    s32 cx,cy,cw,ch;
+    cx = width_r + 10;
+    cw = width - width_r -20;
+    cy = 130;
+    ch = 40;
+
+    IGUIStaticText * ct = guienv->addStaticText(
+        L"Choose Camera To Execute Path",
+        rect<s32>(cx,cy,cx+cw,cy+20),
+        false, true);
+    IGUIComboBox* ccb = guienv->addComboBox( 
+        rect<s32>(cx, cy+20, cx+cw, cy+ch), 0, PATH_CAMERA_COMBO);
+
+    vector<SimEntity*>* eVector = engine->getEntityVector();
+    vector<SimEntity*>::iterator it;
+
+    // set camera combo box
+    int index = 0;
+    for(it = eVector->begin(); it!= eVector->end(); ++it)
+    {
+        SimCamera* s = dynamic_cast<SimCamera*>(*it);
+        if(s)
+        {
+            std::string name = (*it)->getName();
+            std::wstring wname(name.length(), L' '); 
+            std::copy(name.begin(), name.end(), wname.begin());
+            ccb->addItem(wname.c_str(),index);
+        }
+        index++;
+    }
+
+    s32 fx,fy,fw,fh;
+    fx = width_r + 10;
+    fy = cy + ch + 10;
+    fw = width - width_r - 20;
+    fh = 40;
+
+    IGUIStaticText * ft = guienv->addStaticText(
+        L"Folder Path: ",
+        rect<s32>(fx,fy,fx+fw,fy+20),
+        false, true);
+
+    IGUIEditBox* filename =  guienv->addEditBox(
+        L"result", rect<s32>(fx,fy+20,fx+fw,fy+fh), true, 0, PATH_FOLDER);
+        
+
+    s32 bx,by,bw,bh;
+    bx = width_r + 10;
+    bw = 80;
+    by = fy + fh + 10;
+    bh = 40;
+
+    guienv->addButton(rect<s32>(bx,by+10,bx+bw,by+bh), 0,
+                      RUN_BUTTON,
+                      L"Run",
+                      L"Run path with given camera");
+
+    s32 sx,sy,sw,sh,ew;
+    sx = bx + bw + 10;
+    ew = 60;
+    sw = width - width_r - 30 - bw - ew;
+    sy = by;
+    sh = 40;
+
+    IGUIStaticText * st = guienv->addStaticText(
+        L"Set FPS",
+        rect<s32>(sx,sy,sx+sw,sy+20),
+        false, true);
+
+    IGUIScrollBar * scr = 
+        guienv->addScrollBar(true,
+                             rect<s32>(sx,sy+20,sx+sw,sy+sh),
+                             0,PATH_FPS_SCROLL);
+    scr->setMin(1);
+    scr->setMax(60);
+    scr->setPos(30);
+    scr->setSmallStep(1);
+    scr->setLargeStep(5);
+
+    guienv->addStaticText(
+        L"",
+        rect<s32>(sx + sw + 10, sy+20,sx + sw + ew, sy + sh),
+        true,true,
+        0, PATH_FPS);
+                         
+    setPathFPS();
+    
+}
+void SimGUI::updateCombos()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
+    IGUIComboBox* pc =
+        (IGUIComboBox*)(rootelem->getElementFromId(PATH_CAMERA_COMBO, true));
+    pc->clear();
+
+    IGUIComboBox* cc =
+        (IGUIComboBox*)(rootelem->getElementFromId(CAMERA_COMBO, true));
+    cc->clear();
+    
+    vector<SimEntity*>* eVector = engine->getEntityVector();
+    vector<SimEntity*>::iterator it;
+
+    // set camera combo box
+    int index = 0;
+    cc->addItem(L"world camera",-1);
+    for(it = eVector->begin(); it!= eVector->end(); ++it)
+    {
+        SimCamera* s = dynamic_cast<SimCamera*>(*it);
+        if(s)
+        {
+            std::string name = (*it)->getName();
+            std::wstring wname(name.length(), L' '); 
+            std::copy(name.begin(), name.end(), wname.begin());
+            pc->addItem(wname.c_str(),index);
+            cc->addItem(wname.c_str(),index);
+        }
+        index++;
+    }
+}
+
+void SimGUI::setPathFPS()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
+    IGUIScrollBar* scr= 
+        (IGUIScrollBar*)(rootelem->getElementFromId(PATH_FPS_SCROLL, true));
+    int val = scr->getPos();
+
+    IGUIStaticText * fps = 
+        (IGUIStaticText*)(rootelem->getElementFromId(PATH_FPS, true));
+    
+    fps->setText(std::to_wstring(val).c_str());
+}
+
+void SimGUI::addPathNode()
+{
+    ISceneManager* smgr = device->getSceneManager();
+    ICameraSceneNode * cc = smgr->getActiveCamera();
+    paths->addPathNode(cc->getPosition(), cc->getRotation(),1);
+}
+//----------------------------------------------------------------------------//
+//                              PATH EDIT WINDOW                              //
+//----------------------------------------------------------------------------//
+// sets attach window appropriately.
+void SimGUI::editPathWindow()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    s32 wx,wy,ww,wh;
+    wx = 100;
+    wy = 100;
+    ww = 600;
+    wh = 240;
+
+    IGUIWindow* window= guienv->addWindow(
+        rect<s32>(wx, wy, wx+ww, wy+wh), true, L"Edit Path", 0, PATH_WINDOW);
+
+    s32 cx,cy,cw,ch;
+    s32 cbx;
+    cx = 10;
+    cw = ww - 2*cx;
+    ch = 40;
+    cy = 30;
+    
+    // set text
+    IGUIStaticText* crt = guienv->addStaticText(
+        L"", rect<s32>(cx, cy, cx+cw, cy+20), false, true, window);
+
+    // set dropdown box
+    IGUIComboBox *  pc= guienv->addComboBox(
+        rect<s32>(cx, cy+20, cx+cw, cy+ch), window, PATH_COMBO);
+
+    // add combobox items
+    crt->setText(L"Choose Path Node to Edit: ");
+
+    std::list<PathNode>* plist = paths->getPathList();
+    std::list<PathNode>::iterator it;
+    int index = 0;
+    for(it = plist->begin(); it != plist->end() ; it++)
+    {
+        wstring p = L"Path ";
+        p += std::to_wstring(index);
+        pc->addItem(p.c_str(),index);
+        index++;
+    }
+    
+    s32 dx,dy,dw,dh,dm;
+    dx = 10;
+    dh = 100;
+    dw = ww - 2*dx;
+    dy = cy + ch + 10;
+    dm = 70;
+    // add text for coordinate/rotation inputs
+    IGUIStaticText* dof_box = guienv->addStaticText(
+        L"", rect<s32>(dx,dy,dx+dw,dy+dh), true, true, window, -1, false);
+
+    // set pos/rotation with margin 10
+    s32 ddw = dw-20;
+    
+    IGUIStaticText* position =
+        guienv->addStaticText(
+            L"Position", rect<s32>(10,10,ddw,30), false, true, dof_box);
+
+    IGUIStaticText* rotation=
+        guienv->addStaticText(
+            L"Rotation", rect<s32>(10,40,ddw,60), false, true, dof_box);
+
+    IGUIStaticText* duration=
+        guienv->addStaticText(
+            L"Duration", rect<s32>(10,70,ddw,90), false, true, dof_box);
+
+    // set textwidth as 1/3 each
+    s32 tw = (ddw - dm + 10) / 3;
+
+    // add static text
+    IGUIStaticText* sx =
+        guienv->addStaticText(
+            L"x:", rect<s32>(dm,0,tw+dm,20), false, true, position);
+
+    IGUIStaticText* sy =
+        guienv->addStaticText(
+            L"y:",rect<s32>(tw+dm,0,2*tw+dm,20),false,true,position);
+
+    IGUIStaticText* sz =
+        guienv->addStaticText(
+            L"z:",rect<s32>(2*tw+dm,0,3*tw+dm,20),false,true,position);
+
+    IGUIStaticText* sa =
+        guienv->addStaticText(
+            L"Roll:", rect<s32>(dm,0,tw+dm,20), false, true, rotation);
+
+    IGUIStaticText* sb =
+        guienv->addStaticText(
+            L"Pitch:",rect<s32>(tw+dm,0,2*tw+dm,20),false,true,rotation);
+
+    IGUIStaticText* sc =
+        guienv->addStaticText(
+            L"Yaw:",rect<s32>(2*tw+dm,0,3*tw+dm,20),false,true,rotation);
+
+    s32 tm = 50;
+    // add edit box
+    IGUIEditBox* ex =  guienv->addEditBox(
+        L"0.0", rect<s32>(tm,0,tw-10,20), true, sx, PATH_POS_X);
+
+    IGUIEditBox* ey =  guienv->addEditBox(
+        L"0.0", rect<s32>(tm,0,tw-10,20), true, sy, PATH_POS_Y);
+
+    IGUIEditBox* ez =  guienv->addEditBox(
+        L"0.0", rect<s32>(tm,0,tw-10,20), true, sz, PATH_POS_Z);
+
+    IGUIEditBox* ea =  guienv->addEditBox(
+        L"0.0", rect<s32>(tm,0,tw-10,20), true, sa, PATH_ROT_A);
+
+    IGUIEditBox* eb =  guienv->addEditBox(
+        L"0.0", rect<s32>(tm,0,tw-10,20), true, sb, PATH_ROT_B);
+
+    IGUIEditBox* ec =  guienv->addEditBox(
+        L"0.0", rect<s32>(tm,0,tw-10,20), true, sc, PATH_ROT_C);
+
+    IGUIEditBox* ed =  guienv->addEditBox(
+        L"0", rect<s32>(dm+tm,0,tw+dm-10,20), true, duration, PATH_DUR);
+
+    s32 bx,by,bw,bh;
+    by = dy+dh + 10;
+    bw = 80;
+    bx = ww - 10 - bw*3 - 20;
+    bh = 40;
+
+    guienv->addButton(rect<s32>(bx,by,bx+bw*1,by+bh), window,
+                      PATH_REMOVE_BUTTON,
+                      L"Delete",
+                      L"Removes current node");
+
+    guienv->addButton(rect<s32>(bx+bw*1+10,by,bx+bw*2+10,by+bh), window,
+                      APPLY_BUTTON,
+                      L"Apply",
+                      L"Set with current settings");
+
+    guienv->addButton(rect<s32>(bx+bw*2+20,by,bx+bw*3+20,by+bh), window,
+                      CLOSE_BUTTON,
+                      L"Close",
+                      L"Cancel and close window");
+
+    setPathData(0);
+}
+void SimGUI::setPathData(s32 index)
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    std::list<PathNode>* plist = paths->getPathList();
+    std::list<PathNode>::iterator it = plist->begin();
+    std::advance(it,(int)index);
+    vector3df pos = (*it).Pos;
+    vector3df rot = (*it).Rot;
+
+    IGUIEditBox * ex =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_POS_X, true));
+
+    IGUIEditBox * ey =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_POS_Y, true));
+
+    IGUIEditBox * ez =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_POS_Z, true));
+
+    IGUIEditBox * ea =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_ROT_A, true));
+
+    IGUIEditBox * eb =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_ROT_B, true));
+
+    IGUIEditBox * ec =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_ROT_C, true));
+
+    IGUIEditBox * ed =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_DUR, true));
+
+    ex->setText(to_wstring(pos.X).c_str());
+    ey->setText(to_wstring(pos.Y).c_str());
+    ez->setText(to_wstring(pos.Z).c_str());
+    ea->setText(to_wstring(rot.X).c_str());
+    eb->setText(to_wstring(rot.Y).c_str());
+    ec->setText(to_wstring(rot.Z).c_str());
+    ed->setText(to_wstring((*it).dur).c_str());
+}
+void SimGUI::savePathData()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
+    std::list<PathNode>* plist = paths->getPathList();
+    std::list<PathNode>::iterator it = plist->begin();
+
+    IGUIComboBox* cb=
+        (IGUIComboBox*)(rootelem->getElementFromId(PATH_COMBO, true));
+
+    IGUIEditBox * ex =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_POS_X, true));
+
+    IGUIEditBox * ey =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_POS_Y, true));
+
+    IGUIEditBox * ez =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_POS_Z, true));
+
+    IGUIEditBox * ea =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_ROT_A, true));
+
+    IGUIEditBox * eb =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_ROT_B, true));
+
+    IGUIEditBox * ec =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_ROT_C, true));
+
+    IGUIEditBox * ed =
+        (IGUIEditBox*)(rootelem->getElementFromId(PATH_DUR, true));
+
+
+    stringc cstr;
+    int index = cb->getSelected();
+    std::advance(it,index);
+
+    // set Position
+    cstr = ex->getText();
+    double x = (double)atof(cstr.c_str());
+    cstr = ey->getText();
+    double y = (double)atof(cstr.c_str());
+    cstr = ez->getText();
+    double z = (double)atof(cstr.c_str());
+    (*it).Pos = vector3df(x,y,z);
+
+    cstr = ea->getText();
+    double a = (double)atof(cstr.c_str());
+    cstr = eb->getText();
+    double b = (double)atof(cstr.c_str());
+    cstr = ec->getText();
+    double c = (double)atof(cstr.c_str());
+    (*it).Rot = vector3df(a,b,c);
+
+    cstr = ed->getText();
+    int d = (int)atof(cstr.c_str());
+    (*it).dur = d;
+}
+//----------------------------------------------------------------------------//
+//                        ADD / EDIT ENTITY SCENENODE                         //
+//----------------------------------------------------------------------------//
 void SimGUI::addEntitySceneNode(EntityType type, SimEntity * obj)
 {
     // null check
@@ -238,7 +751,9 @@ void SimGUI::addEntitySceneNode(EntityType type, SimEntity * obj)
     }
     entityMeshVector.push_back(node);
     // reset camera dropdown menu
-    setCameraDropdown();
+    updateCombos();
+    /* setCameraDropdown(); */
+    /* setPathExec(); */
 }
 void SimGUI::removeEntitySceneNode(SimEntity * obj)
 {
@@ -265,9 +780,14 @@ void SimGUI::removeEntitySceneNode(SimEntity * obj)
                        entityMeshVector.end(),
                        checkEntityPointer(obj)),
         entityMeshVector.end());
-    setCameraDropdown();
+    updateCombos();
+    /* setCameraDropdown(); */
+    /* setPathExec(); */
 }
 
+//----------------------------------------------------------------------------//
+//                          ATTACH ENTITY GUI WINDOW                          //
+//----------------------------------------------------------------------------//
 void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
 {
     // null check
@@ -327,7 +847,6 @@ void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
     // for possible case where sensor was camera, update
     ((CameraSceneNode*)sc)->update();
 }
-
 // sets attach window appropriately.
 void SimGUI::entityAttachWindow()
 {
@@ -520,9 +1039,10 @@ void SimGUI::capture()
     img->copyTo(view,
                 position2d<s32>(0,0),
                 rect<s32>(0,20,width_r,height_r+20));
+    wstring imagename = cap_path + L"/res_" + std::to_wstring(cap_id)+ L".jpg";
     driver->writeImageToFile(
         view,
-        L"test.jpg");
+        imagename.c_str());
     img->drop();
     view->drop();
 
@@ -554,7 +1074,9 @@ void SimGUI::capture()
     
     // output file
     ofstream myfile;
-    myfile.open ("test.txt");
+    wstring resultname= cap_path + L"/res_" + std::to_wstring(cap_id)+ L".txt";
+    std::string resname(resultname.begin(),resultname.end());
+    myfile.open (resname);
     // get fov, position and rotation of camera
     double fovy = sc->getFOV();
     double fovx = 2*atan(sc->getAspectRatio()*tan(fovy/2.0f));
@@ -637,6 +1159,7 @@ void SimGUI::capture()
     }
     ts->drop();
     myfile.close();
+    cap_id++;
 }
 // quick little helper function to convert point to vector
 vector3df SimGUI::convertPoint(Point p)
@@ -646,6 +1169,71 @@ vector3df SimGUI::convertPoint(Point p)
 
 //----------------------------------------------------------------------------//
 //                        GUI PRIVATE HELPER FUNCTIONS                        //
+//----------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
+//                              CONTEXT MENU GUI                              //
+//----------------------------------------------------------------------------//
+void SimGUI::setContextMenu()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    // add context menu(toolbar menu)
+    IGUIContextMenu * cM = guienv->addMenu();
+
+    //---------------------------Top Level Menu-------------------------------//
+    // menu dropdown for context menu
+    u32 engineMenuId = cM->addItem(L"Engine", 1, true, true, false, false);
+
+    u32 entityMenuId = cM->addItem(L"Entity", 2, true, true, false, false);
+    u32 pathMenuId = cM->addItem(L"Path", 3, true, true, false, false);
+
+    IGUIContextMenu * engineMenu = cM->getSubMenu(engineMenuId);
+    IGUIContextMenu * entityMenu = cM->getSubMenu(entityMenuId);
+    IGUIContextMenu * pathMenu = cM->getSubMenu(pathMenuId);
+    
+    //---------------------------Engine Menu----------------------------------//
+
+	engineMenu->addItem(L"Show Features", FEATURE_BUTTON,
+                        true, false, true, false);
+	engineMenu->addItem(L"Quit", QUIT_BUTTON, true, false, false, false);
+
+    //---------------------------Entity Menu----------------------------------//
+	u32 eA= entityMenu->addItem(L"Add", -1, true, true, false, false);
+
+	u32 eR= entityMenu->addItem(L"Edit", -1, true, true, false, false);
+
+	u32 eAt= entityMenu->addItem(
+        L"Attach", ATTACH_ENTITY, true, false, false, false);
+	u32 eDt= entityMenu->addItem(
+        L"Detach", DETACH_ENTITY, true, false, false, false);
+
+    IGUIContextMenu * entityAdd = entityMenu->getSubMenu(eA);
+    IGUIContextMenu * entityRemove= entityMenu->getSubMenu(eR);
+
+    //----------------------Entity Add/Remove Sub Menu------------------------//
+    u32 entityAddRobotId= entityAdd->addItem(
+        L"Robot", ADD_ROBOT, true, false, false, false);
+
+    u32 entityAddSensorId= entityAdd->addItem(
+        L"Sensor", ADD_SENSOR, true, false, false, false);
+
+    u32 entityAddEnvId= entityAdd->addItem(
+        L"Environment", ADD_ENVIRONMENT, true, false, false, false);
+
+    //---------------------REMOVE-----------------------//
+    u32 entityRemoveRobotId= entityRemove->addItem(
+        L"Robot", EDIT_ROBOT, true, false, false, false);
+
+    u32 entityRemoveSensorId= entityRemove->addItem(
+        L"Sensor", EDIT_SENSOR, true, false, false, false);
+
+    u32 entityRemoveEnvId= entityRemove->addItem(
+        L"Environment", EDIT_ENVIRONMENT, true, false, false, false);
+
+    //----------------------Path Edit menu------------------------//
+	pathMenu->addItem(L"Edit", EDIT_PATH, true, false, false, false);
+}
+//----------------------------------------------------------------------------//
+//                             CAMERA SELECT GUI                              //
 //----------------------------------------------------------------------------//
 void SimGUI::setCameraDropdown()
 {
@@ -698,63 +1286,11 @@ void SimGUI::setCameraCapture()
                       L"Capture",
                       L"Captures Current scene");
 }
-void SimGUI::attachEntityObject()
-{
-    IGUIEnvironment* guienv = device->getGUIEnvironment();
-    IGUIElement * rootelem = guienv->getRootGUIElement();
 
-    IGUIComboBox* crcb=
-        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO1, true));
 
-    IGUIComboBox* cscb=
-        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO2, true));
-
-    vector<SimEntity*>* vec= engine->getEntityVector();
-    int i = crcb->getItemData(crcb->getSelected());
-    SimRobot* robj= (SimRobot*)(vec->at(i));
-    i = cscb->getItemData(cscb->getSelected());
-    if(currPrompt == ATTACH_ENTITY_PROMPT)
-    {
-        SimSensor* sobj= (SimSensor*)(vec->at(i));
-        engine->attachEntity(robj,sobj);
-    }
-    else if(currPrompt == DETACH_ENTITY_PROMPT)
-    {
-        vector<SimSensor*>* svec= robj->getSensorVector();
-        SimSensor* sobj= (SimSensor*)(svec->at(i));
-        engine->detachEntity(robj,sobj);
-    }
-}
-
-void SimGUI::setDetachData(s32 index)
-{
-    IGUIEnvironment* guienv = device->getGUIEnvironment();
-    IGUIElement * rootelem = guienv->getRootGUIElement();
-
-    IGUIComboBox* crcb=
-        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO1, true));
-    IGUIComboBox* cscb=
-        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO2, true));
-    for(int i = 0; i < cscb->getItemCount(); i++)
-    {
-        cscb->removeItem(i);
-    }
-    vector<SimEntity*>* vec= engine->getEntityVector();
-    int i = crcb->getItemData(index);
-    SimRobot* robj= (SimRobot*)vec->at(i);
-    vector<SimSensor*>* sv = robj->getSensorVector();
-    vector<SimSensor*>::iterator it;
-    int c = 0;
-    for(it = sv->begin(); it != sv->end(); it++)
-    {
-        std::string name = (*it)->getName();
-        std::wstring wname(name.length(), L' '); 
-        std::copy(name.begin(), name.end(), wname.begin());
-        cscb->addItem(wname.c_str(),c);
-        c++;
-    }
-
-}
+//----------------------------------------------------------------------------//
+//                      ENTITY ADD/EDIT MENU WINDOW GUI                       //
+//----------------------------------------------------------------------------//
 void SimGUI::createEntityObject()
 {
     engine->addEntity((EntityType)currType, currObj);
@@ -1431,58 +1967,63 @@ void SimGUI::setButtons(s32 bx, s32 by, s32 bw, s32 bh)
     }
 }
 
-
-void SimGUI::setContextMenu()
+//----------------------------------------------------------------------------//
+//                      ENTITY ATTACH/DETACH WINDOW GUI                       //
+//----------------------------------------------------------------------------//
+void SimGUI::attachEntityObject()
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
-    // add context menu(toolbar menu)
-    IGUIContextMenu * cM = guienv->addMenu();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
 
-    //---------------------------Top Level Menu-------------------------------//
-    // menu dropdown for context menu
-    u32 engineMenuId = cM->addItem(L"Engine", 1, true, true, false, false);
+    IGUIComboBox* crcb=
+        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO1, true));
 
-    u32 entityMenuId = cM->addItem(L"Entity", 2, true, true, false, false);
+    IGUIComboBox* cscb=
+        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO2, true));
 
-    IGUIContextMenu * engineMenu = cM->getSubMenu(engineMenuId);
-    IGUIContextMenu * entityMenu = cM->getSubMenu(entityMenuId);
-    
-    //---------------------------Engine Menu----------------------------------//
+    vector<SimEntity*>* vec= engine->getEntityVector();
+    int i = crcb->getItemData(crcb->getSelected());
+    SimRobot* robj= (SimRobot*)(vec->at(i));
+    i = cscb->getItemData(cscb->getSelected());
+    if(currPrompt == ATTACH_ENTITY_PROMPT)
+    {
+        SimSensor* sobj= (SimSensor*)(vec->at(i));
+        engine->attachEntity(robj,sobj);
+    }
+    else if(currPrompt == DETACH_ENTITY_PROMPT)
+    {
+        vector<SimSensor*>* svec= robj->getSensorVector();
+        SimSensor* sobj= (SimSensor*)(svec->at(i));
+        engine->detachEntity(robj,sobj);
+    }
+}
 
-	engineMenu->addItem(L"Show Features", FEATURE_BUTTON,
-                        true, false, true, false);
-	engineMenu->addItem(L"Quit", QUIT_BUTTON, true, false, false, false);
+void SimGUI::setDetachData(s32 index)
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
 
-    //---------------------------Entity Menu----------------------------------//
-	u32 eA= entityMenu->addItem(L"Add", -1, true, true, false, false);
+    IGUIComboBox* crcb=
+        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO1, true));
+    IGUIComboBox* cscb=
+        (IGUIComboBox*)(rootelem->getElementFromId(ATTACH_COMBO2, true));
+    for(int i = 0; i < cscb->getItemCount(); i++)
+    {
+        cscb->removeItem(i);
+    }
+    vector<SimEntity*>* vec= engine->getEntityVector();
+    int i = crcb->getItemData(index);
+    SimRobot* robj= (SimRobot*)vec->at(i);
+    vector<SimSensor*>* sv = robj->getSensorVector();
+    vector<SimSensor*>::iterator it;
+    int c = 0;
+    for(it = sv->begin(); it != sv->end(); it++)
+    {
+        std::string name = (*it)->getName();
+        std::wstring wname(name.length(), L' '); 
+        std::copy(name.begin(), name.end(), wname.begin());
+        cscb->addItem(wname.c_str(),c);
+        c++;
+    }
 
-	u32 eR= entityMenu->addItem(L"Edit", -1, true, true, false, false);
-
-	u32 eAt= entityMenu->addItem(
-        L"Attach", ATTACH_ENTITY, true, false, false, false);
-	u32 eDt= entityMenu->addItem(
-        L"Detach", DETACH_ENTITY, true, false, false, false);
-
-    IGUIContextMenu * entityAdd = entityMenu->getSubMenu(eA);
-    IGUIContextMenu * entityRemove= entityMenu->getSubMenu(eR);
-
-    //----------------------Entity Add/Remove Sub Menu------------------------//
-    u32 entityAddRobotId= entityAdd->addItem(
-        L"Robot", ADD_ROBOT, true, false, false, false);
-
-    u32 entityAddSensorId= entityAdd->addItem(
-        L"Sensor", ADD_SENSOR, true, false, false, false);
-
-    u32 entityAddEnvId= entityAdd->addItem(
-        L"Environment", ADD_ENVIRONMENT, true, false, false, false);
-
-    //---------------------REMOVE-----------------------//
-    u32 entityRemoveRobotId= entityRemove->addItem(
-        L"Robot", EDIT_ROBOT, true, false, false, false);
-
-    u32 entityRemoveSensorId= entityRemove->addItem(
-        L"Sensor", EDIT_SENSOR, true, false, false, false);
-
-    u32 entityRemoveEnvId= entityRemove->addItem(
-        L"Environment", EDIT_ENVIRONMENT, true, false, false, false);
 }

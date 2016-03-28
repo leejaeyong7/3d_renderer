@@ -51,7 +51,9 @@ enum
 
     CLOSE_BUTTON,
     CONFIRM_BUTTON,
+    APPLY_BUTTON,
     REMOVE_BUTTON,
+    RUN_BUTTON,
 
     // context menu
     ADD_ROBOT,
@@ -62,6 +64,8 @@ enum
     EDIT_SENSOR,
     EDIT_ENVIRONMENT,
 
+    EDIT_PATH,
+
     ATTACH_ENTITY,
     DETACH_ENTITY,
 
@@ -69,6 +73,23 @@ enum
     ATTACH_WINDOW,
     ATTACH_COMBO1,
     ATTACH_COMBO2,
+
+    // used for path edit window
+    PATH_WINDOW,
+    PATH_COMBO,
+    PATH_CAMERA_COMBO,
+    PATH_FPS_SCROLL,
+    PATH_FOLDER,
+    PATH_FPS,
+    PATH_REMOVE_BUTTON,
+
+    PATH_POS_X,
+    PATH_POS_Y,
+    PATH_POS_Z,
+    PATH_ROT_A,
+    PATH_ROT_B,
+    PATH_ROT_C,
+    PATH_DUR,
 
     CAMERA_COMBO,
     CAPTURE_BUTTON

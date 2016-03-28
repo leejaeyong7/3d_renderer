@@ -46,6 +46,11 @@ bool EventHandler::OnEvent(const SEvent & event)
                 device->closeDevice();
             }
         }
+        else if(event.KeyInput.Key == KEY_SPACE &&
+                event.KeyInput.PressedDown == false)
+        {
+            gui->addPathNode();
+        }
         else
             KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
     }
@@ -68,6 +73,12 @@ bool EventHandler::OnEvent(const SEvent & event)
             case CLOSE_BUTTON:
                 caller->getParent()->remove();
                 return false;
+            case RUN_BUTTON:
+                gui->execPath();
+                return false;
+            case APPLY_BUTTON:
+                gui->savePathData();
+                return false;
             case CONFIRM_BUTTON:
                 // sets parameter for entity
                 if(gui->currPrompt == EDIT_ENTITY_PROMPT)
@@ -89,6 +100,27 @@ bool EventHandler::OnEvent(const SEvent & event)
                 caller->getParent()->remove();
                 // update
                 break;
+            case PATH_REMOVE_BUTTON:
+            {
+                IGUIComboBox* cb = 
+                    (IGUIComboBox*)(rootelem->getElementFromId(PATH_COMBO,true));
+                gui->paths-> removePathNode(cb->getSelected());
+
+                cb->clear();
+                std::list<PathNode>* plist = gui->paths->getPathList();
+                std::list<PathNode>::iterator it;
+                int index = 0;
+                for(it = plist->begin(); it != plist->end() ; it++)
+                {
+                    wstring p = L"Path ";
+                    p += std::to_wstring(index);
+                    cb->addItem(p.c_str(),index);
+                    index++;
+                }
+                gui->setPathData(0);
+                
+            }
+                return false;
             case REMOVE_BUTTON:
                 gui->engine->removeEntity(gui->currObj);
                 caller->getParent()->remove();
@@ -174,6 +206,8 @@ bool EventHandler::OnEvent(const SEvent & event)
                 gui->currPrompt = DETACH_ENTITY_PROMPT;
                 gui->entityAttachWindow();
                 return true;
+            case EDIT_PATH:
+                gui->editPathWindow();
             default:
                 return false;
             }
@@ -226,6 +260,9 @@ bool EventHandler::OnEvent(const SEvent & event)
                 if(id == ATTACH_COMBO1)
                     gui->setDetachData(sid);
                 break;
+            case PATH_COMBO:
+                gui->setPathData(sid);
+                break;
             }
             break;
         }
@@ -260,10 +297,23 @@ bool EventHandler::OnEvent(const SEvent & event)
             }
             break;
         }
+        case EGET_SCROLL_BAR_CHANGED:
+        {
+            switch(id)
+            {
+            case PATH_FPS_SCROLL:
+                gui->setPathFPS();
+                return false;
+            default:
+                break;
+            }
+        }
+            break;
         default:
+
             break;
         }
-    }
+    }// end gui event
     return false;
 }
 

@@ -20,6 +20,8 @@
 #include <typeinfo>
 #include <string>
 #include <fstream>
+#include <sys/stat.h>
+#include <ctime>
 #include "enumerations.h"
 #include "eventHandler.h"
 #include "simEngine.h"
@@ -150,6 +152,9 @@ public:
      */
     void entityAttachWindow();
 
+
+    void editPathWindow();
+
 private:
     // Pointer to SimEngine
     SimEngine * engine;
@@ -216,6 +221,19 @@ private:
     // sets up context menu(toolbar)
     void setContextMenu();
 
+    // sets up path execute menu
+    void setPathExec();
+    void setPathFPS();
+    void addPathNode();
+    void execPath();
+    void execUpdate();
+    
+    void updateCombos();
+    
+    // save/set up path data
+    void savePathData();
+    void setPathData(s32 index);
+
     // functor for remove_if predicate
     struct checkEntityPointer
     {
@@ -226,5 +244,12 @@ private:
             return obj->getEntity() == ptr_holder;
         }
     };
+    bool exec;
+    int cap_id;
+    int cap_fps;
+    int curr_node;
+    wstring cap_path;
+    int cap_node_count;
+    clock_t curr_t,prev_t;
 };
 #endif

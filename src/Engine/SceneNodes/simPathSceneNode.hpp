@@ -74,6 +74,11 @@ namespace Sim {
                     PathList.erase(it);
                 }
             }
+        std::list<PathNode>* getPathList()
+            {
+                return &PathList;
+            }
+        
         virtual void render()
             {
                 IVideoDriver * driver = SceneManager->getVideoDriver();
@@ -91,7 +96,8 @@ namespace Sim {
                     if(count == 0)
                     {
                         n = (*it);
-                        driver->draw3DBox(vec2box(n.Pos),lineColor);
+                        /* driver->draw3DBox(vec2box(n.Pos),lineColor); */
+                        draw3DVector(driver,n.Pos,n.Rot,lineColor);
                     }
                     else
                     {
@@ -113,7 +119,8 @@ namespace Sim {
                         /*     driver->draw3DLine(prev, curp, lineColor); */
                         /* } */
                         driver->draw3DLine(curp, n.Pos, lineColor);
-                        driver->draw3DBox(vec2box(n.Pos),lineColor);
+                        /* driver->draw3DBox(vec2box(n.Pos),lineColor); */
+                        draw3DVector(driver,n.Pos,n.Rot,lineColor);
                     }
                     count++;
                 }
@@ -139,6 +146,32 @@ namespace Sim {
                 ISceneNode::OnRegisterSceneNode();
             }
     private:
+        void draw3DVector(IVideoDriver *drv,
+                          vector3df pos,
+                          vector3df rot, SColor c)
+            {
+                vector3df tr1(0,0,-0.3);
+                vector3df tr2(0.1,0,0.3);
+                vector3df tr3(-0.1,0,0.3);
+
+                tr1.rotateYZBy(rot.X,vector3df(0,0,0));
+                tr1.rotateXZBy(rot.Y,vector3df(0,0,0));
+                tr1.rotateXYBy(rot.Z,vector3df(0,0,0));
+
+                tr2.rotateYZBy(rot.X,vector3df(0,0,0));
+                tr2.rotateXZBy(rot.Y,vector3df(0,0,0));
+                tr2.rotateXYBy(rot.Z,vector3df(0,0,0));
+
+                tr3.rotateYZBy(rot.X,vector3df(0,0,0));
+                tr3.rotateXZBy(rot.Y,vector3df(0,0,0));
+                tr3.rotateXYBy(rot.Z,vector3df(0,0,0));
+                
+                tr1 = tr1 + pos;
+                tr2 = tr2 + pos;
+                tr3 = tr3 + pos;
+                drv->draw3DTriangle(triangle3df(tr1,tr2,tr3),c);
+                drv->draw3DTriangle(triangle3df(tr3,tr2,tr1),c);
+            }
         aabbox3d<f32> vec2box(vector3df p)
             {
                 return aabbox3d<f32>(
