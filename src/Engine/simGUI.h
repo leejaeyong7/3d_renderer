@@ -187,6 +187,8 @@ private:
 
     // converts point into vector
     vector3df convertPoint(Point p);
+    vector3df convertPos(Position p);
+    vector3df convertRot(Rotation p);
 
     // sets data for prompt window
     void setPromptData(SimEntity* obj);

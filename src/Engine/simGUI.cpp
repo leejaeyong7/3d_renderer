@@ -1079,9 +1079,11 @@ void SimGUI::capture()
     myfile.open (resname);
     // get fov, position and rotation of camera
     double fovy = sc->getFOV();
-    double fovx = 2*atan(sc->getAspectRatio()*tan(fovy/2.0f));
-    vector3df cp = cc->getPosition();
-    vector3df cr = cc->getRotation();
+    double fovx = 2.0f*atan(sc->getAspectRatio()*tan(fovy/2.0f));
+    vector3df cp =
+        convertPos(((CameraSceneNode*)cc)->getCamera()->getPosition());
+    vector3df cr =
+        convertRot(((CameraSceneNode*)cc)->getCamera()->getRotation());
 
     // write camera info on first line
     myfile<<cp.X<<" "<<cp.Y<<" "<<cp.Z<<" "<<cr.X<<" "<<cr.Y<<" "<<cr.Z<<"\n";
@@ -1117,7 +1119,7 @@ void SimGUI::capture()
 
                     // rotate keypoint to fit in camera view before rotation
                     p.rotateYZBy(-cr.X,cp);
-                    p.rotateXZBy(-cr.Y,cp);
+                    p.rotateXZBy(cr.Y,cp);
                     p.rotateXYBy(-cr.Z,cp);
 
                     // dp holds absolute translation; p viewed from camera
@@ -1125,12 +1127,12 @@ void SimGUI::capture()
                     vector3df dp = p - cp;
 
                     // calculate tangent value of angle
-                    double dx = (dp.X/dp.Z);
-                    double dy = (dp.Y/dp.Z);
+                    double dx = (double)(dp.X/dp.Z);
+                    double dy = (double)(dp.Y/dp.Z);
 
                     // if point is between frustum angles, check for collision
-                    if((dx)< tan(fovx/2) && (dx)> -tan(fovx/2) &&
-                       (dy)< tan(fovy/2) && (dy)> -tan(fovy/2))
+                    if((dx)< tan(fovx/2.0f) && (dx)> -tan(fovx/2.0f) &&
+                       (dy)< tan(fovy/2.0f) && (dy)> -tan(fovy/2.0f))
                     {
                         vector3df rp = tp;
                         triangle3df rt;
@@ -1145,9 +1147,9 @@ void SimGUI::capture()
                         // if not blocked, add to file
                         if(!covered)
                         {
-                                double sx = ((dx / tan(fovx/2))+1)*
+                                double sx = ((dx / tan(fovx/2.0f))+1)*
                                     (width_r/2.0f);
-                                double sy = ((-1*dy / tan(fovy/2))+1)*
+                                double sy = ((-1*dy / tan(fovy/2.0f))+1)*
                                     (height_r/2.0f);
                                 myfile<<sx<<" "<<sy<<" "<<tp.X
                                       <<" "<<tp.Y<<" "<<tp.Z<<"\n";
@@ -1165,6 +1167,16 @@ void SimGUI::capture()
 vector3df SimGUI::convertPoint(Point p)
 {
     return vector3df(p.x,p.y,p.z);
+}
+
+vector3df SimGUI::convertPos(Position p)
+{
+    return vector3df(p.X,p.Y,p.Z);
+}
+
+vector3df SimGUI::convertRot(Rotation p)
+{
+    return vector3df(p.Roll,p.Pitch,p.Yaw);
 }
 
 //----------------------------------------------------------------------------//

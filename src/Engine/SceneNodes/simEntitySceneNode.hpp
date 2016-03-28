@@ -91,7 +91,7 @@ namespace Sim{
                         driver->draw3DBox(convertPoint(*itk),r);
                     }
                 }
-                /* driver->draw3DBox(box,c); */
+                driver->draw3DBox(box,c);
             }
         // checks whether to draw feature or not
         void setDrawFeature(bool v)
@@ -163,6 +163,9 @@ namespace Sim{
         void updateBox()
             {
                 box.reset(vector3df(0,0,0));
+                SimEnvironment* s = dynamic_cast<SimEnvironment*>(obj);
+                if(!s)
+                    return;
                 vector<Rectangle>* rv = obj->getRectangles();
                 vector<Triangle>* tv = obj->getTriangles();
                 vector<Point>* pv = obj->getPoints();

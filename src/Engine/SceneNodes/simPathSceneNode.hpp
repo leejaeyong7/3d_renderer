@@ -43,6 +43,7 @@ namespace Sim {
                 Material.Wireframe = false;
                 Material.Lighting = true;
                 showPath = true;
+                box.reset(vector3df(0,0,0));
             };
         void editPathNode(int index, vector3df p, vector3df r, int d)
             {
@@ -121,6 +122,7 @@ namespace Sim {
                         driver->draw3DLine(curp, n.Pos, lineColor);
                         /* driver->draw3DBox(vec2box(n.Pos),lineColor); */
                         draw3DVector(driver,n.Pos,n.Rot,lineColor);
+                        driver->draw3DBox(box,SColor(255,255,0,0));
                     }
                     count++;
                 }
