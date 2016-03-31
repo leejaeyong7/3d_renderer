@@ -64,6 +64,7 @@ private:
     SimGUI * gui;
     // private array that holds all key pressed data
     bool KeyIsDown[KEY_KEY_CODES_COUNT];
+    bool showing = true;
     
 };
 #endif

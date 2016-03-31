@@ -17,6 +17,7 @@
 #include <irrlicht.h>
 #include <algorithm>
 #include <vector>
+#include <numeric> 
 #include <typeinfo>
 #include <string>
 #include <fstream>

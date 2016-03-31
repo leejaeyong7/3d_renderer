@@ -157,6 +157,12 @@ namespace Sim{
             {
                 ISceneNode::setPosition(position);
             }
+        f32 getFocalLength()
+            {
+                vector<AdvancedOption*>* av = obj->getAdvancedOption();
+                double fl = ((AdvancedOption_Double*)av->at(2))->value;
+                return fl;
+            }
 //----------------------------------------------------------------------------//
 //                 ICAMERASCENENODE INHERITED IMPLEMENTATIONS                 //
 //----------------------------------------------------------------------------//     

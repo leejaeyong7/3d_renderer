@@ -305,7 +305,31 @@ void SimGUI::execUpdate()
     
     vector3df pos_update = cN.Pos - pN.Pos;
     vector3df rot_update = cN.Rot - pN.Rot;
+    if(rot_update.X > 180)
+    {
+        rot_update.X -= 360;
+    }
+    else if(rot_update.X < - 180)
+    {
+        rot_update.X += 360;
+    }
+    if(rot_update.Y > 180)
+    {
+        rot_update.Y -= 360;
+    }
+    else if(rot_update.Y < - 180)
+    {
+        rot_update.Y += 360;
+    }
 
+    if(rot_update.Z > 180)
+    {
+        rot_update.Z -= 360;
+    }
+    else if(rot_update.Z < - 180)
+    {
+        rot_update.Z += 360;
+    }
     pos_update = pos_update / floor(cap_fps*cN.dur);
     rot_update = rot_update / floor(cap_fps*cN.dur);
 
@@ -1077,16 +1101,147 @@ void SimGUI::capture()
     wstring resultname= cap_path + L"/res_" + std::to_wstring(cap_id)+ L".txt";
     std::string resname(resultname.begin(),resultname.end());
     myfile.open (resname);
+
     // get fov, position and rotation of camera
     double fovy = sc->getFOV();
     double fovx = 2.0f*atan(sc->getAspectRatio()*tan(fovy/2.0f));
+    double fl = ((CameraSceneNode*)sc)->getFocalLength();
+
+    double w = 2*tan(fovx/2.0f)*fl;
+    double h = 2*tan(fovy/2.0f)*fl;
+
+    double cx = (double)width_r / 2.0f;
+    double cy = (double)height_r / 2.0f;
+
     vector3df cp =
         convertPos(((CameraSceneNode*)cc)->getCamera()->getPosition());
+    vector<double> cpv;
+    cpv.push_back(cp.X);
+    cpv.push_back(cp.Y);
+    cpv.push_back(cp.Z);
+
     vector3df cr =
         convertRot(((CameraSceneNode*)cc)->getCamera()->getRotation());
 
     // write camera info on first line
     myfile<<cp.X<<" "<<cp.Y<<" "<<cp.Z<<" "<<cr.X<<" "<<cr.Y<<" "<<cr.Z<<"\n";
+
+    // convert to rad
+    cr.X = cr.X*3.141592/180;
+    cr.Y = cr.Y*3.141592/180;
+    cr.Z = cr.Z*3.141592/180;
+
+    // calculate extrinsic matrix from camera parameters
+    vector<double> rot_x;
+    rot_x.push_back(cos(cr.Y)*cos(cr.Z));
+    rot_x.push_back(-1 * cos(cr.Y)*sin(cr.Z));
+    rot_x.push_back(sin(cr.Y));
+
+    vector<double> rot_y;
+    rot_y.push_back(sin(cr.X)*sin(cr.Y)*cos(cr.Z) + cos(cr.X)*sin(cr.Z));
+    rot_y.push_back(-1*sin(cr.X)*sin(cr.Y)*sin(cr.Z) +
+                          cos(cr.X)*cos(cr.Z));
+    rot_y.push_back(-1*sin(cr.X)*cos(cr.Y));
+
+    vector<double> rot_z;
+    rot_z.push_back(-1*cos(cr.X)*sin(cr.Y)*cos(cr.Z) +
+                          sin(cr.X)*sin(cr.Z));
+    rot_z.push_back(cos(cr.X)*sin(cr.Y)*sin(cr.Z) + sin(cr.X)*cos(cr.Z));
+    rot_z.push_back(cos(cr.X)*cos(cr.Y));
+
+    vector<double> extrinsic_x;
+    /* extrinsic_x.push_back(cos(cr.Y)*cos(cr.Z)); */
+    /* extrinsic_x.push_back(-1 * cos(cr.Y)*sin(cr.Z)); */
+    /* extrinsic_x.push_back(sin(cr.Y)); */
+    extrinsic_x.push_back(rot_x[0]);
+    extrinsic_x.push_back(rot_y[0]);
+    extrinsic_x.push_back(rot_z[0]);
+
+    vector<double> extrinsic_y;
+    /* extrinsic_y.push_back(sin(cr.X)*sin(cr.Y)*cos(cr.Z) + cos(cr.X)*sin(cr.Z)); */
+    /* extrinsic_y.push_back(-1*sin(cr.X)*sin(cr.Y)*sin(cr.Z) + */
+    /*                       cos(cr.X)*cos(cr.Z)); */
+    /* extrinsic_y.push_back(-1*sin(cr.X)*cos(cr.Y)); */
+    extrinsic_y.push_back(rot_x[1]);
+    extrinsic_y.push_back(rot_y[1]);
+    extrinsic_y.push_back(rot_z[1]);
+
+    vector<double> extrinsic_z;
+    /* extrinsic_z.push_back(-1*cos(cr.X)*sin(cr.Y)*cos(cr.Z) + */
+    /*                       sin(cr.X)*sin(cr.Z)); */
+    /* extrinsic_z.push_back(cos(cr.X)*sin(cr.Y)*sin(cr.Z) + sin(cr.X)*cos(cr.Z)); */
+    /* extrinsic_z.push_back(cos(cr.X)*cos(cr.Y)); */
+    extrinsic_z.push_back(rot_x[2]);
+    extrinsic_z.push_back(rot_y[2]);
+    extrinsic_z.push_back(rot_z[2]);
+
+    vector<double> extrinsic_a;
+    extrinsic_a.push_back(0);
+    extrinsic_a.push_back(0);
+    extrinsic_a.push_back(0);
+    extrinsic_a.push_back(1);
+
+    double tx =
+        std::inner_product(
+            extrinsic_x.begin(),extrinsic_x.end(),
+            cpv.begin(),0.0);
+    
+    double ty =
+        std::inner_product(
+            extrinsic_y.begin(),extrinsic_y.end(),
+            cpv.begin(),0.0);
+
+    double tz =
+        std::inner_product(
+            extrinsic_z.begin(),extrinsic_z.end(),
+            cpv.begin(),0.0);
+
+    extrinsic_x.push_back(-1*tx);
+    extrinsic_y.push_back(-1*ty);
+    extrinsic_z.push_back(-1*tz);
+
+    // calculate intrinsic matrix from fov and fl
+    vector<double> intrinsic_x;
+    intrinsic_x.push_back(1/fovx);
+    intrinsic_x.push_back(0);
+    intrinsic_x.push_back(0.5);
+    intrinsic_x.push_back(0);
+
+    vector<double> intrinsic_y;
+    intrinsic_y.push_back(0);
+    intrinsic_y.push_back(1/fovy);
+    intrinsic_y.push_back(0.5);
+    intrinsic_y.push_back(0);
+
+    vector<double> intrinsic_z;
+    intrinsic_z.push_back(0);
+    intrinsic_z.push_back(0);
+    intrinsic_z.push_back(1);
+    intrinsic_z.push_back(0);
+
+
+    // calculate image plane to pixel coordinates
+    vector<double> pixel_x;
+    pixel_x.push_back(width_r);
+    pixel_x.push_back(0);
+    pixel_x.push_back(0);
+    
+    vector<double> pixel_y;
+    pixel_y.push_back(0);
+    pixel_y.push_back(height_r);
+    pixel_y.push_back(0);
+
+    vector<double> pixel_z;
+    pixel_z.push_back(0);
+    pixel_z.push_back(0);
+    pixel_z.push_back(1);
+    
+    vector<double> pp;
+    position2d<s32> coord;
+    vector<double> temp;
+
+    vector<double> t_psp;
+    vector3df psp;
 
     // iterate entity scennodes
     for(it = entityMeshVector.begin();
@@ -1106,6 +1261,10 @@ void SimGUI::capture()
                     itk != kv->end();
                     itk++)
                 {
+                    pp.clear();
+                    temp.clear();
+                    t_psp.clear();
+                    
                     // calculate keypoint's absolute postion
                     vector3df ip = (*it)->getPosition();
                     vector3df p = ip + convertPoint(*itk);
@@ -1114,47 +1273,99 @@ void SimGUI::capture()
                     p.rotateXZBy(r.Y,ip);
                     p.rotateXYBy(r.Z,ip);
 
-                    // tp holds absolute position
-                    vector3df tp = p;
 
-                    // rotate keypoint to fit in camera view before rotation
-                    p.rotateYZBy(-cr.X,cp);
-                    p.rotateXZBy(cr.Y,cp);
-                    p.rotateXYBy(-cr.Z,cp);
-
-                    // dp holds absolute translation; p viewed from camera
-                    // as if it is viewed without rotation
-                    vector3df dp = p - cp;
-
-                    // calculate tangent value of angle
-                    double dx = (double)(dp.X/dp.Z);
-                    double dy = (double)(dp.Y/dp.Z);
-
+                    coord = cm->getScreenCoordinatesFrom3DPosition(p,cc,false);
+                    coord.X *= ((double)width_r/(double)width);
+                    coord.Y *= ((double)height_r/(double)height);
+                        
+                    
                     // if point is between frustum angles, check for collision
-                    if((dx)< tan(fovx/2.0f) && (dx)> -tan(fovx/2.0f) &&
-                       (dy)< tan(fovy/2.0f) && (dy)> -tan(fovy/2.0f))
-                    {
-                        vector3df rp = tp;
+                    /* if(coord.X>= 0 && coord.X <= width_r && */
+                    /*    coord.Y >= 0 && coord.Y <= height_r) */
+                    /* { */
+                        vector3df rp = p;
                         triangle3df rt;
                         ISceneNode * ret = 0;
 
                         // check for collision. if covered is true, it means
                         // that it may be blocked by some environment entity
-                        bool covered = 
+                        bool covered =
                             cm->getCollisionPoint(
-                                line3d<f32>(cp,tp), ts, rp, rt, ret);
+                                line3d<f32>(cp,p), ts, p, rt, ret);
 
                         // if not blocked, add to file
                         if(!covered)
                         {
-                                double sx = ((dx / tan(fovx/2.0f))+1)*
-                                    (width_r/2.0f);
-                                double sy = ((-1*dy / tan(fovy/2.0f))+1)*
-                                    (height_r/2.0f);
-                                myfile<<sx<<" "<<sy<<" "<<tp.X
-                                      <<" "<<tp.Y<<" "<<tp.Z<<"\n";
+                            myfile<<coord.X<<" "<<coord.Y<<" "<<
+                                p.X<<" "<<p.Y<<" "<<p.Z<<"\n";
                         }
-                    }
+                    /* } */
+                    
+
+                    /* // get homographic coords */
+                    /* pp.push_back(p.X); */
+                    /* pp.push_back(p.Y); */
+                    /* pp.push_back(p.Z); */
+                    /* pp.push_back(1.0); */
+
+
+                    /* // multiply extrinsic for coordinates */
+                    /* temp.push_back( */
+                    /*     std::inner_product(pp.begin(),pp.end(), */
+                    /*                        extrinsic_x.begin(),0.0)); */
+                    /* temp.push_back( */
+                    /*     std::inner_product(pp.begin(),pp.end(), */
+                    /*                        extrinsic_y.begin(),0.0)); */
+                    /* temp.push_back( */
+                    /*     std::inner_product(pp.begin(),pp.end(), */
+                    /*                        extrinsic_z.begin(),0.0)); */
+                    /* temp.push_back( */
+                    /*     std::inner_product(pp.begin(),pp.end(), */
+                    /*                        extrinsic_a.begin(),0.0)); */
+                    /* // multiply intrinsic for coordinates */
+                    /* t_psp.push_back( */
+                    /*     std::inner_product(temp.begin(),temp.end(), */
+                    /*                        intrinsic_x.begin(),0.0)); */
+                    /* t_psp.push_back( */
+                    /*     std::inner_product(temp.begin(),temp.end(), */
+                    /*                        intrinsic_y.begin(),0.0)); */
+                    /* t_psp.push_back( */
+                    /*     std::inner_product(temp.begin(),temp.end(), */
+                    /*                        intrinsic_z.begin(),0.0)); */
+                    /* // multiply camera coord to pixel coord */
+                    /* psp = vector3df( */
+                    /*     std::inner_product(t_psp.begin(),t_psp.end(), */
+                    /*                        pixel_x.begin(),0.0), */
+                    /*     std::inner_product(t_psp.begin(),t_psp.end(), */
+                    /*                        pixel_y.begin(),0.0), */
+                    /*     std::inner_product(t_psp.begin(),t_psp.end(), */
+                    /*                        pixel_z.begin(),0.0)); */
+
+                    /* // calculate pixel coordinates */
+                    /* double sx = psp.X/psp.Z; */
+                    /* double sy = height_r - (psp.Y/psp.Z); */
+                    
+                    /* // if point is between frustum angles, check for collision */
+                    /* if(sx >= 0 && sx <= width_r &&  */
+                    /*    sy >= 0 && sy <= height_r) */
+                    /* { */
+                    /*     vector3df rp = p; */
+                    /*     triangle3df rt; */
+                    /*     ISceneNode * ret = 0; */
+
+                    /*     // check for collision. if covered is true, it means */
+                    /*     // that it may be blocked by some environment entity */
+                    /*     bool covered = */
+                    /*         cm->getCollisionPoint( */
+                    /*             line3d<f32>(cp,p), ts, p, rt, ret); */
+
+                    /*     // if not blocked, add to file */
+                    /*     if(!covered) */
+                    /*     { */
+                    /*         myfile<<sx<<" "<<sy<<" "<< */
+                    /*             p.X<<" "<<p.Y<<" "<<p.Z<<"\n"; */
+                    /*     } */
+                    /* } */
                 }
             }
         }

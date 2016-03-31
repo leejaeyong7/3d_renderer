@@ -29,30 +29,35 @@ bool EventHandler::OnEvent(const SEvent & event)
             {
                 device->getCursorControl()->setVisible(true);
                 camera->setInputReceiverEnabled(false);
+                showing = false;
             }
             else
             {
                 device->getCursorControl()->setVisible(false);
                 camera->setInputReceiverEnabled(true);
+                showing = true;
             }
             KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
         }
-        // on pressing Q, quit
-        else if(event.KeyInput.Key == KEY_KEY_Q &&
-                event.KeyInput.PressedDown == false)
+        if(showing)
         {
-            if(camera->isInputReceiverEnabled())
+            // on pressing Q, quit
+            if(event.KeyInput.Key == KEY_KEY_Q &&
+               event.KeyInput.PressedDown == false)
             {
-                device->closeDevice();
+                if(camera->isInputReceiverEnabled())
+                {
+                    device->closeDevice();
+                }
             }
+            else if(event.KeyInput.Key == KEY_SPACE &&
+                    event.KeyInput.PressedDown == false)
+            {
+                gui->addPathNode();
+            }
+            else
+                KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
         }
-        else if(event.KeyInput.Key == KEY_SPACE &&
-                event.KeyInput.PressedDown == false)
-        {
-            gui->addPathNode();
-        }
-        else
-            KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
     }
     // GUI EVENT
     else if (event.EventType == EET_GUI_EVENT)
@@ -71,8 +76,11 @@ bool EventHandler::OnEvent(const SEvent & event)
             {
             // when close button is clicked, close it's parent
             case CLOSE_BUTTON:
+            {
                 caller->getParent()->remove();
+                showing = true;
                 return false;
+            }
             case RUN_BUTTON:
                 gui->execPath();
                 return false;
@@ -98,6 +106,7 @@ bool EventHandler::OnEvent(const SEvent & event)
                 }
                 gui->update();
                 caller->getParent()->remove();
+                showing = true;
                 // update
                 break;
             case PATH_REMOVE_BUTTON:
@@ -124,6 +133,7 @@ bool EventHandler::OnEvent(const SEvent & event)
             case REMOVE_BUTTON:
                 gui->engine->removeEntity(gui->currObj);
                 caller->getParent()->remove();
+                showing = true;
                 return false;
             case CAPTURE_BUTTON:
                 gui->capture();
@@ -172,42 +182,51 @@ bool EventHandler::OnEvent(const SEvent & event)
                 gui->currPrompt= ADD_ENTITY_PROMPT;
                 gui->currType= ENTITY_TYPE_ROBOT;
                 gui->promptEntityWindow();
+                showing = false;
                 return true;
             case ADD_SENSOR:
                 gui->currPrompt= ADD_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_SENSOR;
                 gui->promptEntityWindow();
+                showing = false;
                 return true;
             case ADD_ENVIRONMENT:
                 gui->currPrompt= ADD_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_ENVIRONMENT;
                 gui->promptEntityWindow();
+                showing = false;
                 return true;
             case EDIT_ROBOT:
                 gui->currPrompt= EDIT_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_ROBOT;
                 gui->promptEntityWindow();
+                showing = false;
                 return true;
             case EDIT_SENSOR:
                 gui->currPrompt= EDIT_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_SENSOR;
                 gui->promptEntityWindow();
+                showing = false;
                 return true;
             case EDIT_ENVIRONMENT:
                 gui->currPrompt= EDIT_ENTITY_PROMPT;
                 gui->currType = ENTITY_TYPE_ENVIRONMENT;
                 gui->promptEntityWindow();
+                showing = false;
                 return true;
             case ATTACH_ENTITY:
                 gui->currPrompt = ATTACH_ENTITY_PROMPT;
                 gui->entityAttachWindow();
+                showing = false;
                 return true;
             case DETACH_ENTITY:
                 gui->currPrompt = DETACH_ENTITY_PROMPT;
                 gui->entityAttachWindow();
+                showing = false;
                 return true;
             case EDIT_PATH:
                 gui->editPathWindow();
+                showing = false;
             default:
                 return false;
             }
