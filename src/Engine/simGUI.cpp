@@ -1499,6 +1499,8 @@ void SimGUI::setAddPromptData(s32 index)
         }
         case SUB_ENTITY_ENVIRONMENT_CUBE:
         {
+            obj = new SimGroundRobot("",0,0,0,0,0,0,0,0,0);
+            currObj = obj;
             break;
         }
         case SUB_ENTITY_ENVIRONMENT_SPHERE:

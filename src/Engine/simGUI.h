@@ -34,6 +34,7 @@
 #include "simEnvironment.h"
 #include "simPlane.h"
 #include "simFloor.h"
+#include "simCube.h"
 #include "simGridNode.hpp"
 #include "simEntitySceneNode.hpp"
 #include "simCameraSceneNode.hpp"
