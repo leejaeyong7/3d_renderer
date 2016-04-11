@@ -69,6 +69,7 @@ bool EventHandler::OnEvent(const SEvent & event)
                     objPos.Y,
                     objPos.Z
                     );
+                cout<<gui->placeObj<< endl;
                 gui->createEntityObject(ENTITY_TYPE_ENVIRONMENT,
                                         gui->placeObj);
                 gui->placeMesh->remove();

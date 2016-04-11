@@ -34,9 +34,13 @@ void SimEngine::setupGUI()
 
 void SimEngine::addEntity(EntityType type, SimEntity * obj)
 {
+    if(!obj)
+        return;
+    
     simEntityVector.push_back(obj);
     if(simGUI)
     {
+        cout<<"adding scenenode"<<endl;
         simGUI->addEntitySceneNode(type, obj);
     }
 }

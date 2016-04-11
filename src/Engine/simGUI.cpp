@@ -220,7 +220,7 @@ void SimGUI::draw()
             }
             if(placeMode)
             {
-                if(placeMesh && wc == smgr->getActiveCamera())
+                if(placeObj && wc == smgr->getActiveCamera())
                 {
                     ISceneCollisionManager * cm =
                         smgr->getSceneCollisionManager();
@@ -237,10 +237,6 @@ void SimGUI::draw()
                     double dxdy = ratio.X / ratio.Y;
                     double dzdy = ratio.Z / ratio.Y;
                     double dyh = wc->getPosition().Y;
-                    /* vector3df newPos = vector3df( */
-                    /*     wc->getPosition().X + -1*dyh*dxdy, */
-                    /*     0, */
-                    /*     wc->getPosition().Z + -1*dyh*dzdy); */
                     placeObj->setPosition(
                         wc->getPosition().X + -1*dyh*dxdy,
                         0,
@@ -870,7 +866,10 @@ void SimGUI::addEntitySceneNode(EntityType type, SimEntity * obj)
 {
     // null check
     if(!obj)
+    {
+    	cout<<"null pointer..."<<endl;
         return;
+    }
 
     ISceneManager* smgr = device->getSceneManager();
     ISceneNode * r = smgr->getRootSceneNode();
@@ -1444,7 +1443,7 @@ void SimGUI::setCameraCapture()
 //----------------------------------------------------------------------------//
 void SimGUI::createEntityObject(EntityType type, SimEntity* obj)
 {
-    engine->addEntity((EntityType)currType, currObj);
+    engine->addEntity((EntityType)currType, obj);
 }
 
 void SimGUI::editEntityObject()
