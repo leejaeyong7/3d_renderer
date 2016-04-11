@@ -52,6 +52,8 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
     currType = 0;
     currPrompt = 0;
     currObj = 0;
+    placeObj = 0;
+    placeMode = 0;
 
     // set initial gui setup
     setup();
@@ -61,6 +63,7 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
     setCameraDropdown();
     setCameraCapture();
     setPathExec();
+    setPlacerMenu();
 
     exec = false;
 }
@@ -126,7 +129,7 @@ void SimGUI::setup()
     keyMap[7].Action = EKA_STRAFE_RIGHT;
     keyMap[7].KeyCode = KEY_KEY_D;
 
-    wc = smgr->addCameraSceneNodeFPS(
+    fc = smgr->addCameraSceneNodeFPS(
         // parent node : default null
         0,
         // rotation speed : default 100
@@ -142,21 +145,38 @@ void SimGUI::setup()
         );
 
     // set camera position
-    wc->setPosition(vector3df(0,5,0));
+    fc->setPosition(vector3df(0,5,0));
     // sets far value of camera
     // extended for sun support
-    wc->setFarValue(20000.0f);
+    fc->setFarValue(20000.0f);
     // hides mouse
-    device->getCursorControl()->setVisible(false);
+    /* device->getCursorControl()->setVisible(false); */
 
     sc = new Sim::CameraSceneNode(r,smgr,-1);
 
     // minimap camera
     mc = smgr->addCameraSceneNode(0, vector3df(0,50,0), vector3df(0,0,0));
 
+    // maya camera
+    yc = smgr->addCameraSceneNodeMaya(0,
+                                      -150.0f,
+                                      200.0f,
+                                      150.0f,
+                                      -1,
+                                      70.0f,
+                                      false);
+    yc->setFOV(fc->getFOV());
+    yc->setAspectRatio(fc->getAspectRatio());
+    yc->setPosition(vector3df(0,5,0));
+    yc->setTarget(vector3df(0,0,0));
+
+    // placer camera
+    pc = smgr->addCameraSceneNode(0, vector3df(-20,20,-20), vector3df(0,0,0));
+
     // setup path scenenode
     paths = new Sim::PathSceneNode(r,smgr,-1);
 
+    wc = yc;
     smgr->setActiveCamera(wc);
 }
 
@@ -196,6 +216,36 @@ void SimGUI::draw()
                 {
                     execUpdate();
                     prev_t = curr_t;
+                }
+            }
+            if(placeMode)
+            {
+                if(placeMesh && wc == smgr->getActiveCamera())
+                {
+                    ISceneCollisionManager * cm =
+                        smgr->getSceneCollisionManager();
+                    position2d<s32> cursor =
+                        device->getCursorControl()->getPosition();
+                    position2d<s32> trueCursor =
+                        position2d<s32>(
+                            cursor.X * ((double)width/(double)width_r),
+                            cursor.Y * ((double)height/(double)height_r));
+                    line3d<f32> raytrace =
+                        cm->getRayFromScreenCoordinates(
+                            trueCursor, wc);
+                    vector3df ratio = raytrace.start - raytrace.end;
+                    double dxdy = ratio.X / ratio.Y;
+                    double dzdy = ratio.Z / ratio.Y;
+                    double dyh = wc->getPosition().Y;
+                    /* vector3df newPos = vector3df( */
+                    /*     wc->getPosition().X + -1*dyh*dxdy, */
+                    /*     0, */
+                    /*     wc->getPosition().Z + -1*dyh*dzdy); */
+                    placeObj->setPosition(
+                        wc->getPosition().X + -1*dyh*dxdy,
+                        0,
+                        wc->getPosition().Z + -1*dyh*dzdy);
+                    placeMesh->update();
                 }
             }
         }
@@ -363,6 +413,64 @@ void SimGUI::execUpdate()
 //----------------------------------------------------------------------------//
 //                            GUI WINDOW HANDLERS                             //
 //----------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
+//                           OBJECT PLACER HANDLER                            //
+//----------------------------------------------------------------------------//
+void SimGUI::setPlacerMenu()
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+
+    s32 cx,cy,cw,bw;
+    cx = 10;
+    cw = width_r - 20;
+    cy = height_r + 30;
+    bw = 40;
+
+
+    guienv->addStaticText(
+        L"Choose World Camera",
+        rect<s32>(cx,cy,cx+bw*3+20,cy+70),
+        true,false);
+
+    guienv->addButton(rect<s32>(cx+10,cy+20,cx+bw+10,cy+60), 0,
+                      FPS_CAMERA_BUTTON,
+                      L"FPS",
+                      L"Use FPS World Camera");
+
+    guienv->addButton(rect<s32>(cx+bw+10,cy+20,cx+2*bw+10,cy+60), 0,
+                      MAYA_CAMERA_BUTTON,
+                      L"Maya",
+                      L"Use Maya World Camera");
+
+    guienv->addButton(rect<s32>(cx+2*bw+10,cy+20,cx+3*bw+10,cy+60), 0,
+                      PLACER_CAMERA_BUTTON,
+                      L"Edit",
+                      L"Use Edit World Camera");
+    s32 px,py,pw,ph;
+    px = cx+150;
+    pw = width_r - 20 - px;
+    py = height_r + 30;
+    bw = 80;
+
+    guienv->addStaticText(
+        L"Choose Primitive To Add",
+        rect<s32>(px,py,px+3*bw+20,py+70),
+        true,false);
+
+    guienv->addButton(rect<s32>(px+10,py+20,px+bw+10,py+60), 0,
+                      ADD_PLANE_BUTTON,
+                      L"Plane",
+                      L"Adds Plane to Scene");
+    guienv->addButton(rect<s32>(px+bw+10,py+20,px+2*bw+10,py+60), 0,
+                      ADD_CUBE_BUTTON,
+                      L"Cube",
+                      L"Adds Cube to Scene");
+    guienv->addButton(rect<s32>(px+2*bw+10,py+20,px+3*bw+10,py+60), 0,
+                      ADD_PYRAMID_BUTTON,
+                      L"Pyramid",
+                      L"Adds Pyramid to Scene");
+}
 //----------------------------------------------------------------------------//
 //                             PATH EXEC HANDLERS                             //
 //----------------------------------------------------------------------------//
@@ -776,8 +884,6 @@ void SimGUI::addEntitySceneNode(EntityType type, SimEntity * obj)
     entityMeshVector.push_back(node);
     // reset camera dropdown menu
     updateCombos();
-    /* setCameraDropdown(); */
-    /* setPathExec(); */
 }
 void SimGUI::removeEntitySceneNode(SimEntity * obj)
 {
@@ -1336,11 +1442,9 @@ void SimGUI::setCameraCapture()
 //----------------------------------------------------------------------------//
 //                      ENTITY ADD/EDIT MENU WINDOW GUI                       //
 //----------------------------------------------------------------------------//
-void SimGUI::createEntityObject()
+void SimGUI::createEntityObject(EntityType type, SimEntity* obj)
 {
     engine->addEntity((EntityType)currType, currObj);
-    currType = 0;
-    currObj = 0;
 }
 
 void SimGUI::editEntityObject()

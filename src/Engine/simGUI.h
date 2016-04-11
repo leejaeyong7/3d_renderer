@@ -176,6 +176,15 @@ private:
     // minimap camera
     ICameraSceneNode * mc;
 
+    // world cameras
+    // fps camera
+    ICameraSceneNode * fc;
+
+    // maya camera
+    ICameraSceneNode * yc;
+
+    // Placer camera
+    ICameraSceneNode * pc;
 
     // holds paths
     Sim::PathSceneNode * paths;
@@ -199,11 +208,12 @@ private:
 
     // used for entity manipulation
     SimEntity* currObj;
+    SimEntity* placeObj;
+    SimSceneNode * placeMesh;
     int currPrompt;
     int currType;
-    void createEntityObject();
+    void createEntityObject(EntityType type, SimEntity* obj);
     void editEntityObject();
-
 
     // used for camera manipulation
     void setCameraDropdown();
@@ -221,6 +231,9 @@ private:
     // attach/detach entity object based on selected combo box name
     void attachEntityObject();
     void setDetachData(s32 index);
+
+    // sets placer menu
+    void setPlacerMenu();
 
     // sets up context menu(toolbar)
     void setContextMenu();
@@ -249,6 +262,7 @@ private:
         }
     };
     bool exec;
+    bool placeMode;
     int cap_id;
     int cap_fps;
     int curr_node;

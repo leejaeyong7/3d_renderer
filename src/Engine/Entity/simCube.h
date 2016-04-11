@@ -28,6 +28,7 @@ public:
             double w, double h, double d,
             int num_feature);
 private:
+    virtual void update();
 };
 
 

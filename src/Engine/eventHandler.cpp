@@ -39,7 +39,7 @@ bool EventHandler::OnEvent(const SEvent & event)
             }
             KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
         }
-        if(showing)
+        if(showing && !(gui->placeMode) )
         {
             // on pressing Q, quit
             if(event.KeyInput.Key == KEY_KEY_Q &&
@@ -58,6 +58,28 @@ bool EventHandler::OnEvent(const SEvent & event)
             else
                 KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
         }
+        else if(gui->placeMode)
+        {
+            if(event.KeyInput.Key == KEY_SPACE &&
+                    event.KeyInput.PressedDown == false)
+            {
+                vector3df objPos = gui->placeMesh->getPosition();
+                gui->placeObj->setPosition(
+                    objPos.X,
+                    objPos.Y,
+                    objPos.Z
+                    );
+                gui->createEntityObject(ENTITY_TYPE_ENVIRONMENT,
+                                        gui->placeObj);
+                gui->placeMesh->remove();
+                delete gui->placeMesh;
+                gui->placeMesh = 0;
+                gui->placeObj = 0;
+                gui->placeMode = false;
+            }
+            else
+                KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
+        }
     }
     // GUI EVENT
     else if (event.EventType == EET_GUI_EVENT)
@@ -67,6 +89,7 @@ bool EventHandler::OnEvent(const SEvent & event)
         s32 id = caller->getID();
         IGUIEnvironment* env = device->getGUIEnvironment();
         IGUIElement* rootelem = env->getRootGUIElement();
+        ISceneManager* smgr = gui->device->getSceneManager();
 
         switch(event.GUIEvent.EventType)
         {
@@ -97,7 +120,11 @@ bool EventHandler::OnEvent(const SEvent & event)
                 else if(gui->currPrompt == ADD_ENTITY_PROMPT)
                 {
                     gui->editEntityObject();
-                    gui->createEntityObject();
+                    gui->createEntityObject(
+                        (EntityType)gui->currType,
+                        gui->currObj);
+                    gui->currType = 0;
+                    gui->currObj = 0;
                 }
                 else if(gui->currPrompt == ATTACH_ENTITY_PROMPT ||
                     gui->currPrompt == DETACH_ENTITY_PROMPT)
@@ -138,6 +165,58 @@ bool EventHandler::OnEvent(const SEvent & event)
             case CAPTURE_BUTTON:
                 gui->capture();
                 return false;
+            case FPS_CAMERA_BUTTON:
+            {
+                if(gui->wc == gui->yc)
+                {
+                    gui->fc->setPosition(gui->wc->getPosition());
+                    gui->fc->updateAbsolutePosition();
+                    gui->fc->setTarget(gui->wc->getTarget());
+                    gui->fc->setProjectionMatrix(
+                        gui->wc->getProjectionMatrix());
+                    gui->wc = gui->fc;
+                    gui->device->getSceneManager()->setActiveCamera(gui->wc);
+                }
+                return false;
+            }
+            case MAYA_CAMERA_BUTTON:
+            case PLACER_CAMERA_BUTTON:
+            {
+                if(gui->wc == gui->fc)
+                {
+                    gui->yc->setPosition(gui->wc->getPosition());
+                    gui->yc->updateAbsolutePosition();
+                    gui->yc->setProjectionMatrix(
+                        gui->wc->getProjectionMatrix());
+                    gui->yc->setTarget(gui->wc->getTarget());
+                    gui->wc = gui->yc;
+                    gui->device->getSceneManager()->setActiveCamera(gui->wc);
+                }
+                return false;
+            }
+            case ADD_PLANE_BUTTON:
+            {
+                gui->placeObj = new SimPlane("",0,0,0,0,0,0,1,1,0);
+                gui->placeMesh = new Sim::SimSceneNode(
+                    smgr->getRootSceneNode(),
+                    smgr,
+                    -1,
+                    gui->placeObj);
+                gui->placeMode = true;
+                return false;
+            }
+            case ADD_CUBE_BUTTON:
+            case ADD_PYRAMID_BUTTON:
+            {
+                gui->placeObj = new SimCube("",0,0,0,0,0,0,1,1,1,0);
+                gui->placeMode = true;
+                gui->placeMesh = new Sim::SimSceneNode(
+                    smgr->getRootSceneNode(),
+                    smgr,
+                    -1,
+                    gui->placeObj);
+                return false;
+            }
             default:
                 return false;
             }

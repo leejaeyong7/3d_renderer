@@ -30,7 +30,7 @@ SimCube::SimCube(std::string _name,
 }
 
 
-void SimPlane::update()
+void SimCube::update()
 {
     vector<Point>* kv = getKeyPoints();
     vector<Rectangle>* rv = getRectangles();

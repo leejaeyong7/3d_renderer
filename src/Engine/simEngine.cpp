@@ -29,7 +29,7 @@ SimEngine::SimEngine(bool enableGUI)
 
 void SimEngine::setupGUI()
 {
-    simGUI = new SimGUI(this,L"TEST WINDOW",1040,500,640,480,false);
+    simGUI = new SimGUI(this,L"TEST WINDOW",1040,590,640,480,false);
 }
 
 void SimEngine::addEntity(EntityType type, SimEntity * obj)
