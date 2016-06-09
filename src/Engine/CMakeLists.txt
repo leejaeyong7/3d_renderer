@@ -8,7 +8,6 @@ include_directories(
 add_subdirectory (Entity)
 add_subdirectory(Physics)
 add_subdirectory(SceneNodes)
-
 #-----------------------------------------------------------------------------#
 #                                   Settings
 #-----------------------------------------------------------------------------#
@@ -19,7 +18,9 @@ add_library( SimEngine STATIC ${ENGINE_SRC}  )
 #-----------------------------------------------------------------------------#
 #                                   Linking
 #-----------------------------------------------------------------------------#
-target_link_libraries(SimEngine 
+target_link_libraries(
+    SimEngine 
+    SimSceneNodes
 	SimEntity 
 	SimPhysics
 	${IRRLICHT_LIBRARY} 

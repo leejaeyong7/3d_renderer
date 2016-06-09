@@ -38,8 +38,9 @@
 #include "simGridNode.hpp"
 #include "simEntitySceneNode.hpp"
 #include "simCameraSceneNode.hpp"
+#include "simWorldCameraSceneNode.hpp"
+#include "RTSCamera.h"
 #include "simPathSceneNode.hpp"
-
 //----------------------------------------------------------------------------//
 //                                  Namespaces
 //----------------------------------------------------------------------------//
@@ -234,6 +235,7 @@ private:
 
     // sets placer menu
     void setPlacerMenu();
+    void setPlacerSubMenu(int type);
 
     // sets up context menu(toolbar)
     void setContextMenu();
