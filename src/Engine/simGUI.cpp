@@ -235,9 +235,56 @@ void SimGUI::draw()
                     double dxdy = ratio.X / ratio.Y;
                     double dzdy = ratio.Z / ratio.Y;
                     double dyh = wc->getPosition().Y;
+                    vector<Point>* pts = placeMesh->getAllPoints();
+                    vector<Point>::iterator itp;
+                    double baseHeight = 0;
+                    line3d<f32> ray;
+
+                    IMetaTriangleSelector* ts = 
+                        smgr->createMetaTriangleSelector();
+                    // iterate scene nodes
+                    vector<SimSceneNode*>::iterator it;
+                    for(it = entityMeshVector.begin();
+                        it != entityMeshVector.end();
+                        it++)
+                    {
+                        // check whether entity is environment
+                        SimEnvironment* s = 
+                            dynamic_cast<SimEnvironment*>(
+                                (*it)->getEntity());
+                        if(s)
+                        {
+                            ts->addTriangleSelector(
+                                (smgr)->
+                                createTriangleSelectorFromBoundingBox(*it));
+                        }
+                    }
+                    vector3df cv;
+                    triangle3df ot;
+                    ISceneNode * matchingNode = 0;
+                    vector3df pp = placeMesh->getPosition();
+
+                    for(itp = pts->begin(); itp != pts->end(); itp++)
+                    {
+                        ray = line3d<f32>(pp.X + itp->x,999999,pp.Z + itp->z,
+                                          pp.X + itp->x,0,pp.Z + itp->z);
+                        if(cm->getCollisionPoint(ray,ts,cv,ot,matchingNode))
+                        {
+                            SimSceneNode * scn = (SimSceneNode*)matchingNode;
+                            baseHeight =
+                                std::max(
+                                    baseHeight,
+                                    scn->getPosition().Y +
+                                    scn->getHeight()/2);
+                            
+                            std::cout<<scn->getPosition().Y<<"," <<
+                                scn->getHeight()<<","<<
+                                baseHeight<<std::endl;
+                        }
+                    }
                     placeObj->setPosition(
                         wc->getPosition().X + -1*dyh*dxdy,
-                        0,
+                        baseHeight + placeMesh->getHeight()/2,
                         wc->getPosition().Z + -1*dyh*dzdy);
                     placeMesh->update();
                 }
@@ -1219,7 +1266,6 @@ void SimGUI::promptEntityWindow()
 //----------------------------------------------------------------------------//
 //                           Handles GUI positioning
 //----------------------------------------------------------------------------//
-
 void SimGUI::capture()
 {
     IVideoDriver * driver = device->getVideoDriver();

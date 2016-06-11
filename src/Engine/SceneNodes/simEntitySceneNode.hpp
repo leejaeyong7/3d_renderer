@@ -56,9 +56,13 @@ namespace Sim{
                 for(itp = points.begin(); itp != points.end(); itp++)
                 {
                     max = std::max(max,itp->y);
-                    min = std::min(max,itp->y);
+                    min = std::min(min,itp->y);
                 }
                 return (max - min);
+            }
+        vector<Point> * getAllPoints()
+            {
+                return &points;
             }
         // draws scene node onto screen
         virtual void render()
