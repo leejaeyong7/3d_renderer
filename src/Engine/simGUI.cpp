@@ -1,7 +1,7 @@
 /*============================================================================
  * @author: Jae Yong Lee
  * @file: simGUI.cpp
- * @version:  
+ * @version:
  * @summary:
  *      Definition file for simulator GUI
  *
@@ -36,7 +36,7 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
 
     // sets IGUIEnvironment object
     IGUIEnvironment* guienv = device->getGUIEnvironment();
-    
+
     // set GUI skin
     IGUISkin * skin = guienv->getSkin();
     IGUIFont * font = guienv->getFont("data/font/inconsolata.xml");
@@ -64,6 +64,7 @@ SimGUI::SimGUI(SimEngine * eng, const wchar_t * text,
     setCameraCapture();
     setPathExec();
     setPlacerMenu();
+    setPlacerSubMenu(0);
 
     exec = false;
 }
@@ -89,10 +90,10 @@ void SimGUI::setup()
 
     // add 4 sun lights at corners
     ILightSceneNode* sunu = smgr->addLightSceneNode(
-        0, vector3df(0,10000,0), 
+        0, vector3df(0,10000,0),
         SColorf(0.906f,0.882f,0.488f,1.0f),
         25000.0f, -1 );
-    
+
     SColorf side(0.151f,0.146f,0.81f,1.0f);
     ILightSceneNode* sun1 = smgr->addLightSceneNode(
         0, vector3df(5000,0,5000), side, 25000.0f, -1 );
@@ -156,19 +157,16 @@ void SimGUI::setup()
 
     // minimap camera
     mc = smgr->addCameraSceneNode(0, vector3df(0,50,0), vector3df(0,0,0));
+    yc = smgr->addCameraSceneNode(0, vector3df(10,10,10), vector3df(0,0,0));
+    yc->bindTargetAndRotation(false);
+    /* yc = new WorldCameraSceneNode(r,smgr,-1,device); */
 
-    // maya camera
-    yc = smgr->addCameraSceneNodeMaya(0,
-                                      -150.0f,
-                                      200.0f,
-                                      150.0f,
-                                      -1,
-                                      70.0f,
-                                      false);
+    yc->bindTargetAndRotation(false);
     yc->setFOV(fc->getFOV());
     yc->setAspectRatio(fc->getAspectRatio());
-    yc->setPosition(vector3df(0,5,0));
-    yc->setTarget(vector3df(0,0,0));
+    yc->setPosition(vector3df(0,100,0));
+    yc->setTarget(vector3df(0,30,0));
+    yc->setFarValue(20000.0f);
 
     // placer camera
     pc = smgr->addCameraSceneNode(0, vector3df(-20,20,-20), vector3df(0,0,0));
@@ -176,7 +174,7 @@ void SimGUI::setup()
     // setup path scenenode
     paths = new Sim::PathSceneNode(r,smgr,-1);
 
-    wc = yc;
+    wc = fc;
     smgr->setActiveCamera(wc);
 }
 
@@ -311,7 +309,7 @@ void SimGUI::execPath()
 
     s32 sid = cb->getSelected();
     u32 d = cb->getItemData(sid);
-        
+
     vector<SimEntity*>* ev= engine->getEntityVector();
     SimCamera* s = dynamic_cast<SimCamera*>(ev->at(d));
     if(s)
@@ -348,7 +346,7 @@ void SimGUI::execUpdate()
     std::advance(it,1);
     PathNode cN = (*it);
 
-    
+
     vector3df pos_update = cN.Pos - pN.Pos;
     vector3df rot_update = cN.Rot - pN.Rot;
     if(rot_update.X > 180)
@@ -423,49 +421,118 @@ void SimGUI::setPlacerMenu()
     cy = height_r + 30;
     bw = 40;
 
-
     guienv->addStaticText(
-        L"Choose World Camera",
-        rect<s32>(cx,cy,cx+bw*3+20,cy+70),
+        L"Camera Mode",
+        rect<s32>(cx,cy,cx+bw*2+20,cy+70),
         true,false);
 
     guienv->addButton(rect<s32>(cx+10,cy+20,cx+bw+10,cy+60), 0,
                       FPS_CAMERA_BUTTON,
-                      L"FPS",
-                      L"Use FPS World Camera");
+                      L"Free",
+                      L"Use Free World Camera");
 
     guienv->addButton(rect<s32>(cx+bw+10,cy+20,cx+2*bw+10,cy+60), 0,
-                      MAYA_CAMERA_BUTTON,
-                      L"Maya",
-                      L"Use Maya World Camera");
-
-    guienv->addButton(rect<s32>(cx+2*bw+10,cy+20,cx+3*bw+10,cy+60), 0,
-                      PLACER_CAMERA_BUTTON,
+                      EDIT_CAMERA_BUTTON,
                       L"Edit",
-                      L"Use Edit World Camera");
-    s32 px,py,pw,ph;
-    px = cx+150;
-    pw = width_r - 20 - px;
-    py = height_r + 30;
-    bw = 80;
+                      L"Use Edit mode Camera");
+}
+void SimGUI::setPlacerSubMenu(int type)
+{
+    IGUIEnvironment* guienv = device->getGUIEnvironment();
+    IGUIElement * rootelem = guienv->getRootGUIElement();
+    IGUIElement* t;
+    if((t = rootelem->getElementFromId(CAMERA_MODE_TEXT,true))){
+        t->remove();
+    }
+    if((t = rootelem->getElementFromId(EDIT_MOVEMENT_TEXT,true))){
+        t->remove();
+    }
+    if((t = rootelem->getElementFromId(ADD_ENTITY_TEXT,true))){
+        t->remove();
+    }
+    if(type == 0)
+    {
+        s32 px,py,pw,ph,bw;
+        px = 120;
+        pw = width_r - 20 - px;
+        py = height_r + 30;
+        bw = 90;
 
-    guienv->addStaticText(
-        L"Choose Primitive To Add",
-        rect<s32>(px,py,px+3*bw+20,py+70),
-        true,false);
+        IGUIStaticText* ct = guienv->addStaticText(
+            L"Choose Movement Mode",
+            rect<s32>(px,py,px+2*bw+20,py+70),
+            true,false,0,CAMERA_MODE_TEXT);
 
-    guienv->addButton(rect<s32>(px+10,py+20,px+bw+10,py+60), 0,
-                      ADD_PLANE_BUTTON,
-                      L"Plane",
-                      L"Adds Plane to Scene");
-    guienv->addButton(rect<s32>(px+bw+10,py+20,px+2*bw+10,py+60), 0,
-                      ADD_CUBE_BUTTON,
-                      L"Cube",
-                      L"Adds Cube to Scene");
-    guienv->addButton(rect<s32>(px+2*bw+10,py+20,px+3*bw+10,py+60), 0,
-                      ADD_PYRAMID_BUTTON,
-                      L"Pyramid",
-                      L"Adds Pyramid to Scene");
+        guienv->addCheckBox(true,rect<s32>(10,20,bw+10,60),
+                            ct,
+                            FREE_CAMERA_MODE,
+                            L"Fly");
+
+        guienv->addCheckBox(false,rect<s32>(bw+10,20,2*bw+10,60), 
+                            ct,
+                            GROUND_CAMERA_MODE,
+                            L"Ground");
+
+    }
+    else
+    {
+        s32 px,py,pw,ph,bw;
+        px = 120;
+        pw = width_r - 20 - px;
+        py = height_r + 30;
+        bw = 60;
+
+        IGUIStaticText* ct = guienv->addStaticText(
+            L"Move Camera",
+            rect<s32>(px,py,px+4*bw+20,py+70),
+            true,false,0,EDIT_MOVEMENT_TEXT);
+
+        guienv->addButton(rect<s32>(10,20,bw+10,40), ct,
+                          ADD_Y_BUTTON,
+                          L"Y+",
+                          L"Increase Height");
+        guienv->addButton(rect<s32>(10,40,bw+10,60), ct,
+                          SUB_Y_BUTTON,
+                          L"Y-",
+                          L"Decrease Height");
+        guienv->addButton(rect<s32>(bw+10,20,2*bw+10,40), ct,
+                          ROT_Y_U_BUTTON,
+                          L"ROT Y++",
+                          L"Look Up");
+        guienv->addButton(rect<s32>(bw+10,40,2*bw+10,60), ct,
+                          ROT_Y_D_BUTTON,
+                          L"ROT Y-",
+                          L"Look Down");
+        guienv->addButton(rect<s32>(2*bw+10,20,3*bw+10,60),ct,
+                          ROT_L_BUTTON,
+                          L"Rot L",
+                          L"Rotate Counter Clockwise");
+        guienv->addButton(rect<s32>(3*bw+10,20,4*bw+10,60), ct,
+                          ROT_R_BUTTON,
+                          L"Rot R",
+                          L"Rotate Clockwise");
+        px = 120;
+        py = height_r + 30;
+        bw = 60;
+
+        ct = guienv->addStaticText(
+            L"Add Entity",
+            rect<s32>(px+4*bw+30,py,px+7*bw+50,py+70),
+            true,false,0,ADD_ENTITY_TEXT);
+
+        guienv->addButton(rect<s32>(10,20,bw+10,60), ct,
+                          ADD_PLANE_BUTTON,
+                          L"Plane",
+                          L"Adds Plane on scene");
+        guienv->addButton(rect<s32>(bw+10,20,2*bw+10,60), ct,
+                          ADD_CUBE_BUTTON,
+                          L"Cube",
+                          L"Adds Cube on scene");
+        guienv->addButton(rect<s32>(2*bw+10,20,3*bw+10,60),ct,
+                          ADD_PYRAMID_BUTTON,
+                          L"Pyramid",
+                          L"Adds Pyramid on scene");
+    }
 }
 //----------------------------------------------------------------------------//
 //                             PATH EXEC HANDLERS                             //
@@ -484,7 +551,7 @@ void SimGUI::setPathExec()
         L"Choose Camera To Execute Path",
         rect<s32>(cx,cy,cx+cw,cy+20),
         false, true);
-    IGUIComboBox* ccb = guienv->addComboBox( 
+    IGUIComboBox* ccb = guienv->addComboBox(
         rect<s32>(cx, cy+20, cx+cw, cy+ch), 0, PATH_CAMERA_COMBO);
 
     vector<SimEntity*>* eVector = engine->getEntityVector();
@@ -498,7 +565,7 @@ void SimGUI::setPathExec()
         if(s)
         {
             std::string name = (*it)->getName();
-            std::wstring wname(name.length(), L' '); 
+            std::wstring wname(name.length(), L' ');
             std::copy(name.begin(), name.end(), wname.begin());
             ccb->addItem(wname.c_str(),index);
         }
@@ -518,7 +585,7 @@ void SimGUI::setPathExec()
 
     IGUIEditBox* filename =  guienv->addEditBox(
         L"result", rect<s32>(fx,fy+20,fx+fw,fy+fh), true, 0, PATH_FOLDER);
-        
+
 
     s32 bx,by,bw,bh;
     bx = width_r + 10;
@@ -543,7 +610,7 @@ void SimGUI::setPathExec()
         rect<s32>(sx,sy,sx+sw,sy+20),
         false, true);
 
-    IGUIScrollBar * scr = 
+    IGUIScrollBar * scr =
         guienv->addScrollBar(true,
                              rect<s32>(sx,sy+20,sx+sw,sy+sh),
                              0,PATH_FPS_SCROLL);
@@ -558,9 +625,9 @@ void SimGUI::setPathExec()
         rect<s32>(sx + sw + 10, sy+20,sx + sw + ew, sy + sh),
         true,true,
         0, PATH_FPS);
-                         
+
     setPathFPS();
-    
+
 }
 void SimGUI::updateCombos()
 {
@@ -574,7 +641,7 @@ void SimGUI::updateCombos()
     IGUIComboBox* cc =
         (IGUIComboBox*)(rootelem->getElementFromId(CAMERA_COMBO, true));
     cc->clear();
-    
+
     vector<SimEntity*>* eVector = engine->getEntityVector();
     vector<SimEntity*>::iterator it;
 
@@ -587,7 +654,7 @@ void SimGUI::updateCombos()
         if(s)
         {
             std::string name = (*it)->getName();
-            std::wstring wname(name.length(), L' '); 
+            std::wstring wname(name.length(), L' ');
             std::copy(name.begin(), name.end(), wname.begin());
             pc->addItem(wname.c_str(),index);
             cc->addItem(wname.c_str(),index);
@@ -601,13 +668,13 @@ void SimGUI::setPathFPS()
     IGUIEnvironment* guienv = device->getGUIEnvironment();
     IGUIElement * rootelem = guienv->getRootGUIElement();
 
-    IGUIScrollBar* scr= 
+    IGUIScrollBar* scr=
         (IGUIScrollBar*)(rootelem->getElementFromId(PATH_FPS_SCROLL, true));
     int val = scr->getPos();
 
-    IGUIStaticText * fps = 
+    IGUIStaticText * fps =
         (IGUIStaticText*)(rootelem->getElementFromId(PATH_FPS, true));
-    
+
     fps->setText(std::to_wstring(val).c_str());
 }
 
@@ -640,7 +707,7 @@ void SimGUI::editPathWindow()
     cw = ww - 2*cx;
     ch = 40;
     cy = 30;
-    
+
     // set text
     IGUIStaticText* crt = guienv->addStaticText(
         L"", rect<s32>(cx, cy, cx+cw, cy+20), false, true, window);
@@ -662,7 +729,7 @@ void SimGUI::editPathWindow()
         pc->addItem(p.c_str(),index);
         index++;
     }
-    
+
     s32 dx,dy,dw,dh,dm;
     dx = 10;
     dh = 100;
@@ -675,7 +742,7 @@ void SimGUI::editPathWindow()
 
     // set pos/rotation with margin 10
     s32 ddw = dw-20;
-    
+
     IGUIStaticText* position =
         guienv->addStaticText(
             L"Position", rect<s32>(10,10,ddw,30), false, true, dof_box);
@@ -931,7 +998,7 @@ void SimGUI::attachEntityMesh(SimRobot * robot, SimSensor * sensor)
                      entityMeshVector.end(),
                      checkEntityPointer(robot));
     SimSceneNode * robotMesh = (*it);
-    
+
     // same for sensor
     it = std::find_if(entityMeshVector.begin(),
                       entityMeshVector.end(),
@@ -954,13 +1021,13 @@ void SimGUI::detachEntityMesh(SimRobot * robot, SimSensor * sensor)
     if(!sensor)
         return;
 
-    // get first scene node that uses robot as ptr 
+    // get first scene node that uses robot as ptr
     vector<SimSceneNode*>::iterator it =
         std::find_if(entityMeshVector.begin(),
                      entityMeshVector.end(),
                      checkEntityPointer(robot));
     SimSceneNode* robotMesh = (*it);
-    
+
     // same for sensor
     it = std::find_if(entityMeshVector.begin(),
                       entityMeshVector.end(),
@@ -1009,7 +1076,7 @@ void SimGUI::entityAttachWindow()
     cy1 = 30;
     ch = 40;
     cy2 = cy1 + ch + 10;
-    
+
     // set text
     IGUIStaticText* crt = guienv->addStaticText(
         L"", rect<s32>(cx, cy1, cx+cw, cy1+20), false, true, window);
@@ -1034,7 +1101,7 @@ void SimGUI::entityAttachWindow()
         if(s)
         {
             std::string name = (*it)->getName();
-            std::wstring wname(name.length(), L' '); 
+            std::wstring wname(name.length(), L' ');
             std::copy(name.begin(), name.end(), wname.begin());
             crcb->addItem(wname.c_str(),index);
         }
@@ -1049,7 +1116,7 @@ void SimGUI::entityAttachWindow()
             if(s)
             {
                 std::string name = (*it)->getName();
-                std::wstring wname(name.length(), L' '); 
+                std::wstring wname(name.length(), L' ');
                 std::copy(name.begin(), name.end(), wname.begin());
                 cscb->addItem(wname.c_str(),index);
             }
@@ -1200,7 +1267,7 @@ void SimGUI::capture()
                 (smgr)->createTriangleSelectorFromBoundingBox(*it));
         }
     }
-    
+
     // output file
     ofstream myfile;
     wstring resultname= cap_path + L"/res_" + std::to_wstring(cap_id)+ L".txt";
@@ -1259,7 +1326,7 @@ void SimGUI::capture()
                     coord = cm->getScreenCoordinatesFrom3DPosition(p,cc,false);
                     coord.X *= ((double)width_r/(double)width);
                     coord.Y *= ((double)height_r/(double)height);
-                    
+
                     // if point is between frustum angles, check for collision
                     if(coord.X>= 0 && coord.X <= width_r &&
                        coord.Y >= 0 && coord.Y <= height_r)
@@ -1339,7 +1406,7 @@ void SimGUI::setContextMenu()
     IGUIContextMenu * engineMenu = cM->getSubMenu(engineMenuId);
     IGUIContextMenu * entityMenu = cM->getSubMenu(entityMenuId);
     IGUIContextMenu * pathMenu = cM->getSubMenu(pathMenuId);
-    
+
     //---------------------------Engine Menu----------------------------------//
 
 	engineMenu->addItem(L"Show Features", FEATURE_BUTTON,
@@ -1399,7 +1466,7 @@ void SimGUI::setCameraDropdown()
         L"Choose Camera",
         rect<s32>(cx,cy,cx+cw,cy+20),
         false, true);
-    IGUIComboBox* ccb = guienv->addComboBox( 
+    IGUIComboBox* ccb = guienv->addComboBox(
         rect<s32>(cx, cy+20, cx+cw, cy+ch), 0, CAMERA_COMBO);
 
     vector<SimEntity*>* eVector = engine->getEntityVector();
@@ -1413,13 +1480,13 @@ void SimGUI::setCameraDropdown()
         if(s)
         {
             std::string name = (*it)->getName();
-            std::wstring wname(name.length(), L' '); 
+            std::wstring wname(name.length(), L' ');
             std::copy(name.begin(), name.end(), wname.begin());
             ccb->addItem(wname.c_str(),index);
         }
         index++;
     }
-    
+
 }
 
 void SimGUI::setCameraCapture()
@@ -1669,7 +1736,7 @@ void SimGUI::setPromptData(SimEntity * obj)
 
     // set name
     std::string name = obj->getName();
-    std::wstring wname(name.length(), L' '); 
+    std::wstring wname(name.length(), L' ');
     std::copy(name.begin(), name.end(), wname.begin());
     en->setText(wname.c_str());
 
@@ -1802,7 +1869,7 @@ void SimGUI::setPromptWindow(s32 wx, s32 wy, s32 ww, s32 wh)
         break;
     }
     }
-    
+
 }
 void SimGUI::setPromptComboBox(s32 cx, s32 cy, s32 cw, s32 ch)
 {
@@ -1874,7 +1941,7 @@ void SimGUI::setPromptComboBox(s32 cx, s32 cy, s32 cw, s32 ch)
                 if(s)
                 {
                     std::string name = (*it)->getName();
-                    std::wstring wname(name.length(), L' '); 
+                    std::wstring wname(name.length(), L' ');
                     std::copy(name.begin(), name.end(), wname.begin());
                     cb->addItem(wname.c_str(),index);
                 }
@@ -1891,7 +1958,7 @@ void SimGUI::setPromptComboBox(s32 cx, s32 cy, s32 cw, s32 ch)
                 if(s)
                 {
                     std::string name = (*it)->getName();
-                    std::wstring wname(name.length(), L' '); 
+                    std::wstring wname(name.length(), L' ');
                     std::copy(name.begin(), name.end(), wname.begin());
                     cb->addItem(wname.c_str(),index);
                 }
@@ -1908,7 +1975,7 @@ void SimGUI::setPromptComboBox(s32 cx, s32 cy, s32 cw, s32 ch)
                 if(s)
                 {
                     std::string name = (*it)->getName();
-                    std::wstring wname(name.length(), L' '); 
+                    std::wstring wname(name.length(), L' ');
                     std::copy(name.begin(), name.end(), wname.begin());
                     cb->addItem(wname.c_str(),index);
                 }
@@ -1979,7 +2046,7 @@ void SimGUI::setDofBox(s32 dx, s32 dy, s32 dw, s32 dh, s32 dm)
 
     // set pos/rotation with margin 10
     s32 ddw = dw-20;
-    
+
     IGUIStaticText* position =
         guienv->addStaticText(
             L"Position", rect<s32>(10,10,ddw,30), false, true, dof_box);
@@ -2170,7 +2237,7 @@ void SimGUI::setDetachData(s32 index)
     for(it = sv->begin(); it != sv->end(); it++)
     {
         std::string name = (*it)->getName();
-        std::wstring wname(name.length(), L' '); 
+        std::wstring wname(name.length(), L' ');
         std::copy(name.begin(), name.end(), wname.begin());
         cscb->addItem(wname.c_str(),c);
         c++;

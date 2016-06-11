@@ -1,7 +1,7 @@
 /*============================================================================
  * @author: Jae Yong Lee
  * @file: eventHandler.cpp
- * @version: 1.0 
+ * @version: 1.0
  * @summary:
  *      Definition file for event handlers
  *
@@ -25,6 +25,8 @@ bool EventHandler::OnEvent(const SEvent & event)
         if (event.KeyInput.Key== KEY_KEY_T &&
             event.KeyInput.PressedDown == false)
         {
+          if(camera == gui->fc)
+          {
             if(camera->isInputReceiverEnabled())
             {
                 device->getCursorControl()->setVisible(true);
@@ -37,7 +39,8 @@ bool EventHandler::OnEvent(const SEvent & event)
                 camera->setInputReceiverEnabled(true);
                 showing = true;
             }
-            KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
+          }
+          KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
         }
         if(showing && !(gui->placeMode) )
         {
@@ -58,28 +61,206 @@ bool EventHandler::OnEvent(const SEvent & event)
             else
                 KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
         }
-        else if(gui->placeMode)
+        else
         {
-            if(event.KeyInput.Key == KEY_SPACE &&
-                    event.KeyInput.PressedDown == false)
+            if(camera == gui->yc)
             {
-                vector3df objPos = gui->placeMesh->getPosition();
-                gui->placeObj->setPosition(
-                    objPos.X,
-                    objPos.Y,
-                    objPos.Z
-                    );
-                cout<<gui->placeObj<< endl;
-                gui->createEntityObject(ENTITY_TYPE_ENVIRONMENT,
-                                        gui->placeObj);
-                gui->placeMesh->remove();
-                delete gui->placeMesh;
-                gui->placeMesh = 0;
-                gui->placeObj = 0;
-                gui->placeMode = false;
+                if(event.KeyInput.PressedDown == false)
+                {
+                    switch(event.KeyInput.Key)
+                    {
+                    case KEY_KEY_A:
+                    {
+                        vector3df pos = gui->yc->getPosition();
+                        vector3df target = gui->yc->getTarget();
+                        vector3df view = pos - target;
+                        if(abs(view.X) > abs(view.Z))
+                        {
+                            if(view.X < 0)
+                            {
+                                pos.Z += 1;
+                                target.Z +=1;
+                            }
+                            else
+                            {
+                                pos.Z -= 1;
+                                target.Z -=1;
+                            }
+                        }
+                        else
+                        {
+                            if(view.Z > 0)
+                            {
+                                pos.X += 1;
+                                target.X +=1;
+                            }
+                            else
+                            {
+                                pos.X -= 1;
+                                target.X -=1;
+                            }
+                        }
+                        gui->yc->setPosition(pos);
+                        gui->yc->setTarget(target);
+                    }
+                        break;
+                    case KEY_KEY_S:
+                    {
+                        vector3df pos = gui->yc->getPosition();
+                        vector3df target = gui->yc->getTarget();
+                        vector3df view = pos - target;
+                        if(abs(view.X) > abs(view.Z))
+                        {
+                            if(view.X < 0)
+                            {
+                                pos.X -= 1;
+                                target.X -=1;
+                            }
+                            else
+                            {
+                                pos.X += 1;
+                                target.X +=1;
+                            }
+                        }
+                        else
+                        {
+                            if(view.Z < 0)
+                            {
+                                pos.Z -= 1;
+                                target.Z -=1;
+                            }
+                            else
+                            {
+                                pos.Z += 1;
+                                target.Z +=1;
+                            }
+                        }
+                        gui->yc->setPosition(pos);
+                        gui->yc->setTarget(target);
+                    }
+                        break;
+                    case KEY_KEY_D:
+                    {
+                        vector3df pos = gui->yc->getPosition();
+                        vector3df target = gui->yc->getTarget();
+                        vector3df view = pos - target;
+                        if(abs(view.X) > abs(view.Z))
+                        {
+                            if(view.X < 0)
+                            {
+                                pos.Z -= 1;
+                                target.Z -=1;
+                            }
+                            else
+                            {
+                                pos.Z += 1;
+                                target.Z +=1;
+                            }
+                        }
+                        else
+                        {
+                            if(view.Z > 0)
+                            {
+                                pos.X -= 1;
+                                target.X -=1;
+                            }
+                            else
+                            {
+                                pos.X += 1;
+                                target.X +=1;
+                            }
+                        }
+                        gui->yc->setPosition(pos);
+                        gui->yc->setTarget(target);
+                    }
+                        break;
+                    case KEY_KEY_W:
+                    {
+                        vector3df pos = gui->yc->getPosition();
+                        vector3df target = gui->yc->getTarget();
+                        vector3df view = pos - target;
+                        if(abs(view.X) > abs(view.Z))
+                        {
+                            if(view.X < 0)
+                            {
+                                pos.X += 1;
+                                target.X +=1;
+                            }
+                            else
+                            {
+                                pos.X -= 1;
+                                target.X -=1;
+                            }
+                        }
+                        else
+                        {
+                            if(view.Z < 0)
+                            {
+                                pos.Z += 1;
+                                target.Z +=1;
+                            }
+                            else
+                            {
+                                pos.Z -= 1;
+                                target.Z -=1;
+                            }
+                        }
+                        gui->yc->setPosition(pos);
+                        gui->yc->setTarget(target);
+                    }
+                        break;
+                    default:
+                        break;
+                    }
+                }
             }
-            else
-                KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
+
+            if(gui->placeMode)
+            {
+                if(event.KeyInput.Key == KEY_SPACE &&
+                   event.KeyInput.PressedDown == false)
+                {
+                    vector3df objPos = gui->placeMesh->getPosition();
+                    gui->placeObj->setPosition(
+                        objPos.X,
+                        objPos.Y + gui->placeMesh->getHeight()/2,
+                        objPos.Z
+                        );
+                    cout<<gui->placeObj<< endl;
+                    gui->createEntityObject(ENTITY_TYPE_ENVIRONMENT,
+                                            gui->placeObj);
+                    gui->placeMesh->remove();
+                    delete gui->placeMesh;
+                    gui->placeMesh = 0;
+                    gui->placeObj = 0;
+                    gui->placeMode = false;
+                }
+                else
+                    KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
+            }
+
+        }
+    }
+    else if(event.EventType == EET_MOUSE_INPUT_EVENT)
+    {
+        if(gui->placeMode)
+        {
+            if(event.MouseInput.isLeftPressed())
+            {
+                if(event.MouseInput.X < gui->width_r &&
+                   event.MouseInput.Y < gui->height_r+20 &&
+                   event.MouseInput.Y > 20)
+                {
+                    gui->createEntityObject(ENTITY_TYPE_ENVIRONMENT,
+                                            gui->placeObj);
+                    gui->placeMesh->remove();
+                    delete gui->placeMesh;
+                    gui->placeMesh = 0;
+                    gui->placeObj = 0;
+                    gui->placeMode = false;
+
+                }
+            }
         }
     }
     // GUI EVENT
@@ -139,7 +320,7 @@ bool EventHandler::OnEvent(const SEvent & event)
                 break;
             case PATH_REMOVE_BUTTON:
             {
-                IGUIComboBox* cb = 
+                IGUIComboBox* cb =
                     (IGUIComboBox*)(rootelem->getElementFromId(PATH_COMBO,true));
                 gui->paths-> removePathNode(cb->getSelected());
 
@@ -155,7 +336,7 @@ bool EventHandler::OnEvent(const SEvent & event)
                     index++;
                 }
                 gui->setPathData(0);
-                
+
             }
                 return false;
             case REMOVE_BUTTON:
@@ -175,24 +356,29 @@ bool EventHandler::OnEvent(const SEvent & event)
                     gui->fc->setTarget(gui->wc->getTarget());
                     gui->fc->setProjectionMatrix(
                         gui->wc->getProjectionMatrix());
+                    gui->wc->setInputReceiverEnabled(false);
                     gui->wc = gui->fc;
+                    gui->fc->setInputReceiverEnabled(true);
                     gui->device->getSceneManager()->setActiveCamera(gui->wc);
                 }
+                gui->setPlacerSubMenu(0);
                 return false;
             }
-            case MAYA_CAMERA_BUTTON:
-            case PLACER_CAMERA_BUTTON:
+            case EDIT_CAMERA_BUTTON:
             {
                 if(gui->wc == gui->fc)
                 {
                     gui->yc->setPosition(gui->wc->getPosition());
                     gui->yc->updateAbsolutePosition();
+                    gui->yc->setTarget(gui->wc->getTarget());
                     gui->yc->setProjectionMatrix(
                         gui->wc->getProjectionMatrix());
-                    gui->yc->setTarget(gui->wc->getTarget());
+                    gui->wc->setInputReceiverEnabled(false);
                     gui->wc = gui->yc;
+                    gui->yc->setInputReceiverEnabled(true);
                     gui->device->getSceneManager()->setActiveCamera(gui->wc);
                 }
+                gui->setPlacerSubMenu(1);
                 return false;
             }
             case ADD_PLANE_BUTTON:
@@ -218,6 +404,62 @@ bool EventHandler::OnEvent(const SEvent & event)
                     gui->placeObj);
                 return false;
             }
+            case ADD_Y_BUTTON:
+            {
+                vector3df pos = gui->yc->getPosition();
+                vector3df target = gui->yc->getTarget();
+                pos.Y += 1;
+                target.Y += 1;
+                gui->yc->setPosition(pos);
+                gui->yc->setTarget(target);
+            }
+                return false;
+            case SUB_Y_BUTTON:
+            {
+                vector3df pos = gui->yc->getPosition();
+                vector3df target = gui->yc->getTarget();
+                pos.Y -= 1;
+                target.Y -= 1;
+                gui->yc->setPosition(pos);
+                gui->yc->setTarget(target);
+            }
+                return false;
+            case ROT_Y_U_BUTTON:
+            {
+                vector3df pos = gui->yc->getPosition();
+                vector3df target = gui->yc->getTarget();
+
+                target.rotateYZBy(-10,pos);
+                gui->yc->setTarget(target);
+            }
+                return false;
+            case ROT_Y_D_BUTTON:
+            {
+                vector3df pos = gui->yc->getPosition();
+                vector3df target = gui->yc->getTarget();
+
+                target.rotateYZBy(10,pos);
+                gui->yc->setTarget(target);
+            }
+                return false;
+            case ROT_R_BUTTON:
+            {
+                vector3df pos = gui->yc->getPosition();
+                vector3df target = gui->yc->getTarget();
+
+                target.rotateXZBy(-10,pos);
+                gui->yc->setTarget(target);
+            }
+                return false;
+            case ROT_L_BUTTON:
+            {
+                vector3df pos = gui->yc->getPosition();
+                vector3df target = gui->yc->getTarget();
+
+                target.rotateXZBy(10,pos);
+                gui->yc->setTarget(target);
+            }
+                return false;
             default:
                 return false;
             }
@@ -237,7 +479,7 @@ bool EventHandler::OnEvent(const SEvent & event)
             if(cm->isItemChecked(sid))
             {
                 cm->setItemChecked(sid,false);
-                
+
                 vector<SimSceneNode*>* v = &(gui->entityMeshVector);
                 for(int i = 0; i < v->size(); i++)
                 {
@@ -348,7 +590,7 @@ bool EventHandler::OnEvent(const SEvent & event)
                 }
             }
                 break;
-                
+
             case PROMPT_COMBO:
                 if(gui->currPrompt == EDIT_ENTITY_PROMPT)
                     gui->setEditPromptData(sid);
@@ -405,6 +647,34 @@ bool EventHandler::OnEvent(const SEvent & event)
                 return false;
             default:
                 break;
+            }
+        }
+            break;
+        case EGET_CHECKBOX_CHANGED:
+        {
+            switch(id)
+            {
+            case FREE_CAMERA_MODE:
+            {
+                IGUICheckBox * cb = (IGUICheckBox*)
+                    (rootelem->getElementFromId(FREE_CAMERA_MODE,true));
+                IGUICheckBox * cbc = (IGUICheckBox*)
+                    (rootelem->getElementFromId(GROUND_CAMERA_MODE,true));
+                cb->setChecked(true);
+                cbc->setChecked(false);
+            }
+                break;
+            case GROUND_CAMERA_MODE:
+            {
+                IGUICheckBox * cb = (IGUICheckBox*)
+                    (rootelem->getElementFromId(FREE_CAMERA_MODE,true));
+                IGUICheckBox * cbc = (IGUICheckBox*)
+                    (rootelem->getElementFromId(GROUND_CAMERA_MODE,true));
+                cb->setChecked(false);
+                cbc->setChecked(true);
+            }
+                break;
+                
             }
         }
             break;

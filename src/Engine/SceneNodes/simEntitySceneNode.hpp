@@ -37,6 +37,7 @@ namespace Sim{
                 Material.Lighting = true;
                 obj = _obj;
                 setScale(vector3df(1,1,1));
+                registerPoints();
                 setAutomaticCulling(EAC_FRUSTUM_BOX);
                 update();
                 drawfeature = true;
@@ -47,7 +48,18 @@ namespace Sim{
             {
                 return obj;
             }
-
+        double getHeight()
+            {
+                vector<Point>::iterator itp;
+                double max = DBL_MIN;
+                double min = DBL_MAX;
+                for(itp = points.begin(); itp != points.end(); itp++)
+                {
+                    max = std::max(max,itp->y);
+                    min = std::min(max,itp->y);
+                }
+                return (max - min);
+            }
         // draws scene node onto screen
         virtual void render()
             {
@@ -160,6 +172,40 @@ namespace Sim{
             {
                 return vector3df(p.x,p.y,p.z);
             }
+        void registerPoints()
+            {
+                points.clear();
+                vector<Rectangle>* rv = obj->getRectangles();
+                vector<Triangle>* tv = obj->getTriangles();
+                vector<Point>* pv = obj->getPoints();
+
+                vector<Rectangle>::iterator itr;
+                vector<Triangle>::iterator itt;
+                vector<Point>::iterator itp;
+                for(itr = rv->begin(); itr != rv->end(); itr++)
+                {
+                    Triangle t;
+                    t = itr->u;
+                    points.push_back(t.a);
+                    points.push_back(t.b);
+                    points.push_back(t.c);
+
+                    t = itr->d;
+                    points.push_back(t.a);
+                    points.push_back(t.b);
+                    points.push_back(t.c);
+                }
+                for(itt = tv->begin(); itt != tv->end(); itt++)
+                {
+                    points.push_back(itt->a);
+                    points.push_back(itt->b);
+                    points.push_back(itt->c);
+                }
+                for(itp = pv->begin(); itp != pv->end(); itp++)
+                {
+                    points.push_back(*itp);
+                }
+            }
         void updateBox()
             {
                 box.reset(vector3df(0,0,0));
@@ -199,6 +245,7 @@ namespace Sim{
             }
         SMaterial Material;
         aabbox3d<f32> box;
+        vector<Point> points;
         SimEntity* obj;
         bool drawfeature;
     };
