@@ -220,13 +220,6 @@ bool EventHandler::OnEvent(const SEvent & event)
                 if(event.KeyInput.Key == KEY_SPACE &&
                    event.KeyInput.PressedDown == false)
                 {
-                    vector3df objPos = gui->placeMesh->getPosition();
-                    gui->placeObj->setPosition(
-                        objPos.X,
-                        objPos.Y + gui->placeMesh->getHeight()/2,
-                        objPos.Z
-                        );
-                    cout<<gui->placeObj<< endl;
                     gui->createEntityObject(ENTITY_TYPE_ENVIRONMENT,
                                             gui->placeObj);
                     gui->placeMesh->remove();

@@ -252,7 +252,7 @@ private:
     // save/set up path data
     void savePathData();
     void setPathData(s32 index);
-
+    
     // functor for remove_if predicate
     struct checkEntityPointer
     {
