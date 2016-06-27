@@ -110,23 +110,23 @@ void SimCube::update()
 
     // down : 5,6,7,8
     // down triangles
-    t5.a = p5;
+    t5.a = p7;
     t5.b = p6;
-    t5.c = p7;
+    t5.c = p5;
 
-    t6.a = p8;
+    t6.a = p6;
     t6.b = p7;
-    t6.c = p6;
+    t6.c = p8;
 
     // front : 2,4,6,8
     // front triangles
-    t7.a = p2;
+    t7.a = p6;
     t7.b = p4;
-    t7.c = p6;
+    t7.c = p2;
 
-    t8.a = p8;
+    t8.a = p4;
     t8.b = p6;
-    t8.c = p4;
+    t8.c = p8;
 
     // right : 3,4,7,8
     // right triangles
@@ -140,13 +140,13 @@ void SimCube::update()
 
     // left : 1,2,5,6
     // left triangles
-    t11.a = p1;
+    t11.a = p5;
     t11.b = p2;
-    t11.c = p5;
+    t11.c = p1;
 
-    t12.a = p6;
+    t12.a = p2;
     t12.b = p5;
-    t12.c = p2;
+    t12.c = p6;
 
     // up rectangle
     r1.u = t1;

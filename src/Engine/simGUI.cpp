@@ -315,6 +315,9 @@ void SimGUI::end()
 {
     device->drop();
 }
+/**
+ * @brief executes path based on saved points
+ */
 void SimGUI::execPath()
 {
     IGUIEnvironment* guienv = device->getGUIEnvironment();
@@ -340,7 +343,7 @@ void SimGUI::execPath()
     std::string oname(pn.begin(),pn.end());
     std::string pathname = oname;
     int i = 1;
-
+    // set name of path result path 
     while((stat(pathname.c_str(),&sb) == 0 && S_ISDIR(sb.st_mode)))
     {
         pathname = oname + " (" + to_string(i) + ")";
@@ -1393,18 +1396,6 @@ void SimGUI::capture()
                             myfile<<coord.X<<" "<<coord.Y<<" "<<
                                 p.X<<" "<<p.Y<<" "<<p.Z<<"\n";
                         }
-                        /* else */
-                        /* { */
-                        /*     myfile<<coord.X<<" "<<coord.Y<<" "<< */
-                        /*         "blocked at : "<< */
-                        /*         p.X<<" "<<p.Y<<" "<<p.Z<<" " */
-                        /*         "original coord : "<< */
-                        /*         rp.X<<" "<<rp.Y<<" "<<rp.Z<< */
-                        /*         "  blocked by :"<< */
-                        /*         ((SimSceneNode*)ret)->getEntity() */
-                        /*         ->getName()<< */
-                        /*         "\n"; */
-                        /* } */
                     }
                 }
             }

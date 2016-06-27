@@ -89,15 +89,32 @@ namespace Sim {
                 std::list<PathNode>::iterator it;
                 PathNode p;
                 PathNode n;
+                vector3df pv;
+                vector3df nv;
                 int count = 0;
                 int max = PathList.size();
                 SColor lineColor(255,0,255,0);
+                if(max > 1)
+                {
+                    for(int i = 0; i < max*120; i++)
+                    {
+                        if(i == 0)
+                        {
+                            nv = bezier(0);
+                        }
+                        else
+                        {
+                            pv = nv;
+                            nv = bezier((double)i/((double)max*120));
+                            driver->draw3DLine(pv, nv, lineColor);
+                        }
+                    }
+                }
                 for(it = PathList.begin(); it != PathList.end() ; it++)
                 {
                     if(count == 0)
                     {
                         n = (*it);
-                        /* driver->draw3DBox(vec2box(n.Pos),lineColor); */
                         draw3DVector(driver,n.Pos,n.Rot,lineColor);
                     }
                     else
@@ -106,21 +123,7 @@ namespace Sim {
                         n = (*it);
                         vector3df curp = p.Pos;
                         vector3df curr = p.Rot;
-                        /* vector3df prev = p.Pos; */
-                        /* vector3df diffr = n.Rot - curr; */
-
-                        /* // connect path */
-                        /* for(int i = 0; i < 100; i++) */
-                        /* { */
-                        /*     prev = curp; */
-                        /*     vector3df diff = n.Pos - curp; */
-                        /*     // advance path */
-                        /*     curr = curr.normalize() + diff.normalize()*0.1;  */
-                        /*     curp = curp + curr.normalize()*0.1; */
-                        /*     driver->draw3DLine(prev, curp, lineColor); */
-                        /* } */
-                        driver->draw3DLine(curp, n.Pos, lineColor);
-                        /* driver->draw3DBox(vec2box(n.Pos),lineColor); */
+                        /* driver->draw3DLine(curp, n.Pos, lineColor); */
                         draw3DVector(driver,n.Pos,n.Rot,lineColor);
                         driver->draw3DBox(box,SColor(255,255,0,0));
                     }
@@ -179,6 +182,38 @@ namespace Sim {
                 return aabbox3d<f32>(
                     vector3df(p.X+0.1,p.Y+0.1,p.Z+0.1),
                     vector3df(p.X-0.1,p.Y-0.1,p.Z-0.1));
+            }
+        vector3df bezier(double t)
+            {
+                // t must be between 0 and 1
+                std::list<PathNode>::iterator it;
+                int count = 0;
+                
+                vector3df sum = vector3df(0,0,0);
+
+                int max = PathList.size();
+                for(it = PathList.begin(); it != PathList.end() ; it++)
+                {
+                    sum += (it->Pos)*bernstein(count,max-1,t);
+                    count++;
+                }
+                return sum;
+            }
+        double bernstein(int i, int n, double t)
+            {
+                return binomial(n,i)*powerOf(t,i)*powerOf((1-t),n-i);
+            }
+        int binomial(int n, int i)
+            {
+                return factorial(n) / (factorial(i)*factorial(n-i));
+            }
+        int factorial(int n)
+            {
+                return n ? n*factorial(n-1) : 1;
+            }
+        double powerOf(double t, int p)
+            {
+                return p ? t*powerOf(t,p-1) : 1;
             }
         std::list<PathNode> PathList;
         SMaterial Material;
