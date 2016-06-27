@@ -1,3 +1,6 @@
 [submodule "src/ORB_SLAM2"]
 	path = src/ORB_SLAM2
 	url = https://github.com/raulmur/ORB_SLAM2
+[submodule "src/assimp"]
+	path = src/assimp
+	url = https://github.com/assimp/assimp
