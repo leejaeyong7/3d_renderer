@@ -49,6 +49,8 @@ include_directories(
 #-----------------------------------------------------------------------------#
 include_directories(Engine Engine/Entity Engine/Physics Engine/SceneNodes)
 add_subdirectory(Engine)
+add_subdirectory(ORB_SLAM2)
+add_subdirectory(assimp)
 
 #-----------------------------------------------------------------------------#
 #                                   Settings
